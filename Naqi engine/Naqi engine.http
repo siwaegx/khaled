@@ -1,0 +1,6 @@
+@Naqi_engine_HostAddress = http://localhost:5047
+
+GET {{Naqi_engine_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
