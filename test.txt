@@ -1,0 +1,195 @@
+You are a senior software architect, QA engineer, and codebase refactoring expert.
+
+Your mission is to FULLY analyze, clean, test, and restructure this entire project to production-level quality.
+
+## 🔴 CORE OBJECTIVE
+
+Make this project:
+
+* Fully functional end-to-end
+* Clean, organized, and scalable
+* Free of bugs, duplicates, and unused code
+* Structured like a professional SaaS-grade system
+
+---
+
+## 🧠 PHASE 1: FULL PROJECT ANALYSIS
+
+1. Scan the ENTIRE codebase:
+
+   * All files, folders, configs, dependencies
+   * Frontend + Backend + Database + APIs
+
+2. Build a complete understanding of:
+
+   * Project architecture
+   * Feature flows (from landing page → full system usage)
+   * Module relationships (CRM, Inventory, Admin, Auth, etc.)
+
+3. Detect and list:
+
+   * Broken logic
+   * Dead code
+   * Duplicate files/functions
+   * Missing connections between modules
+   * Inconsistent naming
+   * Unused dependencies
+
+---
+
+## 🧹 PHASE 2: CLEANUP & REFACTOR
+
+### File & Folder Structure
+
+Reorganize into a clean scalable structure like:
+
+/src
+/modules
+/auth
+/crm
+/inventory
+/admin
+/components
+/pages
+/services
+/hooks
+/utils
+/types
+/backend
+/api
+/services
+/models
+/middlewares
+/database
+/config
+
+* Move EVERY file to correct place
+* Delete duplicates and unused files
+* Merge fragmented logic
+
+---
+
+### Naming & Standards
+
+* Fix ALL naming (files, variables, functions)
+* Use consistent naming convention:
+
+  * camelCase (JS/TS variables)
+  * PascalCase (components)
+* Rename unclear or messy identifiers
+
+---
+
+### Code Refactoring
+
+* Break large files into smaller reusable units
+* Remove repeated logic
+* Create reusable services and helpers
+* Improve readability and maintainability
+
+---
+
+## 🧪 PHASE 3: FULL SYSTEM TESTING
+
+Simulate REAL user behavior:
+
+### Test Flow:
+
+1. Landing page
+2. Signup / Login / Auth
+3. Dashboard
+4. CRM (companies, deals, users)
+5. Inventory system
+6. Admin panel:
+
+   * Plans & pricing (dynamic)
+   * Companies management
+   * Enable/disable modules
+7. API calls & database interactions
+
+### You MUST:
+
+* Detect ALL bugs
+* Fix them immediately
+* Ensure no broken flow exists
+* Ensure data loads correctly everywhere
+
+---
+
+## ⚙️ PHASE 4: FUNCTIONALITY FIXES
+
+* Fix:
+
+  * Companies not loading
+  * Admin plans not loading
+* Ensure:
+
+  * Fully dynamic SaaS plans
+  * Proper multi-tenant handling
+  * Clean database relations
+
+---
+
+## 🧱 PHASE 5: ARCHITECTURE IMPROVEMENT
+
+* Enforce modular architecture
+* Separate concerns properly:
+
+  * UI / Logic / Data
+* Ensure scalability for:
+
+  * Multi-tenant SaaS
+  * Global deployment
+
+---
+
+## 🔐 PHASE 6: SECURITY & PERFORMANCE
+
+* Validate:
+
+  * Auth security
+  * API protection
+  * Role-based access (Admin, Super Admin)
+* Optimize:
+
+  * Load speed
+  * API efficiency
+  * DB queries
+
+---
+
+## 📦 PHASE 7: FINAL OUTPUT
+
+You MUST deliver:
+
+1. Clean folder structure
+2. Refactored code (no duplicates)
+3. Fully working system
+4. Bug-free flows
+5. Summary report including:
+
+   * What was fixed
+   * What was removed
+   * What was improved
+
+---
+
+## 🚫 STRICT RULES
+
+* DO NOT leave:
+
+  * Unused files
+  * Duplicate code
+  * Broken logic
+* DO NOT keep anything “just in case”
+* EVERYTHING must be in the RIGHT place
+* If something is unclear → FIX IT properly
+
+---
+
+## ✅ FINAL GOAL
+
+A PERFECT, CLEAN, PROFESSIONAL SaaS ERP SYSTEM
+that works end-to-end without errors and is ready to scale.
+
+Execute this task completely without skipping any step.

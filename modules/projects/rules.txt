@@ -1,0 +1,203 @@
+================================================================
+MODULE RULES — PROJECTS
+================================================================
+Key:          projects
+Plan:         enterprise (minimum)
+Icon:         Package  (lucide-react)
+Phase:        10
+================================================================
+
+
+INSTALLATION CONTRACT
+---------------------
+The module engine checks these before activating:
+
+1. manifest.ts exports `projectsManifest` typed as ModuleManifest
+2. requiredPlan = "enterprise"  (engine rejects install if org.plan < enterprise)
+3. All route paths start with /dashboard/projects/
+4. All permission keys use format  projects:{resource}:{action}
+5. dependencies = []  (Projects has no required module dependencies)
+6. migrations/ folder exists with at least one SQL file
+7. backend/index.ts exports an Express Router as default
+8. frontend/ contains at least the root page for /dashboard/projects
+
+
+REQUIRED FOLDER STRUCTURE
+--------------------------
+modules/projects/
+  manifest.ts          ← already exists — do not rename
+  package.json         ← already exists
+  rules.txt            ← this file
+  backend/
+    index.ts           ← Express Router (default export)
+    routes/
+      projects.ts
+      tasks.ts
+      milestones.ts
+    services/
+      projects.service.ts
+      tasks.service.ts
+      milestones.service.ts
+    types/
+      projects.types.ts
+  frontend/
+    pages/
+      index.tsx          ← /dashboard/projects
+      tasks/
+        page.tsx         ← /dashboard/projects/tasks
+      milestones/
+        page.tsx         ← /dashboard/projects/milestones
+    components/
+      ProjectCard.tsx
+      TaskBoard.tsx
+      TaskCard.tsx
+      MilestoneTimeline.tsx
+      ProgressBar.tsx
+  migrations/
+    001_projects_initial.sql
+
+
+MANIFEST RULES
+--------------
+- key must be exactly: "projects"
+- version: start "1.0.0"
+- routes array must match every page in frontend/pages/
+- permissions must cover all exposed operations
+- projects:tasks:write allows members (team collaboration feature)
+- projects:write — owner and admin only (create/delete projects)
+
+
+BACKEND RULES
+-------------
+- All routes protected by requireAuth — never skip
+- Use tenant DB — never write project data to shared DB
+- Logic in services/, not route handlers
+- Return consistent JSON:  { data, error, message }
+- HTTP status codes: 200, 201, 400, 401, 403, 404, 500
+- TypeScript strict — no "any"
+- Max 300 lines per file
+
+Entities and their API endpoints:
+
+  Projects
+    GET    /api/projects                  → list projects (filter by status)
+    POST   /api/projects                  → create project
+    GET    /api/projects/:id              → get project with task summary and milestones
+    PATCH  /api/projects/:id              → update project (name, description, status)
+    DELETE /api/projects/:id              → archive project (set status = archived)
+    Fields: id, name, description, status, ownerId, startDate, dueDate?, createdAt
+    Status enum: active | on_hold | completed | archived
+
+  Tasks
+    GET    /api/projects/tasks            → list tasks (filter by project, assignee, status)
+    POST   /api/projects/tasks            → create task
+    GET    /api/projects/tasks/:id        → get task with comments
+    PATCH  /api/projects/tasks/:id        → update task (title, status, assignee, priority)
+    DELETE /api/projects/tasks/:id        → delete task
+    Fields: id, projectId, title, description, status, priority, assigneeId?,
+            dueDate?, completedAt?, createdAt
+    Status enum: todo | in_progress | review | done
+    Priority enum: low | medium | high | urgent
+
+  Milestones
+    GET    /api/projects/:id/milestones   → list milestones for a project
+    POST   /api/projects/:id/milestones   → create milestone
+    PATCH  /api/projects/milestones/:id   → update milestone (title, dueDate, completed)
+    DELETE /api/projects/milestones/:id   → delete milestone
+    Fields: id, projectId, title, dueDate, completed, completedAt?
+
+  Business rules:
+    - Task completion sets completedAt timestamp automatically (server-side)
+    - Project completion = all milestones completed (can also be manually set)
+    - Tasks without a project are not allowed (projectId required)
+    - Deleting a project does NOT delete tasks — set tasks.projectId = null or archive them
+
+
+FRONTEND RULES
+--------------
+Follow style.txt for all UI. Projects-specific rules:
+
+- Dashboard page (/dashboard/projects):
+    Cards: active projects, total tasks, tasks due this week, completed this month
+    Project list with progress bars (% tasks done)
+
+- Tasks page (/dashboard/projects/tasks):
+    Kanban board — columns: To Do | In Progress | Review | Done
+    Drag-and-drop cards between columns (PATCH status on drop)
+    Task card shows: title, priority badge, assignee avatar, due date
+    Filter bar: by project, assignee, priority
+
+- Milestones page (/dashboard/projects/milestones):
+    Timeline view (horizontal) — milestones grouped by project
+    Completed milestones shown with checkmark
+    Overdue milestones highlighted in red
+    "Add Milestone" inline per project
+
+- Priority badge colors (accent palette from style.txt):
+    low → gray, medium → blue, high → amber, urgent → rose
+
+Platform quirks (MUST follow):
+- NO asChild on <Button> — use buttonVariants() + <Link>
+- useSearchParams() must be inside <Suspense>-wrapped child component
+- "use client" on any file using hooks
+- No inline styles, no hardcoded colors
+- Max 300 lines per file
+
+
+DATABASE MIGRATION (migrations/001_projects_initial.sql)
+--------------------------------------------------------
+Runs inside TENANT database only.
+
+Tables:
+  proj_projects    (id, name, description TEXT, status, owner_id, start_date DATE,
+                    due_date DATE, created_at, updated_at)
+                   status CHECK IN ('active','on_hold','completed','archived')
+  proj_tasks       (id, project_id REFERENCES proj_projects, title, description TEXT,
+                    status, priority, assignee_id, due_date DATE, completed_at TIMESTAMPTZ,
+                    created_at, updated_at)
+                   status CHECK IN ('todo','in_progress','review','done')
+                   priority CHECK IN ('low','medium','high','urgent')
+  proj_milestones  (id, project_id REFERENCES proj_projects, title, due_date DATE,
+                    completed BOOLEAN DEFAULT false, completed_at TIMESTAMPTZ,
+                    created_at, updated_at)
+
+Rules:
+- id: TEXT PRIMARY KEY DEFAULT gen_random_uuid()
+- Timestamps: TIMESTAMPTZ DEFAULT NOW()
+- proj_tasks and proj_milestones: CASCADE on proj_projects delete is optional
+  (prefer SET NULL to preserve task history after project archive)
+- No org_id column
+- Migration idempotent: CREATE TABLE IF NOT EXISTS
+
+
+INSTALLATION FLOW
+-----------------
+1. Engine validates requiredPlan = "enterprise" against org.plan
+2. Engine checks InstalledModule — rejects if already active
+3. Engine runs 001_projects_initial.sql on tenant DB
+4. InstalledModule saved { orgId, moduleKey: "projects", isActive: true }
+5. Routes registered under /api/projects/*
+6. Sidebar updated from manifest.routes
+
+Uninstall:
+- isActive = false (data preserved)
+- Routes deregistered
+
+
+CODE QUALITY CHECKLIST
+----------------------
+  ✔ No TypeScript "any"
+  ✔ No console.log
+  ✔ Max 300 lines per file
+  ✔ One React component per file
+  ✔ All routes protected by requireAuth
+  ✔ Task completedAt set server-side (not from client)
+  ✔ Members can write tasks but not delete/archive projects
+  ✔ Kanban drag-and-drop updates status via PATCH (optimistic UI ok)
+  ✔ Mobile layout works at 375px
+  ✔ Migration is idempotent
+  ✔ manifest.ts key = "projects" (exact match)
+
+================================================================
+END
+================================================================

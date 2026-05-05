@@ -1,0 +1,186 @@
+================================================================
+MODULE RULES — CRM
+================================================================
+Key:          crm
+Plan:         starter (minimum)
+Icon:         Users  (lucide-react)
+Phase:        5
+================================================================
+
+
+INSTALLATION CONTRACT
+---------------------
+The module engine checks these before activating:
+
+1. manifest.ts exports `crmManifest` typed as ModuleManifest
+2. requiredPlan = "starter"  (engine rejects install if org.plan < starter)
+3. All route paths start with /dashboard/crm/
+4. All permission keys use format  crm:{resource}:{action}
+5. dependencies = []  (CRM has no module dependencies)
+6. migrations/ folder exists (even if empty on first version)
+7. backend/index.ts exports an Express Router as default
+8. frontend/ contains at least the root page for /dashboard/crm
+
+
+REQUIRED FOLDER STRUCTURE
+--------------------------
+modules/crm/
+  manifest.ts          ← already exists — do not rename
+  package.json         ← already exists
+  rules.txt            ← this file
+  backend/
+    index.ts           ← Express Router (default export)
+    routes/
+      leads.ts
+      deals.ts
+      customers.ts
+    services/
+      leads.service.ts
+      deals.service.ts
+      customers.service.ts
+    types/
+      crm.types.ts
+  frontend/
+    pages/
+      index.tsx          ← /dashboard/crm
+      leads/
+        page.tsx         ← /dashboard/crm/leads
+      deals/
+        page.tsx         ← /dashboard/crm/deals
+      customers/
+        page.tsx         ← /dashboard/crm/customers
+    components/
+      LeadCard.tsx
+      DealKanban.tsx
+      CustomerTable.tsx
+  migrations/
+    001_crm_initial.sql
+
+
+MANIFEST RULES
+--------------
+- key must be exactly: "crm"
+- version: follow semver (start "1.0.0", bump minor for features, patch for fixes)
+- routes array must match every page created in frontend/pages/
+- permissions array must cover every DB action exposed by backend routes
+- roles array in each permission must be one of: ["owner", "admin", "member"]
+- Never add a permission key that is not enforced in the backend middleware
+
+
+BACKEND RULES
+-------------
+- All routes are protected — never skip requireAuth middleware
+- Use the tenant DB connection (from Phase 3 middleware) — never use the shared DB for module data
+- Controller logic goes in services/, not directly in route handlers
+- Return consistent JSON shape:  { data, error, message }
+- HTTP status codes:
+    200 OK, 201 Created, 400 Bad Request, 401 Unauthorized,
+    403 Forbidden, 404 Not Found, 500 Internal Server Error
+- TypeScript strict — no "any" types
+- Max 300 lines per file
+
+Entities and their API endpoints:
+
+  Leads
+    GET    /api/crm/leads           → list leads (paginated)
+    POST   /api/crm/leads           → create lead
+    GET    /api/crm/leads/:id       → get lead
+    PATCH  /api/crm/leads/:id       → update lead
+    DELETE /api/crm/leads/:id       → delete lead
+    Fields: id, orgId, name, email, phone, status, source, assignedTo, createdAt
+
+  Deals
+    GET    /api/crm/deals           → list deals
+    POST   /api/crm/deals           → create deal
+    PATCH  /api/crm/deals/:id       → update deal (incl. stage change)
+    DELETE /api/crm/deals/:id       → delete deal
+    Fields: id, orgId, title, value, stage, leadId?, customerId?, closedAt?
+
+    Stages (enum): lead → qualified → proposal → negotiation → won | lost
+
+  Customers
+    GET    /api/crm/customers       → list customers
+    POST   /api/crm/customers       → create customer
+    GET    /api/crm/customers/:id   → get customer + linked deals
+    PATCH  /api/crm/customers/:id   → update customer
+    Fields: id, orgId, name, email, phone, company?, address?
+
+
+FRONTEND RULES
+--------------
+Follow style.txt for all UI. Additional CRM-specific rules:
+
+- Dashboard page (/dashboard/crm):
+    Summary cards: total leads, open deals, total customers, deals value
+    Recent activity feed
+
+- Leads page (/dashboard/crm/leads):
+    Table view with status badge, pagination, search by name/email
+    "New Lead" button opens modal or side panel
+
+- Deals page (/dashboard/crm/deals):
+    Kanban board — columns match the Stages enum
+    Drag-and-drop between stages (update stage via PATCH)
+    Each card shows: title, value, assignee avatar
+
+- Customers page (/dashboard/crm/customers):
+    Table with company column, linked deals count
+    Click row → detail view with deal history
+
+Platform quirks (MUST follow):
+- shadcn/ui uses @base-ui — NO asChild prop on <Button>
+    WRONG:  <Button asChild><Link href="...">...</Link></Button>
+    RIGHT:  <Link href="..." className={buttonVariants({ variant: "default" })}>...</Link>
+- useSearchParams() requires <Suspense> wrapper — extract into child component
+- Pages using useAuth() must be "use client"
+- Tailwind only — no inline styles, no hardcoded colors
+- Max 300 lines per file — split into components if exceeded
+
+
+DATABASE MIGRATION (migrations/001_crm_initial.sql)
+----------------------------------------------------
+Runs inside the TENANT database (org-specific DB), not the shared DB.
+
+Tables to create:
+  crm_leads       (id, name, email, phone, status, source, assigned_to, created_at, updated_at)
+  crm_deals       (id, title, value, stage, lead_id, customer_id, closed_at, created_at, updated_at)
+  crm_customers   (id, name, email, phone, company, address, created_at, updated_at)
+
+Rules:
+- id column: TEXT PRIMARY KEY DEFAULT gen_random_uuid()
+- All timestamps: TIMESTAMPTZ DEFAULT NOW()
+- Foreign keys between crm tables must CASCADE on delete
+- No org_id column in tenant tables (tenant DB is already org-scoped)
+- Migration file must be idempotent: use CREATE TABLE IF NOT EXISTS
+
+
+INSTALLATION FLOW (engine calls these in order)
+------------------------------------------------
+1. Engine reads manifest.ts → validates requiredPlan against org.plan
+2. Engine checks InstalledModule table — rejects if already installed
+3. Engine calls migrations/001_crm_initial.sql on the tenant DB
+4. Engine saves InstalledModule { orgId, moduleKey: "crm", isActive: true }
+5. Engine registers backend routes under /api/crm/*
+6. Engine exposes frontend routes from manifest.routes to sidebar
+
+Uninstall reversal:
+- Sets InstalledModule.isActive = false (does NOT drop tables — data preserved)
+- Routes deregistered immediately
+
+
+CODE QUALITY CHECKLIST (before marking phase complete)
+------------------------------------------------------
+  ✔ No TypeScript "any"
+  ✔ No console.log
+  ✔ Max 300 lines per file
+  ✔ One React component per file
+  ✔ No unused imports
+  ✔ All API routes protected by requireAuth
+  ✔ Permission keys enforced in middleware (not just declared in manifest)
+  ✔ Mobile layout works at 375px (no overflow, full-width buttons)
+  ✔ Migration is idempotent (CREATE TABLE IF NOT EXISTS)
+  ✔ manifest.ts key = "crm" (exact match)
+
+================================================================
+END
+================================================================

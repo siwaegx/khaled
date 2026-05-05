@@ -1,0 +1,11 @@
+{
+  "key": "inventory",
+  "name": "Inventory",
+  "version": "1.0.0",
+  "description": "Track products, stock levels, warehouses, and purchase orders",
+  "icon": "Package",
+  "routes": ["/dashboard/inventory"],
+  "permissions": ["view_products", "edit_products", "view_stock", "manage_warehouses", "view_purchase_orders", "edit_purchase_orders"],
+  "dependencies": [],
+  "planRequired": "growth"
+}

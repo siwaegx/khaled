@@ -1,0 +1,214 @@
+================================================================
+MODULE RULES — REPORTS
+================================================================
+Key:          reports
+Plan:         enterprise (minimum)
+Icon:         BarChart3  (lucide-react)
+Phase:        8 / 11 (core in Phase 8, AI layer in Phase 11)
+================================================================
+
+
+INSTALLATION CONTRACT
+---------------------
+The module engine checks these before activating:
+
+1. manifest.ts exports `reportsManifest` typed as ModuleManifest
+2. requiredPlan = "enterprise"  (engine rejects install if org.plan < enterprise)
+3. All route paths start with /dashboard/reports/
+4. All permission keys use format  reports:{resource}:{action}
+5. dependencies = []  (Reports queries other modules directly — no hard dependency)
+   NOTE: Individual report sections must gracefully handle missing modules
+         (e.g. if CRM is not installed, CRM chart returns empty, not an error)
+6. migrations/ folder exists (Reports may not need its own tables — see below)
+7. backend/index.ts exports an Express Router as default
+8. frontend/ contains at least the root page for /dashboard/reports
+
+
+REQUIRED FOLDER STRUCTURE
+--------------------------
+modules/reports/
+  manifest.ts          ← already exists — do not rename
+  package.json         ← already exists
+  rules.txt            ← this file
+  backend/
+    index.ts           ← Express Router (default export)
+    routes/
+      kpis.ts
+      exports.ts
+    services/
+      kpis.service.ts
+      exports.service.ts
+      aggregators/
+        crm.aggregator.ts
+        inventory.aggregator.ts
+        accounting.aggregator.ts
+        hr.aggregator.ts
+    types/
+      reports.types.ts
+  frontend/
+    pages/
+      index.tsx          ← /dashboard/reports
+      kpis/
+        page.tsx         ← /dashboard/reports/kpis
+      exports/
+        page.tsx         ← /dashboard/reports/exports
+    components/
+      KpiCard.tsx
+      RevenueChart.tsx
+      ModuleMetricSection.tsx
+      ExportButton.tsx
+      DateRangePicker.tsx
+  migrations/
+    001_reports_initial.sql   (saved report configs only — see below)
+
+
+MANIFEST RULES
+--------------
+- key must be exactly: "reports"
+- version: start "1.0.0"
+- routes array must match every page in frontend/pages/
+- reports:read and reports:export — owner and admin only (no member access)
+- Never grant member role access to financial or cross-module data
+
+
+BACKEND RULES
+-------------
+- All routes protected by requireAuth — never skip
+- All report routes check permission: reports:read or reports:export
+- Aggregators query the TENANT DB for cross-module data
+- Each aggregator must check if the source module's tables exist before querying
+  (use information_schema.tables — graceful fallback to empty if table missing)
+- Return consistent JSON:  { data, error, message }
+- HTTP status codes: 200, 400, 401, 403, 404, 500
+- TypeScript strict — no "any"
+- Max 300 lines per file
+
+API endpoints:
+
+  KPIs
+    GET  /api/reports/kpis/summary          → cross-module summary (revenue, leads, employees, etc.)
+    GET  /api/reports/kpis/crm              → CRM metrics (leads by status, deal pipeline value)
+    GET  /api/reports/kpis/inventory        → Inventory metrics (stock value, low-stock count)
+    GET  /api/reports/kpis/accounting       → Accounting metrics (revenue, expenses, profit by month)
+    GET  /api/reports/kpis/hr               → HR metrics (headcount, leave requests, dept breakdown)
+    Query params: ?from=YYYY-MM-DD&to=YYYY-MM-DD  (all endpoints support date range)
+
+  Exports
+    POST /api/reports/exports/csv           → generate CSV for a given dataset
+    POST /api/reports/exports/pdf           → generate PDF report (Phase 11 — placeholder ok for now)
+    Body: { reportType: "crm_leads" | "accounting_invoices" | "hr_employees" | ... }
+
+  Saved Reports (optional — Phase 11)
+    GET  /api/reports/saved                 → list saved report configs
+    POST /api/reports/saved                 → save a report config
+    DELETE /api/reports/saved/:id           → delete saved config
+
+  Business rules:
+    - Each aggregator is independent — failure in one does not crash others
+    - All monetary values returned in cents or with 2 decimal precision (consistent format)
+    - Date range defaults: last 30 days if no params provided
+    - CSV export must be streamed for large datasets (use res.setHeader + pipe)
+
+
+FRONTEND RULES
+--------------
+Follow style.txt for all UI. Reports-specific rules:
+
+- Dashboard page (/dashboard/reports):
+    Cross-module summary strip: revenue (accounting), open leads (CRM),
+    low-stock products (inventory), employees (HR)
+    Each metric card shows: value, label, trend arrow vs previous period
+    Sections only render if the corresponding module is installed
+    (check installedModules from useAuth context)
+
+- KPIs page (/dashboard/reports/kpis):
+    Tabbed sections: Overview | CRM | Inventory | Accounting | HR
+    Each tab shows charts relevant to that module
+    Date range picker at top (affects all charts on page)
+    Charts: use recharts or a similar lightweight library
+    Empty state if module not installed: "Install [Module] to view this report"
+
+- Exports page (/dashboard/reports/exports):
+    List of available exports with description
+    "Export CSV" button per report type
+    Download triggers immediately (no waiting page)
+    Disabled state with tooltip if source module not installed
+
+- Chart color palette — use accent colors from style.txt:
+    CRM → blue, Inventory → emerald, Accounting → violet, HR → orange
+
+Platform quirks (MUST follow):
+- NO asChild on <Button> — use buttonVariants() + <Link>
+- useSearchParams() must be inside <Suspense>-wrapped child component
+- "use client" on any file using hooks
+- No inline styles, no hardcoded colors
+- Max 300 lines per file
+
+
+DATABASE MIGRATION (migrations/001_reports_initial.sql)
+-------------------------------------------------------
+Reports primarily reads from other modules' tables — it does NOT duplicate data.
+
+Only create a table if saving report configurations:
+
+  rep_saved_configs  (id, name, report_type, filters JSONB, created_by, created_at)
+
+If saved configs are not in scope for the current phase, migration file can contain
+only a comment — but the file MUST exist so the engine does not error on install.
+
+Rules:
+- id: TEXT PRIMARY KEY DEFAULT gen_random_uuid()
+- No org_id column (tenant DB)
+- Migration idempotent: CREATE TABLE IF NOT EXISTS
+- JSONB column for filters: flexible, no schema migrations needed as filter shapes evolve
+
+
+INSTALLATION FLOW
+-----------------
+1. Engine validates requiredPlan = "enterprise" against org.plan
+2. Engine checks InstalledModule — rejects if already active
+3. Engine runs 001_reports_initial.sql on tenant DB
+4. InstalledModule saved { orgId, moduleKey: "reports", isActive: true }
+5. Routes registered under /api/reports/*
+6. Sidebar updated from manifest.routes
+
+Uninstall:
+- isActive = false
+- Routes deregistered
+- Saved configs can be preserved (isActive=false is enough)
+
+
+GRACEFUL DEGRADATION (critical for Reports)
+-------------------------------------------
+Reports is the only module that depends on data from other modules.
+It must NOT crash or error if a source module is uninstalled.
+
+Pattern for each aggregator:
+1. Check if source table exists:
+   SELECT EXISTS (
+     SELECT 1 FROM information_schema.tables
+     WHERE table_schema = 'public' AND table_name = 'crm_leads'
+   )
+2. If table does not exist → return { available: false, data: null }
+3. Frontend checks available flag and shows "module not installed" empty state
+
+
+CODE QUALITY CHECKLIST
+----------------------
+  ✔ No TypeScript "any"
+  ✔ No console.log
+  ✔ Max 300 lines per file
+  ✔ One React component per file
+  ✔ All routes protected by requireAuth
+  ✔ All report routes check reports:read permission
+  ✔ Each aggregator handles missing tables gracefully
+  ✔ Frontend shows empty state when module not installed (not an error)
+  ✔ Date range defaults applied server-side (not assumed from client)
+  ✔ CSV export streams (does not buffer entire dataset in memory)
+  ✔ Mobile layout works at 375px
+  ✔ Migration file exists (even if minimal)
+  ✔ manifest.ts key = "reports" (exact match)
+
+================================================================
+END
+================================================================

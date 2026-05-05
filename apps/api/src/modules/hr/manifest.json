@@ -1,0 +1,11 @@
+{
+  "key": "hr",
+  "name": "HR",
+  "version": "1.0.0",
+  "description": "Employee records, leave management, payroll, and org chart",
+  "icon": "Briefcase",
+  "routes": ["/dashboard/hr"],
+  "permissions": ["view_employees", "edit_employees", "manage_leave", "view_payroll", "manage_payroll"],
+  "dependencies": [],
+  "planRequired": "pro"
+}

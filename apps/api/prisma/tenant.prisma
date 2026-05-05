@@ -1,0 +1,393 @@
+// Business360 — Tenant schema
+// Each organization gets its own isolated database running this schema.
+
+generator tenantClient {
+  provider = "prisma-client-js"
+  output   = "../src/generated/tenant"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("TENANT_DATABASE_URL")
+}
+
+// ─── Tenant meta (bootstrapping anchor) ──────────────────────────────────────
+
+model TenantMeta {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("_tenant_meta")
+}
+
+// ─── Activity log (shared across all modules) ────────────────────────────────
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@map("activity_logs")
+}
+
+// ─── CRM ─────────────────────────────────────────────────────────────────────
+
+enum LeadStatus {
+  new
+  contacted
+  qualified
+  converted
+  lost
+}
+
+enum DealStatus {
+  prospect
+  qualified
+  proposal
+  negotiation
+  won
+  lost
+}
+
+model Lead {
+  id         String     @id @default(cuid())
+  name       String
+  email      String?
+  phone      String?
+  company    String?
+  status     LeadStatus @default(new)
+  source     String?
+  notes      String?
+  assignedTo String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([status])
+  @@map("crm_leads")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deals     Deal[]
+
+  @@map("crm_customers")
+}
+
+model Deal {
+  id         String     @id @default(cuid())
+  title      String
+  value      Float?
+  currency   String     @default("USD")
+  status     DealStatus @default(prospect)
+  customerId String?
+  assignedTo String?
+  closeDate  DateTime?
+  notes      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  customer   Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@map("crm_deals")
+}
+
+// ─── Inventory ───────────────────────────────────────────────────────────────
+
+enum ProductStatus {
+  active
+  inactive
+  discontinued
+}
+
+enum PurchaseOrderStatus {
+  draft
+  ordered
+  partial
+  received
+  cancelled
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  sku         String        @unique
+  description String?
+  category    String?
+  unitPrice   Float?
+  costPrice   Float?
+  unit        String        @default("unit")
+  status      ProductStatus @default(active)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  stockLevels        StockLevel[]
+  purchaseOrderItems PurchaseOrderItem[]
+
+  @@index([status])
+  @@map("inv_products")
+}
+
+model Warehouse {
+  id          String       @id @default(cuid())
+  name        String
+  location    String?
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  stockLevels StockLevel[]
+
+  @@map("inv_warehouses")
+}
+
+model StockLevel {
+  id          String    @id @default(cuid())
+  productId   String
+  warehouseId String
+  quantity    Float     @default(0)
+  minQuantity Float     @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, warehouseId])
+  @@map("inv_stock_levels")
+}
+
+model PurchaseOrder {
+  id           String              @id @default(cuid())
+  supplierName String
+  status       PurchaseOrderStatus @default(draft)
+  totalAmount  Float?
+  notes        String?
+  orderDate    DateTime?
+  expectedDate DateTime?
+  receivedDate DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  items        PurchaseOrderItem[]
+
+  @@index([status])
+  @@map("inv_purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  productId       String?
+  productName     String
+  quantity        Float
+  unitCost        Float
+  totalCost       Float
+  createdAt       DateTime      @default(now())
+
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product         Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("inv_purchase_order_items")
+}
+
+// ─── Accounting ───────────────────────────────────────────────────────────────
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  overdue
+  cancelled
+}
+
+model Invoice {
+  id           String        @id @default(cuid())
+  number       String        @unique
+  customerName String
+  customerId   String?
+  status       InvoiceStatus @default(draft)
+  subtotal     Float         @default(0)
+  tax          Float         @default(0)
+  total        Float         @default(0)
+  notes        String?
+  issueDate    DateTime      @default(now())
+  dueDate      DateTime?
+  paidDate     DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  items        InvoiceItem[]
+
+  @@index([status])
+  @@map("acc_invoices")
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Float    @default(1)
+  unitPrice   Float
+  amount      Float
+  createdAt   DateTime @default(now())
+
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("acc_invoice_items")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  category    String
+  description String
+  amount      Float
+  currency    String   @default("USD")
+  date        DateTime @default(now())
+  reference   String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@map("acc_expenses")
+}
+
+// ─── HR ──────────────────────────────────────────────────────────────────────
+
+enum EmployeeStatus {
+  active
+  inactive
+  terminated
+}
+
+enum LeaveType {
+  annual
+  sick
+  unpaid
+  maternity
+  paternity
+  other
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+model Employee {
+  id              String         @id @default(cuid())
+  name            String
+  email           String?
+  phone           String?
+  position        String?
+  department      String?
+  salary          Float?
+  status          EmployeeStatus @default(active)
+  hireDate        DateTime?
+  terminationDate DateTime?
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  leaveRequests   LeaveRequest[]
+
+  @@index([status, department])
+  @@map("hr_employees")
+}
+
+model LeaveRequest {
+  id         String      @id @default(cuid())
+  employeeId String
+  type       LeaveType   @default(annual)
+  status     LeaveStatus @default(pending)
+  startDate  DateTime
+  endDate    DateTime
+  days       Float
+  reason     String?
+  notes      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  employee   Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("hr_leave_requests")
+}
+
+// ─── Projects ────────────────────────────────────────────────────────────────
+
+enum ProjectStatus {
+  planning
+  active
+  on_hold
+  completed
+  cancelled
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  review
+  done
+  cancelled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(planning)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tasks       Task[]
+
+  @@index([status])
+  @@map("proj_projects")
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  projectId   String?
+  title       String
+  description String?
+  status      TaskStatus   @default(todo)
+  priority    TaskPriority @default(medium)
+  assignedTo  String?
+  dueDate     DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([status, priority])
+  @@map("proj_tasks")
+}

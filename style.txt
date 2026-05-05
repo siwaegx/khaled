@@ -1,0 +1,293 @@
+================================================================
+BUSINESS 360 — FRONTEND STYLE SYSTEM  (v2)
+================================================================
+
+
+DESIGN PRINCIPLES
+-----------------
+1. Clean > Complex
+2. Space > Clutter
+3. Consistency > Creativity
+4. Function > Decoration
+5. Mobile-first always
+
+
+================================================================
+BRAND IDENTITY
+================================================================
+
+Logo
+  - Icon: rounded square with gradient background + Zap icon (white)
+  - Wordmark: "Business" in foreground + "360" in gradient text
+  - Use: nav, footer, auth pages, onboarding
+
+Primary Color
+  - oklch(0.50 0.26 264)  — rich indigo-blue
+  - Gradient: from primary (#4F46E5 range) → violet (#7C3AED range)
+  - CSS: var(--gradient-from) → var(--gradient-to)
+
+Accent Colors (module icons only)
+  - Blue     bg-blue-50 / text-blue-600      CRM
+  - Emerald  bg-emerald-50 / text-emerald-600  Inventory
+  - Violet   bg-violet-50 / text-violet-600    Accounting
+  - Orange   bg-orange-50 / text-orange-500    HR
+  - Rose     bg-rose-50 / text-rose-500        Projects
+  - Amber    bg-amber-50 / text-amber-500      Reports / AI
+
+
+================================================================
+COLOR TOKENS
+================================================================
+
+Light mode (default)
+  --background        white
+  --foreground        near-black (oklch 0.13)
+  --primary           indigo-blue (oklch 0.50 0.26 264)
+  --muted             light gray (oklch 0.968)
+  --muted-foreground  medium gray (oklch 0.50)
+  --border            soft gray (oklch 0.918)
+  --card              white
+
+Dark mode
+  --background        dark indigo-tinted (oklch 0.12 0.01 264)
+  --foreground        near-white (oklch 0.97)
+  --primary           lighter indigo (oklch 0.65 0.22 264)
+  --muted             dark indigo (oklch 0.22)
+  --card              slightly lighter dark (oklch 0.17)
+
+
+================================================================
+TYPOGRAPHY
+================================================================
+
+Font: Geist Sans (variable font via next/font/google)
+Mono: Geist Mono (code only)
+
+Scale
+  Hero H1      5xl–7xl  font-extrabold  tracking-tight  leading-[1.1]
+  Section H2   3xl–5xl  font-extrabold  tracking-tight
+  Card H3      base–lg  font-semibold
+  Body         sm–lg    font-normal     leading-relaxed
+  Label/Meta   xs–sm    font-medium
+
+Rules
+  - Never below 14px body text
+  - Headings always font-extrabold on marketing pages
+  - Tight tracking (-0.025em) on all headings
+
+Gradient text
+  - Class: text-gradient
+  - Use on: logo "360", hero keywords, step numbers, section accents
+  - Never on body text
+
+
+================================================================
+LAYOUT
+================================================================
+
+Marketing pages
+  - Full-width sections, max-w-7xl content container
+  - Section padding: py-24 on desktop, py-16 on mobile
+  - Page padding: px-4 sm:px-6
+
+Dashboard (Phase 2+)
+  - Sidebar (left, 240px) + Topbar (64px) + Main content
+  - Mobile: no sidebar, hamburger → slide-in, topbar always visible
+
+Breakpoints (Tailwind defaults)
+  sm   640px
+  md   768px
+  lg   1024px
+  xl   1280px
+
+
+================================================================
+SPACING
+================================================================
+
+Section vertical   py-24 (desktop) / py-16 (mobile)
+Section horizontal px-4 sm:px-6
+Card padding       p-6
+Component gap      gap-5 / gap-6
+Button height      h-9 (default) / h-12 (hero CTAs)
+Touch target       min h-9 (36px), recommended h-11 (44px)
+
+Scale: 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48
+
+
+================================================================
+COMPONENTS
+================================================================
+
+Buttons
+  Primary (hero)   bg-gradient-brand  rounded-xl  h-12  font-semibold
+  Primary (normal) bg-primary  (shadcn default variant)
+  Secondary        variant="outline"
+  Ghost            variant="ghost"
+  — Full width on mobile (w-full justify-center)
+  — Min touch target: h-9 (36px)
+  — Icon buttons: icon-* size variants
+
+Cards
+  - rounded-2xl  border border-border/70  bg-card  p-6
+  - Hover: card-hover class (translate-y + shadow-lg)
+  - Stack on mobile, grid on desktop
+
+Feature cards
+  - Colored icon container (12x12 rounded-xl, bg-{color}-50)
+  - Title font-semibold, description text-sm text-muted-foreground
+
+Module cards
+  - Icon + text horizontal layout
+  - Plan badge: text-xs border rounded-full px-2
+
+Navigation (marketing)
+  - Sticky, backdrop-blur-md, bg-background/80
+  - Logo: gradient icon + text gradient on "360"
+  - Links: px-3 py-2 rounded-md hover:bg-muted/60
+  - CTA button: bg-gradient-brand (not shadcn Button)
+
+Forms
+  - Always vertical stack
+  - One input per row on mobile
+  - Label + Input + error message pattern
+
+Badges (section labels)
+  - variant="secondary"  bg-primary/8  text-primary  border-primary/15
+  - Use above section H2 headings
+
+Hero badge
+  - Rounded-full pill: border-primary/20 bg-primary/5 text-primary
+  - Animated pulse dot inside
+
+
+================================================================
+SECTION PATTERNS
+================================================================
+
+Marketing page section order
+  1. Hero          — gradient blobs bg, large headline, 2 CTAs
+  2. Stats bar     — dark (bg-foreground) background, 3 metrics
+  3. Features      — white bg, 6-card grid, colored icons
+  4. How it works  — muted bg, 3 numbered steps
+  5. Modules       — white bg, 6-card grid, icon + text
+  6. Dark CTA      — bg-foreground, gradient button
+  7. Benefits row  — border-t, 6 checkmark items
+
+Hero background
+  - bg-hero-pattern (3 radial gradient blobs via CSS)
+  - Additional blur blob divs for depth
+  - Never a stock photo or image
+
+Dark sections (stats bar, CTA)
+  - bg-foreground  text-background (inverted)
+  - White text, white/60 subtext
+  - Gradient CTA button
+
+
+================================================================
+ANIMATION
+================================================================
+
+Transitions
+  - transition-colors  (nav links, text)
+  - transition-opacity  (gradient buttons hover)
+  - transition-all duration-200  (card hover)
+
+Card hover
+  - .card-hover: -translate-y-1 + shadow-lg + shadow-primary/8
+  - Apply to: feature cards, module cards
+
+Pulse dot (hero badge)
+  - animate-pulse on 2x2 rounded-full dot
+
+Rules
+  - Light only — no slides, no fades, no parallax
+  - All transitions ≤ 200ms
+  - No animation on body text
+
+
+================================================================
+BACKGROUND UTILITIES (globals.css)
+================================================================
+
+.text-gradient
+  Gradient text from --gradient-from to --gradient-to
+  Use: logo, hero keywords, step numbers
+
+.bg-gradient-brand
+  Solid gradient background (buttons, logo icon)
+
+.bg-hero-pattern
+  3 radial gradient blobs (subtle, primary tinted)
+
+.card-hover
+  transition-all duration-200 hover:-translate-y-1 hover:shadow-lg
+
+
+================================================================
+GRID
+================================================================
+
+Mobile       1 column (grid-cols-1)
+Tablet       2 columns (md:grid-cols-2)
+Desktop      3–4 columns (lg:grid-cols-3 or lg:grid-cols-4)
+
+Examples
+  Features:   grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+  Modules:    grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+  Pricing:    grid-cols-1 md:grid-cols-2 lg:grid-cols-4
+  Stats:      flex-col sm:flex-row
+
+
+================================================================
+CODE RULES
+================================================================
+
+  - Tailwind responsive classes only
+  - No fixed pixel widths — use % or responsive utilities
+  - Use: w-full, max-w-*, flex-wrap
+  - No overflow issues, no horizontal scroll
+  - No hardcoded colors (use CSS vars / Tailwind tokens)
+  - No inline styles
+  - Max 300 lines per file
+  - One component per file
+
+
+================================================================
+TESTING — EVERY SCREEN
+================================================================
+
+  375px   Mobile  — stack layout, full-width buttons, no overflow
+  768px   Tablet  — 2-col grids, nav condensed
+  1280px  Desktop — full layout, sidebar, 3-4 col grids
+
+Check each: layout, buttons, navigation, forms, cards, text size
+
+
+================================================================
+NEVER
+================================================================
+
+  - No desktop-only layouts
+  - No tiny buttons (min 36px height)
+  - No broken tables or overflowing content
+  - No horizontal scroll at any breakpoint
+  - No stock photos in marketing sections
+  - No heavy JS animations
+  - No hardcoded colors or pixel values
+  - No color outside the defined accent palette
+
+
+================================================================
+FINAL RULE
+================================================================
+
+If it does not work on mobile — it is not complete.
+If it uses a hardcoded color — it is not on-brand.
+If it uses a fixed pixel width — it will break.
+
+
+================================================================
+END
+================================================================

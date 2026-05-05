@@ -1,0 +1,309 @@
+You are a senior software architect and full-stack engineer.
+
+Your task is to build a production-ready SaaS platform called:
+
+"Business360 — Modular ERP SaaS Platform"
+
+===========================================================
+PROJECT GOAL
+============
+
+Build a scalable SaaS platform where:
+
+* Each organization has its own system
+* Each organization installs only the modules it needs
+* Modules are dynamically loaded (NOT hardcoded)
+* Multi-tenant architecture (database per organization)
+* Clean, maintainable, scalable codebase
+
+This system is inspired by Odoo but must be:
+
+* Simpler
+* SaaS-first
+* Modular-first
+* AI-ready (future phase)
+
+===========================================================
+CORE ARCHITECTURE RULES (STRICT)
+================================
+
+1. NEVER duplicate code per organization
+2. Use ONE shared codebase
+3. Modules must be dynamically loaded
+4. Each organization has isolated database
+5. All modules must follow a standard structure
+6. Use clean architecture (services, controllers, models)
+7. Use TypeScript strict mode (NO "any")
+
+===========================================================
+TECH STACK
+==========
+
+Frontend:
+
+* Next.js 14 (App Router)
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+
+Backend:
+
+* Node.js (Express or Fastify)
+* TypeScript
+
+Database:
+
+* PostgreSQL
+* Prisma ORM
+
+Other:
+
+* Redis (optional)
+* JWT authentication
+* Docker-ready structure
+
+===========================================================
+PROJECT STRUCTURE
+=================
+
+business360/
+apps/
+web/              (frontend)
+api/              (backend)
+
+modules/            (ALL modules shared)
+crm/
+inventory/
+accounting/
+hr/
+
+engine/
+module_loader.ts
+module_installer.ts
+route_registry.ts
+
+packages/
+db/
+shared/
+ui/
+
+===========================================================
+PHASE 1 — LANDING PAGE + AUTH + SUBSCRIPTION
+============================================
+
+Build the following pages:
+
+1. Landing Page
+
+   * Hero section
+   * Features
+   * Pricing preview
+   * CTA: Start Free Trial
+
+2. Pricing Page
+
+   * Starter / Growth / Pro / Enterprise
+   * Clear features per plan
+
+3. Authentication
+
+   * Register
+   * Login
+   * Forgot password
+
+4. Subscription Flow
+
+   * Select plan
+   * Enter organization name
+   * Choose number of users
+   * Create organization
+
+Database tables:
+
+* organizations
+* users
+* roles
+
+===========================================================
+PHASE 2 — CORE SAAS SYSTEM
+==========================
+
+Build:
+
+* JWT authentication
+* Role-based access control
+* Organization management
+* User invitations
+* Basic dashboard shell
+
+===========================================================
+PHASE 3 — MULTI-TENANT SYSTEM
+=============================
+
+Implement:
+
+* Database per organization
+* Middleware to resolve tenant
+* Dynamic database connection switching
+
+Flow:
+User → Organization → Tenant DB
+
+===========================================================
+PHASE 4 — MODULE ENGINE (CRITICAL)
+==================================
+
+Build dynamic module system:
+
+Each module must have:
+
+/modules/crm
+manifest.json
+backend/
+frontend/
+migrations/
+
+manifest.json example:
+
+{
+"name": "crm",
+"version": "1.0.0",
+"routes": ["/crm"],
+"permissions": ["view_leads", "edit_leads"],
+"dependencies": [],
+"plan_required": "starter"
+}
+
+Build:
+
+* module_loader.ts → loads modules per org
+* module_installer.ts → install/uninstall modules
+* route_registry.ts → dynamic routes
+
+===========================================================
+PHASE 5 — FIRST MODULE (CRM)
+============================
+
+Build CRM module:
+
+Backend:
+
+* Leads
+* Deals
+* Customers
+
+Frontend:
+
+* CRM dashboard
+* Kanban pipeline
+* Customer list
+
+===========================================================
+PHASE 6 — DYNAMIC UI
+====================
+
+Frontend must:
+
+* Show menu based on installed modules
+* Load pages dynamically
+* Hide modules not installed
+
+===========================================================
+PHASE 7 — BILLING SYSTEM
+========================
+
+Build:
+
+* Subscription plans
+* Plan restrictions
+* Trial system
+* Payment integration placeholder
+
+Plans:
+
+Starter:
+
+* CRM only
+
+Growth:
+
+* CRM + Inventory
+
+Pro:
+
+* All core modules
+
+Enterprise:
+
+* All + advanced features
+
+===========================================================
+PHASE 8 — MODULE INSTALLATION FLOW
+==================================
+
+Implement:
+
+When user installs module:
+
+1. Validate plan
+2. Check dependencies
+3. Run migrations
+4. Save in database (company_modules)
+5. Activate module
+
+===========================================================
+PHASE 9 — ADD-ON SYSTEM
+=======================
+
+Build:
+
+/addons
+ai_reports/
+advanced_inventory/
+
+Each add-on:
+
+* Linked to module
+* Has version
+* Has install rules
+
+===========================================================
+PHASE 10 — CODE QUALITY RULES
+=============================
+
+* Max 300 lines per file
+* One component per file
+* No unused code
+* No console.log
+* Strict typing
+* Modular architecture
+
+===========================================================
+OUTPUT REQUIREMENTS
+===================
+
+Generate:
+
+1. Full folder structure
+2. Backend code (Express/Fastify)
+3. Frontend code (Next.js)
+4. Database schema (Prisma)
+5. Module engine implementation
+6. CRM module example
+7. Clean, production-ready code
+
+===========================================================
+IMPORTANT
+=========
+
+Build step-by-step.
+
+Start with:
+PHASE 1 → then wait for confirmation before continuing.
+
+Do NOT skip phases.
+Do NOT overcomplicate early.
+
+===========================================================
+END
+===

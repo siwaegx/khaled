@@ -1,0 +1,1192 @@
+================================================================================
+                        BUSINESS360 — PROJECT EXPLANATION
+                    A Plain-English Guide to the Entire Codebase
+================================================================================
+
+Written for: Anyone who wants to understand what this project is, how it works,
+             and where every important piece lives.
+Language:    Simple and clear — no confusing jargon.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. WHAT IS BUSINESS360?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Business360 is a SaaS (Software as a Service) platform — like Odoo or Salesforce.
+
+  "SaaS" means: multiple companies (called "organizations" or "tenants") can
+   sign up and use the software at the same time, each with their own private
+   data and settings.
+
+Think of it like an apartment building:
+  - The building = Business360
+  - Each apartment = one company's account
+  - Each apartment has its own lock (separate database)
+  - The landlord (admin) can manage all apartments
+
+Core idea:
+  A company signs up → creates an organization → installs the modules they
+  need (like CRM, Inventory, HR) → and starts using them.
+
+Current modules available:
+  - CRM         — track leads, deals, customers
+  - Inventory   — products, warehouses, stock levels, purchase orders
+  - Accounting  — invoices, invoice line items, expenses
+  - HR          — employees, leave requests
+  - Projects    — projects, tasks
+  - Reports     — cross-module analytics, monthly revenue vs expenses
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. THE BIG PICTURE — HOW THE PIECES FIT TOGETHER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                  ┌─────────────┐        ┌─────────────┐
+                  │   BROWSER   │◄──────►│  FRONTEND   │  (Next.js web app)
+                  └─────────────┘        └──────┬──────┘
+                                                │  HTTP requests
+                                         ┌──────▼──────┐
+                                         │   BACKEND   │  (Express API server)
+                                         └──────┬──────┘
+                                                │  SQL queries
+                                    ┌───────────┼───────────┐
+                                    │           │           │
+                              ┌─────▼──┐  ┌────▼───┐  ┌────▼───┐
+                              │ Main DB│  │ Org A  │  │ Org B  │
+                              │(shared)│  │   DB   │  │   DB   │
+                              └────────┘  └────────┘  └────────┘
+
+  - FRONTEND:  What users see in their browser (pages, buttons, forms)
+  - BACKEND:   The server that handles logins, saves data, enforces rules
+  - MAIN DB:   Stores users, organizations, subscriptions (shared by all)
+  - ORG DB:    Each organization gets its own private database for CRM data, etc.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. FOLDER STRUCTURE — WHERE EVERYTHING LIVES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Business360/                      ← Root of the whole project (monorepo)
+│
+├── apps/                         ← The two main applications
+│   ├── web/                      ← FRONTEND (Next.js) — the website users visit
+│   └── api/                      ← BACKEND (Express) — the server behind the scenes
+│
+├── packages/                     ← Shared code used by both apps
+│   ├── db/                       ← Database schemas and Prisma ORM setup
+│   ├── engine/                   ← Module system (how modules are loaded/registered)
+│   └── types/                    ← Shared TypeScript types (shapes of data)
+│
+└── package.json                  ← Root config that ties everything together (npm workspaces)
+
+
+"Monorepo" means: one Git repository that holds multiple projects.
+It's like one big folder that contains both the frontend and backend,
+so they can share code easily.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. TECH STACK — THE TOOLS AND LANGUAGES USED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TOOL               WHAT IT IS / WHY WE USE IT
+  ─────────────────  ────────────────────────────────────────────────────────
+  TypeScript         JavaScript with types — catches bugs before the code runs
+  Next.js 16         React framework — builds the pages users see
+  React 19           UI library — makes interactive components (buttons, forms)
+  Tailwind CSS v4    Styling tool — adds colors, spacing, layout via class names
+  shadcn/ui          Pre-built UI components (uses @base-ui, NOT Radix)
+  Node.js            Runs JavaScript on the server (backend)
+  Express            Web server framework for the backend API
+  PostgreSQL         The database — stores all data permanently
+  Prisma ORM         Makes it easy to talk to PostgreSQL from TypeScript code
+  JWT                JSON Web Token — a small encrypted ticket that proves who you are
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. ALL PAGES (ROUTES) — WHAT EACH PAGE DOES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  URL                                   NAME               WHAT THE USER CAN DO
+  ────────────────────────────────────  ─────────────────  ──────────────────────────────────────
+  /                                     Landing Page       Learn about Business360, see features
+  /pricing                              Pricing Page       See 4 subscription plans and prices
+  /register                             Register           Create a new personal account
+  /login                                Login              Sign in to an existing account
+  /forgot-password                      Forgot Password    Request a password reset email
+  /reset-password                       Reset Password     Set new password via token from reset email
+  /onboarding                           Onboarding         3-step setup: name your org, pick plan
+  /dashboard                            Dashboard          Home screen: module grid, stats, trial
+  /dashboard/settings                   Settings           Account info, org info, members, password
+  /dashboard/modules                    Modules            Install or uninstall available modules
+  /dashboard/store                      App Store          Browse all available modules
+  /dashboard/store/[key]                Module Detail      See details about one specific module
+  /dashboard/store/developer            Developer Portal   Submit a new module for review
+  /dashboard/admin                      Admin Panel        (Owner only) Manage all orgs and users
+  /dashboard/crm                        CRM Overview       See CRM stats at a glance
+  /dashboard/crm/leads                  CRM Leads          Add/edit/delete sales leads
+  /dashboard/crm/deals                  CRM Deals          Drag-and-drop kanban board for deals
+  /dashboard/crm/customers              CRM Customers      Add/edit/delete customer records
+  /dashboard/inventory                  Inventory Overview Stats: product count, warehouse count
+  /dashboard/inventory/products         Products           Add/edit/delete product catalog
+  /dashboard/inventory/warehouses       Warehouses         Add/edit/delete storage locations
+  /dashboard/inventory/orders           Purchase Orders    Create and track supplier orders
+  /dashboard/accounting                 Accounting Overview Stats: revenue, expenses, outstanding
+  /dashboard/accounting/invoices        Invoices           Create and manage customer invoices
+  /dashboard/accounting/expenses        Expenses           Track business expenses by category
+  /dashboard/hr                         HR Overview        Staff headcount, leave summary
+  /dashboard/hr/employees               Employees          Add/edit/delete employee records
+  /dashboard/hr/leave                   Leave Requests     Submit and approve leave requests
+  /dashboard/projects                   Projects Overview  Create projects, view task breakdown
+  /dashboard/projects/tasks             Tasks              Add/edit/delete tasks, assign to projects
+  /dashboard/reports                    Reports            Cross-module KPIs + monthly P&L table
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. AUTHENTICATION — HOW LOGIN AND IDENTITY WORKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When a user logs in:
+  1. They submit email + password to the /login page
+  2. The backend checks the password, then creates a JWT (a signed ticket)
+  3. The JWT is saved in a cookie called "access_token" in the browser
+  4. Every future request automatically sends that cookie to prove identity
+  5. Protected pages check the cookie — if missing or invalid, redirect to /login
+
+Key files:
+  apps/web/src/lib/auth.tsx
+    → The AuthContext and useAuth() hook
+    → Wraps the whole app so any page can ask "who is logged in?"
+    → Holds: user info, org info, login(), logout(), refresh() functions
+
+  apps/api/src/middleware/requireAuth.ts
+    → A "gate" on the backend
+    → Every protected API endpoint runs this first
+    → Reads the access_token cookie → decodes the JWT → attaches user to request
+
+IMPORTANT QUIRK:
+  After login or after creating an org, the code MUST call refresh() from
+  AuthContext BEFORE navigating. Otherwise the dashboard thinks no one is
+  logged in and sends them back to /login.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. MULTI-TENANT SYSTEM — HOW EACH COMPANY GETS ITS OWN DATA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"Multi-tenant" means many organizations share the same app but have separate data.
+
+How it works in Business360:
+  - The MAIN database holds: users, orgs, subscriptions, installed modules
+  - Each ORGANIZATION gets its own separate PostgreSQL database
+  - That org's CRM data (leads, deals, customers) lives only in their database
+  - Company A can NEVER see Company B's data
+
+Key file:
+  apps/api/src/middleware/tenantResolver.ts
+    → Reads the orgId from the logged-in user's JWT
+    → Looks up which database belongs to that org
+    → Connects to that specific database for the request
+    → Caches the connection so it doesn't reconnect every time (performance)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. MODULE SYSTEM — HOW ADD-ON FEATURES ARE MANAGED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The "module system" lets organizations turn features on/off, like installing apps
+on a phone.
+
+How it works:
+  - A MODULE has a manifest (a description file with its name, key, version, etc.)
+  - The ENGINE (packages/engine/) reads all available module manifests
+  - The MAIN DB tracks which modules each org has installed
+  - When an org installs a module, its pages and features become available
+
+Key file:
+  apps/api/src/routes/modules.ts
+    → Uses getAllManifests() from @business360/engine
+    → GET  /api/modules         → list all available modules
+    → POST /api/modules/install → install a module for the current org
+    → POST /api/modules/uninstall → remove a module
+
+NOTE: The function is called getAllManifests() — NOT loadAllManifests().
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+9. ROLES AND PERMISSIONS — WHO CAN DO WHAT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+There are roles inside an organization:
+
+  ROLE     RANK   WHAT THEY CAN DO
+  ───────  ─────  ──────────────────────────────────────────────────────────
+  owner      3    Everything — including the Admin panel and deleting the org
+  admin      2    Manage members, settings, modules
+  member     1    Use installed modules (CRM, etc.)
+
+How it's enforced:
+  apps/api/src/middleware/requireRole.ts
+    → Called like: requireRole("owner") or requireRole("admin")
+    → Checks the user's role rank against the required rank
+    → If too low, returns 403 Forbidden
+
+The Admin Panel (/dashboard/admin) is only visible to "owner" role users.
+The sidebar link only appears if user.role === "owner".
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+10. THE DATABASE SCHEMA — WHAT DATA IS STORED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+File: packages/db/prisma/schema.prisma
+
+Main database tables (shared across all orgs):
+
+  TABLE              STORES
+  ─────────────────  ─────────────────────────────────────────────────────
+  User               email, hashed password, name, role
+  Organization       name, plan, database connection info
+  OrgMember          links a User to an Organization with a role
+  InstalledModule    which modules are installed for each org
+
+Per-org database tables (in each org's own database):
+
+  TABLE                   STORES
+  ──────────────────────  ──────────────────────────────────────────────────────
+  Lead                    name, email, phone, status (new/contacted/qualified…)
+  Deal                    title, value, stage (prospect/proposal/closed…)
+  Customer                name, email, phone, company, notes
+  Product                 name, SKU, category, unit price, cost price, status
+  Warehouse               name, location, description
+  StockLevel              quantity + min quantity per product per warehouse
+  PurchaseOrder           supplier, status, total amount, dates
+  PurchaseOrderItem       line items on a purchase order
+  Invoice                 number, customer, status, subtotal/tax/total, dates
+  InvoiceItem             line items on an invoice
+  Expense                 category, amount, date, reference
+  Employee                name, position, department, salary, status, hire date
+  LeaveRequest            employee, type, status, start/end dates, days count
+  Project                 name, status, start/end dates
+  Task                    title, project, status, priority, assignee, due date
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+11. SECURITY FEATURES — HOW THE APP STAYS SAFE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  FEATURE            WHAT IT DOES
+  ─────────────────  ─────────────────────────────────────────────────────────
+  helmet             Adds security headers to every API response (prevents XSS,
+                     clickjacking, etc.)
+  express-rate-limit Global: max 300 requests/minute per IP
+                     Auth endpoints: max 20 requests per 15 minutes (brute force
+                     protection on login/register)
+  requireAuth        Every protected API route checks for a valid JWT cookie
+  requireRole        Sensitive routes check that user has the right role
+  JWT (HttpOnly)     The login token is stored in an HttpOnly cookie —
+                     JavaScript in the browser cannot read it (XSS-safe)
+  Separate DBs       Each org's data is physically isolated in its own database
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+12. PERFORMANCE FEATURES — HOW THE APP STAYS FAST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  FEATURE            WHAT IT DOES
+  ─────────────────  ─────────────────────────────────────────────────────────
+  Pagination         CRM endpoints accept ?page=&limit= — loads data in pages
+                     instead of dumping thousands of rows at once
+  Status filtering   CRM leads/deals accept ?status= to narrow results
+  Promise.all        Database queries run in parallel instead of one-by-one
+  DB client caching  getTenantClient() caches database connections —
+                     doesn't reconnect to the org's database on every request
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+13. KEY FILES — THE MOST IMPORTANT FILES TO KNOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  FILE                                               WHAT IT DOES
+  ─────────────────────────────────────────────────  ────────────────────────────────────────
+  apps/web/src/lib/auth.tsx                          Login state for the whole frontend
+  apps/web/src/app/dashboard/layout.tsx              Protects all dashboard pages, sidebar
+  apps/web/src/components/dashboard/AppSidebar.tsx   Left navigation sidebar
+  apps/web/src/components/dashboard/AppHeader.tsx    Top bar with page title and logout
+  apps/api/src/routes/auth.ts                        /register, /login, /logout, /me
+  apps/api/src/routes/organizations.ts               Create org, list orgs, get current org
+  apps/api/src/routes/modules.ts                     List, install, uninstall modules
+  apps/api/src/routes/admin.ts                       Admin: org management, user list, plans
+  apps/api/src/middleware/requireAuth.ts             JWT check — who is this user?
+  apps/api/src/middleware/requireRole.ts             Role check — are they allowed?
+  apps/api/src/middleware/tenantResolver.ts          Connect to the right org's database
+  packages/db/prisma/schema.prisma                   All database table definitions
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+14. KNOWN QUIRKS — THINGS THAT ARE DIFFERENT FROM NORMAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+These are gotchas — things that look wrong but are correct on purpose:
+
+  1. SHADCN BUTTON LINKS
+     shadcn/ui uses @base-ui (not Radix). The Button component does NOT support
+     asChild. To make a button that is also a link, do this:
+       <Link className={buttonVariants({ variant: "default" })} href="/page">
+     NOT: <Button asChild><Link>...</Link></Button>
+
+  2. useSearchParams() NEEDS SUSPENSE
+     Any component that calls useSearchParams() must be wrapped in <Suspense>.
+     The fix: extract that component into a child component, then wrap it.
+
+  3. Select.onValueChange RETURNS string | null
+     Always guard with: onValueChange={(v) => v && doSomething(v)}
+
+  4. REFRESH BEFORE NAVIGATE
+     After login or org creation, always call refresh() FIRST, then navigate.
+     If you navigate first, the auth context still has stale/null user data
+     and the dashboard will kick the user back to /login.
+
+  5. ALL MODULE LAYOUTS ARE "use client"
+     The CRM, Inventory, Accounting, HR, Projects layouts all use usePathname()
+     to highlight the active tab. All must be client components ("use client").
+
+  6. DASHBOARD LAYOUT IS "use client"
+     Uses useAuth() hook, which requires it to be a client component.
+
+  7. PRISMA DATETIME NULL vs UNDEFINED
+     Prisma DateTime fields with @default(now()) (like issueDate on Invoice)
+     are non-nullable in the database. When patching, pass undefined to skip
+     the field — do NOT pass null, which will cause a TypeScript type error.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+15. THE USER JOURNEY — WHAT HAPPENS STEP BY STEP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Step 1: Visit /             → Read about Business360 on the landing page
+  Step 2: Visit /pricing      → Pick a plan
+  Step 3: Visit /register     → Create an account (email + password)
+  Step 4: Visit /login        → Sign in
+  Step 5: Visit /onboarding   → Name your organization, confirm plan (3 steps)
+  Step 6: /dashboard          → See your dashboard (empty at first)
+  Step 7: /dashboard/modules  → Install the CRM module
+  Step 8: /dashboard/crm      → Start adding leads, deals, customers
+  Step 9: /dashboard/settings → Invite team members, change settings
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+16. DEVELOPMENT STATUS — WHAT IS DONE AND WHAT IS NEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  PHASE   NAME                      STATUS
+  ──────  ────────────────────────  ──────────
+  0       Foundation                COMPLETE
+  1       Landing + Auth            COMPLETE
+  2       Core SaaS System          COMPLETE
+  3       Multi-tenant DB           COMPLETE
+  4       Module System             COMPLETE
+  5       CRM Module + Store        COMPLETE
+  6       Security + Performance    COMPLETE
+  7       All Modules + Polish      COMPLETE
+  8       UX Polish                 COMPLETE
+  9       Password Reset + Export   COMPLETE
+  10      Invoice Line Items + CSV  COMPLETE
+  11      Dark Mode + Pagination +  COMPLETE
+          Stock Levels UI
+  12      PO Line Items + Charts +  COMPLETE
+          Search/Export on Orders
+  13      Drag-and-drop Kanban +   COMPLETE
+          Alerts Bell
+  14      Command Palette +        COMPLETE
+          Lead Conversion +
+          Leave Approval
+
+  Phase 7 delivered:
+    - Full backend routers: Inventory, Accounting, HR, Projects, Reports
+    - Full frontend pages for all 5 new modules (layout + overview + CRUD)
+    - Password change form on settings page (verifies current password)
+    - Reports page: cross-module KPI cards + monthly revenue vs expenses table
+    - Tenant DB provisioning extended with all new module tables
+
+  Phase 8 delivered:
+    - Toast notifications (sonner) on all CRUD pages — success and error states
+    - Proper confirm dialogs (useConfirm hook + ConfirmDialog) replacing window.confirm
+    - Dashboard enhanced with live cross-module stats (fetches /api/reports/summary)
+    - Reusable Pagination component wired into Employees, Tasks, and Expenses tables
+
+  Phase 9 delivered:
+    - Password reset flow: POST /api/auth/forgot-password (generates token, logs reset URL
+      to console in dev), POST /api/auth/reset-password (verifies token, updates password)
+    - PasswordResetToken table added to main DB schema (migration SQL written)
+    - /forgot-password page now calls the real API
+    - New /reset-password page reads ?token= from URL, validates, sets new password
+    - CSV export on Employees, Tasks, Expenses, Leave Requests (exportCSV utility in lib/csv.ts)
+
+  Phase 10 delivered:
+    - Invoice line items UI: full line-item table in the edit sheet (add/remove items inline)
+    - Invoice auto-calculates subtotal; tax is a manual input; total = subtotal + tax
+    - On save: creates/patches invoice header, then parallel DELETE removed items + POST new items
+    - CSV export on Leads, Customers, Products, Invoices
+    - Pagination (PAGE_SIZE=20) added to Invoices, Leads, Customers, Products pages
+
+  Phase 11 delivered:
+    - Dark mode toggle: Sun/Moon button in AppHeader; state persisted to localStorage
+    - Anti-flash inline script in layout.tsx reads localStorage on initial render
+    - Pagination added to Leads, Customers, Products, Invoices (resets to page 1 on search)
+    - Stock levels dialog on Products page: view qty + min qty per warehouse, edit and save
+      via POST /api/inventory/stock/adjust; low-stock rows highlighted in amber
+
+  Phase 13 delivered:
+    - Drag-and-drop on Deals kanban: HTML5 DnD API (no extra deps) — drag cards between columns
+      to instantly update deal status via PATCH; optimistic update with rollback on error;
+      target column shows ring highlight while dragging over it
+    - Alerts bell in AppHeader: new GET /api/reports/alerts backend endpoint returns overdue
+      invoices (dueDate < today, not paid/cancelled) and low stock items (qty <= minQty)
+    - Bell icon shows badge count; click opens dropdown grouped by alert type
+    - Alerts fetched on AppHeader mount; dropdown closes on outside click
+
+  Phase 14 delivered:
+    - Command palette (Ctrl/Cmd+K): modal overlay with fuzzy search across all 16 pages,
+      grouped by section (Navigation, CRM, Inventory, Accounting, HR, Projects);
+      arrow key navigation, Enter to go, Escape to close; mounted in DashboardLayout
+    - Lead → Customer conversion: POST /api/crm/leads/:id/convert backend endpoint creates
+      a Customer from lead fields + marks lead as "converted"; green UserPlus button on
+      each non-converted lead row
+    - Leave request approval: green Check / red X buttons appear on pending leave rows;
+      call PATCH /api/hr/leave/:id with status "approved" or "rejected" directly
+    - Fixed pre-existing TypeScript error in dashboard/page.tsx (Link href undefined)
+
+  Phase 14 delivered:
+    - Full design system applied via ui-ux-pro-max skill (cloned to C:\Users\KR007\ui-ux-pro-max-skill)
+    - Design tokens: teal primary (oklch(0.56 0.115 174) = #0D9488), orange CTA (oklch(0.62 0.195 38) = #EA580C)
+    - Fonts replaced: Geist Sans → Poppins (headings, via CSS base layer) + Open Sans (body --font-sans)
+    - globals.css rewritten: oklch color space, bg-cta/.shadow-cta/.shadow-cta-sm utilities,
+      bg-gradient-brand (teal), bg-grid (subtle dot-grid), glass, card-hover, shadow-glow utilities
+    - cursor:pointer enforced on all a/button/[role=button] via base layer
+    - layout.tsx updated: imports Poppins + Open_Sans from next/font/google, keeps Geist_Mono
+    - Landing page (marketing/page.tsx) rewritten: hero with bg-grid + glow, Sparkles badge,
+      feature cards with colored top-strip, numbered gradient step circles, module cards,
+      gradient CTA section — all CTA buttons use bg-cta + shadow-cta
+    - MarketingNav.tsx: CTA changed to bg-cta + shadow-cta-sm
+    - Pricing page: color-tinted plan cards (blue/violet/amber), orange bg-cta for Growth CTA
+    - AppSidebar: active items use bg-primary/10 + left accent bar; plan badge + org avatar
+    - AppHeader: added dark mode toggle (Sun/Moon + localStorage) + breadcrumb nav +
+      gradient user initials avatar
+    - Auth layout: bg-hero-pattern + bg-grid background + glow orb + gradient logo
+    - Dashboard page (dashboard/page.tsx) fully rewritten with Executive Dashboard pattern:
+        · useCountUp() hook — animated KPI numbers (cubic ease-out, 900ms)
+        · KpiCard component — 2.75rem numbers, trend arrows (↑↓), traffic-light badges
+        · LiveCard component — compact data-dense live stats
+        · SkeletonCard — animate-pulse loading placeholders
+        · Trial banner with gradient background + Upgrade link
+        · Module progress indicator (dot grid showing active/inactive modules)
+        · Module grid with Link wrapping active modules + hover arrow animation
+        · Orange "Add Modules" bg-cta CTA button in welcome area
+
+  Phase 12 delivered:
+    - Purchase Order line items: full line-item table (product name, qty, unit cost, total)
+      in the edit sheet — same add/remove/sync pattern as invoices
+    - New backend endpoints: GET /api/inventory/orders/:id (with items), POST /orders/:id/items,
+      DELETE /orders/:id/items/:itemId
+    - Search + CSV export + pagination on Purchase Orders page
+    - Bar chart on Reports page (pure CSS, no extra dependency): green/red paired bars
+      for revenue vs expenses per month, with legend and hover tooltips
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+17. COMPLETE FILE LIST — EVERY FILE AND WHAT IT DOES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────────────────────────────────────────────
+ROOT (Business360/)
+────────────────────────────────────────────────────────────────────────────────
+
+  package.json
+    Path:    Business360\package.json
+    What:    Root config that ties the monorepo together using npm workspaces.
+             Lists all workspace folders (apps/web, apps/api, packages/*, modules/*,
+             engine). Running "npm install" from here installs everything at once.
+
+  tsconfig.base.json
+    Path:    Business360\tsconfig.base.json
+    What:    Shared TypeScript settings. All other tsconfig.json files in the
+             project "extend" this one, so type checking rules stay consistent
+             across the whole codebase.
+
+  EXPLAIN.txt
+    Path:    Business360\EXPLAIN.txt
+    What:    This file — the plain-English explanation of the whole project.
+
+
+────────────────────────────────────────────────────────────────────────────────
+BACKEND API (apps/api/)
+────────────────────────────────────────────────────────────────────────────────
+
+  apps\api\src\index.ts
+    What:    The entry point — starts the Express server.
+             Applies all global middleware (helmet, rate limiting, cors, cookies),
+             then registers all route files (/auth, /orgs, /modules, /admin, /store),
+             then starts listening on a port.
+
+  apps\api\src\lib\prisma.ts
+    What:    Creates and exports the shared Prisma database client.
+             This client connects to the MAIN database (users, orgs, subscriptions).
+             All backend code imports from here to query the main database.
+
+  apps\api\src\lib\tenantDb.ts
+    What:    Manages connections to each organization's private database.
+             Contains getTenantClient(orgId) which:
+               - Looks up the org's database URL
+               - Creates a Prisma client for that specific database
+               - Caches the connection so the same org doesn't reconnect every request
+
+  ── MIDDLEWARE ──────────────────────────────────────────────────────────────
+
+  apps\api\src\middleware\requireAuth.ts
+    What:    A "gate" function placed before any protected route.
+             Reads the "access_token" cookie from the request.
+             Decodes and verifies the JWT inside.
+             Attaches the user's id, email, role, and orgId to the request object.
+             If the token is missing or invalid → returns 401 Unauthorized.
+
+  apps\api\src\middleware\requireRole.ts
+    What:    A role-check gate used AFTER requireAuth.
+             Called as: requireRole("owner") or requireRole("admin")
+             Uses ROLE_RANK (owner=3, admin=2, member=1) to compare.
+             If user's rank is too low → returns 403 Forbidden.
+
+  apps\api\src\middleware\tenantResolver.ts
+    What:    Connects the request to the correct org's private database.
+             Reads orgId from the authenticated user (set by requireAuth).
+             Calls getTenantClient(orgId) and attaches the tenant DB client
+             to the request so route handlers can query org-specific data.
+
+  apps\api\src\middleware\requireModule.ts
+    What:    Checks that the org has a specific module installed before
+             allowing access to that module's routes.
+             Example: blocks CRM routes if the CRM module isn't installed.
+
+  apps\api\src\middleware\errorHandler.ts
+    What:    A global error catcher placed at the very end of the middleware chain.
+             When any route throws an error, this catches it and returns a clean
+             JSON error response instead of crashing the server.
+
+  ── ROUTES ──────────────────────────────────────────────────────────────────
+
+  apps\api\src\routes\auth.ts
+    What:    Handles all authentication endpoints:
+             POST /api/auth/register         → Create a new user account
+             POST /api/auth/login            → Check password, issue JWT cookie
+             POST /api/auth/logout           → Clear the JWT cookie
+             GET  /api/auth/me               → Return current logged-in user's data
+             POST /api/auth/change-password  → Verify current password + set new one
+             POST /api/auth/forgot-password  → Generate reset token (1hr), log URL to console
+             POST /api/auth/reset-password   → Verify token, update password, mark token used
+
+  apps\api\src\routes\organizations.ts
+    What:    Handles organization management:
+             POST /api/organizations         → Create a new org (and re-issue JWT with orgId)
+             GET  /api/organizations         → List all orgs the user belongs to
+             GET  /api/organizations/current → Get the user's active org details
+
+  apps\api\src\routes\modules.ts
+    What:    Handles module install/uninstall:
+             GET  /api/modules         → List all available modules (uses getAllManifests())
+             POST /api/modules/install → Install a module for the current org
+             POST /api/modules/uninstall → Remove a module from the current org
+
+  apps\api\src\routes\admin.ts
+    What:    Owner-only admin endpoints (protected by requireRole("owner")):
+             GET  /api/admin/stats          → Platform-wide stats (MRR, user count)
+             GET  /api/admin/organizations  → List all organizations
+             PUT  /api/admin/organizations/:id → Update an org (plan, status)
+             DELETE /api/admin/organizations/:id → Delete an org
+             GET  /api/admin/users          → List all users
+             GET  /api/admin/plans          → List available subscription plans
+
+  apps\api\src\routes\store.ts
+    What:    Handles the App Store browsing (no install — just viewing):
+             GET /api/store         → List all modules with enriched store info
+             GET /api/store/:key    → Get details for one specific module
+
+  ── SERVICES ────────────────────────────────────────────────────────────────
+
+  apps\api\src\services\authService.ts
+    What:    Business logic for authentication (used by auth routes):
+             - hashPassword(plain) → returns a bcrypt hash
+             - verifyPassword(plain, hash) → returns true/false
+             - signJwt(payload) → creates a signed JWT string
+             - verifyJwt(token) → decodes and validates a JWT
+
+  apps\api\src\services\orgProvisionService.ts
+    What:    Handles the work of setting up a new organization:
+             - Creates the org record in the main DB
+             - Creates a new private PostgreSQL database for the org
+             - Runs Prisma migrations on the new database
+             - Returns the new org's connection details
+
+  ── ENGINE ──────────────────────────────────────────────────────────────────
+
+  apps\api\src\engine\module_loader.ts
+    What:    Scans the modules folder and loads all module manifests.
+             A manifest describes a module: its key, name, version, and what
+             routes/features it provides.
+
+  apps\api\src\engine\module_installer.ts
+    What:    Handles the database-level work of installing/uninstalling a module:
+             Records the installation in InstalledModule table, runs any
+             module-specific DB migrations on the tenant database.
+
+  apps\api\src\engine\route_registry.ts
+    What:    Registers each installed module's API routes with the Express app.
+             When a module is installed, its backend router gets added to the
+             API server dynamically.
+
+  apps\api\src\engine\types.ts
+    What:    TypeScript type definitions for the module engine:
+             ModuleManifest shape, RouteRegistration shape, etc.
+
+  apps\api\src\bootstrap\registerModules.ts
+    What:    Called once at server startup to load all module manifests and
+             register any routes from already-installed modules.
+
+  ── MODULE DEFINITIONS (inside apps/api) ────────────────────────────────────
+
+  apps\api\src\modules\crm\manifest.ts / manifest.json
+    What:    Describes the CRM module: key="crm", name="CRM", version,
+             description, and what features it includes.
+
+  apps\api\src\modules\crm\backend\router.ts
+    What:    All CRM API endpoints:
+             GET/POST   /api/crm/leads        → List or create leads (paginated)
+             PUT/DELETE /api/crm/leads/:id    → Update or delete a lead
+             GET/POST   /api/crm/deals        → List or create deals
+             PUT/DELETE /api/crm/deals/:id    → Update or delete a deal
+             GET/POST   /api/crm/customers    → List or create customers
+             PUT/DELETE /api/crm/customers/:id → Update or delete a customer
+
+  apps\api\src\modules\inventory\manifest.ts / manifest.json
+    What:    Describes the Inventory module: key="inventory", name, version, etc.
+
+  apps\api\src\modules\inventory\backend\router.ts
+    What:    All Inventory API endpoints:
+             GET  /api/inventory/stats          → KPI counts for overview page
+             GET/POST/PATCH/DELETE /api/inventory/products   → Product catalog CRUD
+             GET/POST/PATCH/DELETE /api/inventory/warehouses → Warehouse CRUD
+             POST /api/inventory/stock/adjust   → Upsert stock level for a product/warehouse
+             GET/POST/PATCH/DELETE /api/inventory/orders     → Purchase order CRUD
+
+  apps\api\src\modules\accounting\manifest.ts / manifest.json
+    What:    Describes the Accounting module.
+
+  apps\api\src\modules\accounting\backend\router.ts
+    What:    All Accounting API endpoints:
+             GET  /api/accounting/stats                      → Revenue/expense KPI summary
+             GET/POST/PATCH/DELETE /api/accounting/invoices  → Invoice CRUD
+             GET  /api/accounting/invoices/:id               → Single invoice with line items
+             POST /api/accounting/invoices/:id/items         → Add line item to invoice
+             DELETE /api/accounting/invoices/:id/items/:itemId → Remove line item
+             GET/POST/PATCH/DELETE /api/accounting/expenses  → Expense CRUD
+
+  apps\api\src\modules\hr\manifest.ts / manifest.json
+    What:    Describes the HR (Human Resources) module.
+
+  apps\api\src\modules\hr\backend\router.ts
+    What:    All HR API endpoints:
+             GET  /api/hr/stats                        → Employee and leave KPI summary
+             GET/POST/PATCH/DELETE /api/hr/employees   → Employee CRUD
+             GET/POST/PATCH/DELETE /api/hr/leave       → Leave request CRUD
+
+  apps\api\src\modules\projects\manifest.ts / manifest.json
+    What:    Describes the Projects module.
+
+  apps\api\src\modules\projects\backend\router.ts
+    What:    All Projects API endpoints:
+             GET  /api/projects/stats                          → Project/task KPI summary
+             GET/POST/PATCH/DELETE /api/projects/projects      → Project CRUD
+             GET/POST/PATCH/DELETE /api/projects/tasks         → Task CRUD
+
+  apps\api\src\modules\reports\manifest.ts / manifest.json
+    What:    Describes the Reports module.
+
+  apps\api\src\modules\reports\backend\router.ts
+    What:    Cross-module analytics endpoints:
+             GET /api/reports/summary  → Aggregated KPIs from all modules (CRM, Inventory,
+                                         Accounting, HR, Projects) in one response
+             GET /api/reports/revenue  → Monthly revenue vs expenses data (paid invoices
+                                         grouped by month vs expenses grouped by month)
+
+  ── TYPES ───────────────────────────────────────────────────────────────────
+
+  apps\api\src\types\index.ts
+    What:    Extends Express's Request type so TypeScript knows about
+             extra properties added by middleware:
+             req.user (from requireAuth), req.tenantDb (from tenantResolver).
+
+  ── PRISMA (API-SIDE TENANT SCHEMA) ─────────────────────────────────────────
+
+  apps\api\prisma\tenant.prisma
+    What:    The database schema for each org's private database.
+             Defines tables: Lead, Deal, Customer (with all their fields).
+             Used to generate the Prisma client in apps/api/src/generated/tenant/.
+
+  apps\api\src\generated\tenant\  (entire folder)
+    What:    Auto-generated Prisma client code for the tenant database.
+             Never edit manually — always regenerate with "prisma generate".
+
+  ── TESTS ───────────────────────────────────────────────────────────────────
+
+  apps\api\src\test\authRoutes.test.ts
+    What:    Tests for /register, /login, /logout, /me endpoints.
+
+  apps\api\src\test\authService.test.ts
+    What:    Tests for password hashing, JWT signing/verifying.
+
+  apps\api\src\test\crmRoutes.test.ts
+    What:    Tests for CRM leads/deals/customers CRUD endpoints.
+
+  apps\api\src\test\errorHandler.test.ts
+    What:    Tests that the global error handler returns proper JSON.
+
+  apps\api\src\test\helpers.ts
+    What:    Shared test utilities: create test users, orgs, seed data.
+
+  apps\api\src\test\moduleEngine.test.ts
+    What:    Tests for module loading and route registration engine.
+
+  apps\api\src\test\moduleRoutes.test.ts
+    What:    Tests for /modules install/uninstall endpoints.
+
+  apps\api\src\test\requireAuth.test.ts
+    What:    Tests that protected routes reject requests without valid tokens.
+
+  apps\api\src\test\resolveTenant.test.ts
+    What:    Tests that tenantResolver correctly connects to the org's database.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FRONTEND WEB APP (apps/web/)
+────────────────────────────────────────────────────────────────────────────────
+
+  ── CONFIG ──────────────────────────────────────────────────────────────────
+
+  apps\web\next.config.ts
+    What:    Next.js configuration. Sets up rewrites so /api/* requests from
+             the browser go to the backend server.
+
+  apps\web\components.json
+    What:    shadcn/ui configuration — tells the shadcn CLI where to put
+             generated UI components and which style/theme to use.
+
+  apps\web\eslint.config.mjs
+    What:    Code quality rules. Enforces consistent code style.
+
+  ── ROOT LAYOUT ─────────────────────────────────────────────────────────────
+
+  apps\web\src\app\layout.tsx
+    What:    The outermost wrapper for the entire app.
+             Sets the HTML lang, fonts, and wraps everything in AuthProvider
+             so every page has access to the login state. Also mounts the
+             global <Toaster> (sonner) for toast notifications app-wide.
+
+  ── MARKETING GROUP (public pages, no login needed) ─────────────────────────
+
+  apps\web\src\app\(marketing)\layout.tsx
+    What:    Wrapper for public marketing pages — adds the nav bar and footer.
+
+  apps\web\src\app\(marketing)\page.tsx
+    What:    The landing page (/). Shows hero, features, how it works,
+             call-to-action buttons.
+
+  apps\web\src\app\(marketing)\pricing\page.tsx
+    What:    The pricing page (/pricing). Shows 4 subscription plans with
+             features and prices.
+
+  ── AUTH GROUP (login / register pages) ─────────────────────────────────────
+
+  apps\web\src\app\(auth)\layout.tsx
+    What:    Wrapper for auth pages — centers them on screen with a clean layout.
+
+  apps\web\src\app\(auth)\login\page.tsx
+    What:    The /login page wrapper — imports and renders LoginForm.
+
+  apps\web\src\app\(auth)\login\LoginForm.tsx
+    What:    The actual login form component. Handles:
+             - Email/password input fields
+             - Form submission → POST /api/auth/login
+             - Calls refresh() after login, then navigates to /dashboard
+             (Must be a separate component because it uses useSearchParams)
+
+  apps\web\src\app\(auth)\register\page.tsx
+    What:    The /register page wrapper.
+
+  apps\web\src\app\(auth)\register\RegisterForm.tsx
+    What:    The registration form. Handles name/email/password fields,
+             submits to POST /api/auth/register, then redirects to /login.
+
+  apps\web\src\app\(auth)\forgot-password\page.tsx
+    What:    The /forgot-password page. Calls POST /api/auth/forgot-password.
+             Shows success message regardless of whether email exists (prevents
+             account enumeration). Loading state + error display.
+
+  apps\web\src\app\(auth)\reset-password\page.tsx + ResetPasswordForm.tsx
+    What:    The /reset-password page. Reads ?token= from URL. If missing: shows
+             "invalid link" state. Otherwise: password + confirm fields, calls
+             POST /api/auth/reset-password, shows success and redirects to login.
+             Wrapped in Suspense because it uses useSearchParams().
+
+  ── ONBOARDING ──────────────────────────────────────────────────────────────
+
+  apps\web\src\app\onboarding\page.tsx
+    What:    The /onboarding page wrapper — renders OnboardingFlow.
+
+  apps\web\src\app\onboarding\OnboardingFlow.tsx
+    What:    3-step wizard for new users after registration:
+             Step 1: Enter organization name
+             Step 2: Choose a subscription plan
+             Step 3: Confirm and create the org
+             After org creation → calls refresh() THEN navigates to /dashboard.
+
+  ── DASHBOARD GROUP (protected pages, login required) ───────────────────────
+
+  apps\web\src\app\dashboard\layout.tsx
+    What:    Wraps all /dashboard/* pages. Checks if user is logged in
+             (if not → redirect to /login). Renders AppSidebar + AppHeader
+             around the page content. Manages mobile sidebar open/close state.
+             This is "use client" because it uses the useAuth() hook.
+
+  apps\web\src\app\dashboard\page.tsx
+    What:    The main dashboard home (/dashboard).
+             Executive Dashboard pattern (from ui-ux-pro-max skill):
+             animated KPI cards (useCountUp hook, 2.75rem numbers, trend arrows,
+             traffic-light status badges), compact live stats section with skeleton
+             loading, module grid with hover animations, trial banner with upgrade
+             link, orange "Add Modules" CTA. Fetches /api/reports/summary for
+             live cross-module KPIs when modules are installed.
+
+  apps\web\src\app\dashboard\settings\page.tsx
+    What:    The settings page (/dashboard/settings).
+             Sections: Account (name/email/role), Change Password (verifies current
+             password before updating), Organization (name/plan/status),
+             Members (list of org members with roles).
+
+  apps\web\src\app\dashboard\modules\page.tsx
+    What:    The modules management page (/dashboard/modules).
+             Lists available modules with install/uninstall buttons.
+             Calls POST /api/modules/install or /api/modules/uninstall.
+
+  apps\web\src\app\dashboard\store\page.tsx
+    What:    The App Store (/dashboard/store).
+             Shows all modules as cards with ratings, descriptions, categories.
+
+  apps\web\src\app\dashboard\store\[key]\page.tsx
+    What:    The module detail page (/dashboard/store/crm etc.).
+             Shows full description, screenshots, version history for one module.
+
+  apps\web\src\app\dashboard\store\developer\page.tsx
+    What:    The developer portal (/dashboard/store/developer).
+             Shows how to build a module + a submission form.
+
+  apps\web\src\app\dashboard\admin\page.tsx
+    What:    The admin panel (/dashboard/admin). Owner-only.
+             Shows: total organizations, MRR (monthly recurring revenue),
+             user count. Tables for managing all orgs and changing their plans.
+
+  ── CRM PAGES ───────────────────────────────────────────────────────────────
+
+  apps\web\src\app\dashboard\crm\layout.tsx
+    What:    Wrapper for all /dashboard/crm/* pages.
+             Adds the CRM sub-navigation tabs (Overview / Leads / Deals / Customers).
+             Uses usePathname() to highlight the active tab → "use client".
+
+  apps\web\src\app\dashboard\crm\page.tsx
+    What:    CRM overview (/dashboard/crm). Shows summary stats:
+             total leads, open deals, deal value, customer count.
+
+  apps\web\src\app\dashboard\crm\leads\page.tsx
+    What:    Leads table (/dashboard/crm/leads).
+             Full CRUD: add lead, edit inline, delete. Supports status filtering
+             and pagination. Calls /api/crm/leads endpoints.
+
+  apps\web\src\app\dashboard\crm\deals\page.tsx
+    What:    Deals kanban board (/dashboard/crm/deals).
+             Drag-and-drop cards across columns (Prospect → Proposal → Closed).
+             Each card shows deal title, value, company. Calls /api/crm/deals.
+
+  apps\web\src\app\dashboard\crm\customers\page.tsx
+    What:    Customers table (/dashboard/crm/customers).
+             Full CRUD: add customer, edit, delete. Calls /api/crm/customers.
+
+  ── INVENTORY PAGES ─────────────────────────────────────────────────────────
+
+  apps\web\src\app\dashboard\inventory\layout.tsx
+    What:    Wrapper for /dashboard/inventory/* — sub-nav tabs (Overview / Products /
+             Warehouses / Orders). Uses usePathname() → "use client".
+
+  apps\web\src\app\dashboard\inventory\page.tsx
+    What:    Inventory overview. KPI cards: product count, warehouse count, PO count.
+             Products-by-status breakdown + quick links to sub-pages.
+
+  apps\web\src\app\dashboard\inventory\products\page.tsx
+    What:    Products table (/dashboard/inventory/products).
+             CRUD: add/edit/delete products. Fields: name, SKU, category,
+             unit/cost price, unit, status. Search by name/SKU/category.
+
+  apps\web\src\app\dashboard\inventory\warehouses\page.tsx
+    What:    Warehouses card grid (/dashboard/inventory/warehouses).
+             CRUD: add/edit/delete warehouses. Shows product count per warehouse.
+
+  apps\web\src\app\dashboard\inventory\orders\page.tsx
+    What:    Purchase orders table (/dashboard/inventory/orders).
+             CRUD: add/edit/delete purchase orders. Fields: supplier, status,
+             total amount, order date, expected date, item count.
+
+  ── ACCOUNTING PAGES ─────────────────────────────────────────────────────────
+
+  apps\web\src\app\dashboard\accounting\layout.tsx
+    What:    Wrapper for /dashboard/accounting/* — sub-nav (Overview / Invoices /
+             Expenses). Uses usePathname() → "use client".
+
+  apps\web\src\app\dashboard\accounting\page.tsx
+    What:    Accounting overview. KPI cards: paid revenue, outstanding, total
+             expenses, invoice count. Invoices-by-status and top expense
+             categories breakdown.
+
+  apps\web\src\app\dashboard\accounting\invoices\page.tsx
+    What:    Invoices table (/dashboard/accounting/invoices).
+             CRUD: add/edit/delete invoices. Fields: number, customer, status,
+             subtotal/tax/total, issue date, due date. Search by number/customer.
+
+  apps\web\src\app\dashboard\accounting\expenses\page.tsx
+    What:    Expenses table (/dashboard/accounting/expenses).
+             CRUD: add/edit/delete expenses. Fields: category, description,
+             amount, currency, date, reference. Datalist autocomplete for category.
+
+  ── HR PAGES ─────────────────────────────────────────────────────────────────
+
+  apps\web\src\app\dashboard\hr\layout.tsx
+    What:    Wrapper for /dashboard/hr/* — sub-nav (Overview / Employees / Leave).
+             Uses usePathname() → "use client".
+
+  apps\web\src\app\dashboard\hr\page.tsx
+    What:    HR overview. KPI cards: total employees, active, leave requests.
+             Employees-by-status and leave-by-type breakdowns.
+
+  apps\web\src\app\dashboard\hr\employees\page.tsx
+    What:    Employees table (/dashboard/hr/employees).
+             CRUD: add/edit/delete employees. Fields: name, position, department,
+             email, phone, status, hire date, salary. Search by name/dept/position.
+
+  apps\web\src\app\dashboard\hr\leave\page.tsx
+    What:    Leave requests table (/dashboard/hr/leave).
+             CRUD: submit/edit/delete leave requests. Employee selected from
+             dropdown (loaded from /api/hr/employees). Fields: type, status,
+             start/end dates, days count, reason.
+
+  ── PROJECTS PAGES ───────────────────────────────────────────────────────────
+
+  apps\web\src\app\dashboard\projects\layout.tsx
+    What:    Wrapper for /dashboard/projects/* — sub-nav (Overview / Tasks).
+             Uses usePathname() → "use client".
+
+  apps\web\src\app\dashboard\projects\page.tsx
+    What:    Projects overview + project CRUD (/dashboard/projects).
+             KPI cards: project count, task count, active projects, done tasks.
+             Inline project list with edit/delete. Sheet for creating/editing projects.
+
+  apps\web\src\app\dashboard\projects\tasks\page.tsx
+    What:    Tasks table (/dashboard/projects/tasks).
+             CRUD: add/edit/delete tasks. Project selected from dropdown.
+             Fields: title, project, status, priority, assigned to, due date.
+             Search by title/project name.
+
+  ── REPORTS PAGE ─────────────────────────────────────────────────────────────
+
+  apps\web\src\app\dashboard\reports\page.tsx
+    What:    Cross-module analytics dashboard (/dashboard/reports).
+             Business overview: paid revenue, total expenses, net profit, pipeline value.
+             Module summary grid: CRM leads/customers, HR employees, inventory products,
+             accounting invoices, project tasks.
+             Monthly P&L table: revenue vs expenses vs profit per month (last 12 months).
+
+  ── COMPONENTS — DASHBOARD ──────────────────────────────────────────────────
+
+  apps\web\src\components\dashboard\AppSidebar.tsx
+    What:    The left navigation sidebar shown on all dashboard pages.
+             Shows links to: Dashboard, CRM, Inventory, Modules, Store, Settings.
+             The Admin link only appears if user.role === "owner".
+             On mobile: hidden by default, toggled via the AppHeader menu button.
+
+  apps\web\src\components\dashboard\AppHeader.tsx
+    What:    The top bar shown on all dashboard pages.
+             Shows: breadcrumb navigation, dark mode toggle (Sun/Moon + localStorage),
+             alerts bell (overdue invoices + low stock), user initials avatar,
+             logout button. Dark mode state persisted to localStorage and read by
+             the anti-flash inline script in layout.tsx.
+
+  ── COMPONENTS — MARKETING ──────────────────────────────────────────────────
+
+  apps\web\src\components\marketing\MarketingNav.tsx
+    What:    The top navigation bar on public pages (landing, pricing).
+             Shows logo, nav links, Login and Get Started buttons.
+
+  apps\web\src\components\marketing\MarketingFooter.tsx
+    What:    The footer on public pages. Shows links, copyright.
+
+  ── COMPONENTS — STORE ──────────────────────────────────────────────────────
+
+  apps\web\src\components\store\StoreModuleCard.tsx
+    What:    A reusable card component for displaying a module in the App Store.
+             Shows: icon, name, category, rating, short description, install button.
+
+  ── COMPONENTS — UI (shadcn/ui components) ──────────────────────────────────
+
+  NOTE: These are pre-built UI components from shadcn/ui using @base-ui (NOT Radix).
+        Never edit these manually unless fixing a bug specific to this project.
+
+  apps\web\src\components\ui\button.tsx   → Button component (use buttonVariants for links)
+  apps\web\src\components\ui\input.tsx    → Text input field
+  apps\web\src\components\ui\label.tsx    → Form label
+  apps\web\src\components\ui\card.tsx     → Card container (Card, CardHeader, CardContent…)
+  apps\web\src\components\ui\dialog.tsx   → Modal dialog popup
+  apps\web\src\components\ui\table.tsx    → Data table (Table, TableRow, TableCell…)
+  apps\web\src\components\ui\select.tsx   → Dropdown select (onValueChange returns string|null)
+  apps\web\src\components\ui\badge.tsx    → Small status badge (colored label)
+  apps\web\src\components\ui\avatar.tsx   → User avatar circle with initials/image
+  apps\web\src\components\ui\checkbox.tsx → Checkbox input
+  apps\web\src\components\ui\textarea.tsx → Multi-line text input
+  apps\web\src\components\ui\separator.tsx → Horizontal divider line
+  apps\web\src\components\ui\sheet.tsx    → Slide-in drawer panel (used for mobile sidebar)
+  apps\web\src\components\ui\dropdown-menu.tsx → Dropdown menu with items
+  apps\web\src\components\ui\confirm-dialog.tsx → Async confirm dialog + useConfirm() hook
+                                               (replaces window.confirm on all delete actions)
+  apps\web\src\components\ui\pagination.tsx → Pagination control component (prev/next buttons
+                                               with "X–Y of Z" count display)
+
+  ── LIB (added) ─────────────────────────────────────────────────────────────
+  apps\web\src\lib\csv.ts
+    What:    exportCSV(filename, headers, rows) — escapes values, builds a CSV blob,
+             and triggers a browser file download. Used by table pages.
+
+  ── LIB ─────────────────────────────────────────────────────────────────────
+
+  apps\web\src\lib\auth.tsx
+    What:    The authentication context — the heart of frontend identity.
+             Exports:
+               AuthProvider   → Wraps the whole app, fetches /me on load
+               useAuth()      → Hook to get: user, org, isLoading, login(), logout(), refresh()
+               AuthUser type  → Shape of the logged-in user object
+               AuthOrg type   → Shape of the current organization object
+             The refresh() function re-fetches /me from the backend and updates
+             state. Must be called after login and after org creation.
+
+  apps\web\src\lib\api.ts
+    What:    A thin wrapper around fetch() for calling the backend API.
+             Automatically includes credentials (cookies) with every request.
+             Handles JSON parsing and throws errors with readable messages.
+
+  apps\web\src\lib\utils.ts
+    What:    Small utility functions used across the frontend.
+             Mainly: cn() — merges Tailwind CSS class names cleanly.
+
+  ── TESTS ───────────────────────────────────────────────────────────────────
+
+  apps\web\src\test\api.test.ts       → Tests for the api.ts fetch wrapper
+  apps\web\src\test\utils.test.ts     → Tests for the cn() utility function
+  apps\web\src\test\shared.test.ts    → Shared integration tests
+  apps\web\src\test\setup.ts          → Test environment setup (mocks, globals)
+
+
+────────────────────────────────────────────────────────────────────────────────
+ENGINE PACKAGE (engine/)
+────────────────────────────────────────────────────────────────────────────────
+
+  engine\src\index.ts
+    What:    Entry point of the engine package. Exports getAllManifests()
+             which returns all available module manifests by scanning the
+             modules folder. This is what apps/api/src/routes/modules.ts imports.
+
+  engine\src\registry.ts
+    What:    The MODULE_REGISTRY — a map of module key → enriched module info
+             (store description, screenshots, rating, category).
+             Used to enrich raw manifests with store-display data.
+
+  engine\src\types.ts
+    What:    TypeScript types for the engine package:
+             ModuleManifest, InstalledModuleRecord, EngineConfig.
+
+
+────────────────────────────────────────────────────────────────────────────────
+MODULE PACKAGES (modules/)
+────────────────────────────────────────────────────────────────────────────────
+
+Each module folder has the same structure:
+
+  modules\crm\manifest.ts
+    What:    The CRM module's identity card. Defines:
+             key: "crm", name: "CRM", version: "1.0.0", description,
+             category: "Sales", icon, and what features it includes.
+
+  modules\crm\package.json
+    What:    npm package descriptor for this module. Allows it to be
+             referenced as "@business360/module-crm" in other packages.
+
+  (Same pattern for: accounting, hr, inventory, projects, reports)
+
+
+────────────────────────────────────────────────────────────────────────────────
+DATABASE PACKAGE (packages/db/)
+────────────────────────────────────────────────────────────────────────────────
+
+  packages\db\prisma\schema.prisma
+    What:    The MAIN database schema. Defines tables:
+             - User         (id, email, passwordHash, name, createdAt)
+             - Organization (id, name, plan, dbUrl, createdAt)
+             - OrgMember    (userId, orgId, role) — links users to orgs
+             - InstalledModule (orgId, moduleKey, installedAt)
+
+  packages\db\prisma\migrations\20260503213010_init\migration.sql
+    What:    The SQL that was run to create the main database tables the first time.
+             Prisma generates this automatically from schema.prisma changes.
+             Never edit manually — use "prisma migrate dev" to create new migrations.
+
+  packages\db\prisma\migrations\migration_lock.toml
+    What:    Tracks which database engine (PostgreSQL) the migrations are for.
+             Prevents accidental use of the wrong database type.
+
+
+────────────────────────────────────────────────────────────────────────────────
+SHARED PACKAGE (packages/shared/)
+────────────────────────────────────────────────────────────────────────────────
+
+  packages\shared\src\index.ts
+    What:    Shared constants and utility functions used by both the frontend
+             and backend. For example: plan names, role names, common validation
+             helpers that should not be duplicated in both apps.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+18. QUICK REFERENCE — WHERE TO GO FOR COMMON TASKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TASK                                       FILE TO OPEN
+  ─────────────────────────────────────────  ───────────────────────────────────────────
+  Add a new page to the dashboard            apps\web\src\app\dashboard\<name>\page.tsx
+  Add a new API endpoint                     apps\api\src\routes\<name>.ts
+  Change how login works                     apps\api\src\routes\auth.ts
+                                             apps\web\src\app\(auth)\login\LoginForm.tsx
+  Change what's shown in the sidebar         apps\web\src\components\dashboard\AppSidebar.tsx
+  Add a new database table (main DB)         packages\db\prisma\schema.prisma
+  Add a new CRM database table               apps\api\prisma\tenant.prisma
+  Create a new module                        modules\<name>\manifest.ts
+                                             apps\api\src\modules\<name>\backend\router.ts
+  Change who can access admin routes         apps\api\src\middleware\requireRole.ts
+  Change JWT or cookie behavior              apps\api\src\services\authService.ts
+  Change how the org database connects       apps\api\src\lib\tenantDb.ts
+  Add a new UI component                     apps\web\src\components\ui\<name>.tsx
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                              END OF EXPLAIN.txt
+================================================================================

@@ -1,0 +1,106 @@
+// Business360 — Core schema (Phase 1 & 2)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Plan {
+  starter
+  growth
+  pro
+  enterprise
+}
+
+enum OrgRole {
+  owner
+  admin
+  member
+}
+
+enum OrgStatus {
+  trial
+  active
+  suspended
+  cancelled
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  memberships  OrgMember[]
+  resetTokens  PasswordResetToken[]
+
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model Organization {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique @default(cuid())
+  plan      Plan      @default(starter)
+  status    OrgStatus @default(trial)
+  userCount Int       @default(1)
+  trialEnds DateTime  @default(dbgenerated("NOW() + INTERVAL '14 days'"))
+  dbUrl     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  members   OrgMember[]
+  modules   InstalledModule[]
+
+  @@map("organizations")
+}
+
+model OrgMember {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrgRole      @default(member)
+  joinedAt       DateTime     @default(now())
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("org_members")
+}
+
+model InstalledModule {
+  id             String       @id @default(cuid())
+  organizationId String
+  moduleKey      String
+  installedAt    DateTime     @default(now())
+  isActive       Boolean      @default(true)
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, moduleKey])
+  @@map("installed_modules")
+}

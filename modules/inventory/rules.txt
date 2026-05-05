@@ -1,0 +1,197 @@
+================================================================
+MODULE RULES — INVENTORY
+================================================================
+Key:          inventory
+Plan:         growth (minimum)
+Icon:         Boxes  (lucide-react)
+Phase:        8
+================================================================
+
+
+INSTALLATION CONTRACT
+---------------------
+The module engine checks these before activating:
+
+1. manifest.ts exports `inventoryManifest` typed as ModuleManifest
+2. requiredPlan = "growth"  (engine rejects install if org.plan < growth)
+3. All route paths start with /dashboard/inventory/
+4. All permission keys use format  inventory:{resource}:{action}
+5. dependencies = []  (Inventory has no required module dependencies)
+6. migrations/ folder exists with at least one SQL file
+7. backend/index.ts exports an Express Router as default
+8. frontend/ contains at least the root page for /dashboard/inventory
+
+
+REQUIRED FOLDER STRUCTURE
+--------------------------
+modules/inventory/
+  manifest.ts          ← already exists — do not rename
+  package.json         ← already exists
+  rules.txt            ← this file
+  backend/
+    index.ts           ← Express Router (default export)
+    routes/
+      products.ts
+      warehouses.ts
+      transfers.ts
+    services/
+      products.service.ts
+      warehouses.service.ts
+      transfers.service.ts
+    types/
+      inventory.types.ts
+  frontend/
+    pages/
+      index.tsx          ← /dashboard/inventory
+      products/
+        page.tsx         ← /dashboard/inventory/products
+      warehouses/
+        page.tsx         ← /dashboard/inventory/warehouses
+      transfers/
+        page.tsx         ← /dashboard/inventory/transfers
+    components/
+      ProductTable.tsx
+      WarehouseCard.tsx
+      TransferForm.tsx
+      StockBadge.tsx
+  migrations/
+    001_inventory_initial.sql
+
+
+MANIFEST RULES
+--------------
+- key must be exactly: "inventory"
+- version: start "1.0.0", bump minor for new features
+- routes array must match every page in frontend/pages/
+- permissions must cover all exposed DB operations
+- roles array in each permission: one of ["owner", "admin", "member"]
+- Never declare a permission that the backend does not enforce
+
+
+BACKEND RULES
+-------------
+- All routes are protected — never skip requireAuth middleware
+- Use tenant DB connection — never write inventory data to the shared DB
+- Controller logic stays in services/, not in route handlers
+- Return consistent JSON:  { data, error, message }
+- HTTP status codes:
+    200 OK, 201 Created, 400 Bad Request, 401 Unauthorized,
+    403 Forbidden, 404 Not Found, 500 Internal Server Error
+- TypeScript strict — no "any" types
+- Max 300 lines per file
+
+Entities and their API endpoints:
+
+  Products
+    GET    /api/inventory/products         → list products (paginated, filterable by warehouse)
+    POST   /api/inventory/products         → create product
+    GET    /api/inventory/products/:id     → get product with stock per warehouse
+    PATCH  /api/inventory/products/:id     → update product details
+    DELETE /api/inventory/products/:id     → soft-delete (set active = false)
+    Fields: id, name, sku, description, unit, reorderLevel, active, createdAt
+
+  Warehouses
+    GET    /api/inventory/warehouses       → list warehouses
+    POST   /api/inventory/warehouses       → create warehouse
+    GET    /api/inventory/warehouses/:id   → get warehouse with stock summary
+    PATCH  /api/inventory/warehouses/:id   → update warehouse
+    Fields: id, name, location, isDefault, createdAt
+
+  Stock (join table — no direct CRUD, managed via transfers)
+    Tracks: productId, warehouseId, quantity
+
+  Transfers
+    GET    /api/inventory/transfers        → list transfers (paginated)
+    POST   /api/inventory/transfers        → create transfer (validates stock availability)
+    GET    /api/inventory/transfers/:id    → get transfer details
+    PATCH  /api/inventory/transfers/:id/confirm → confirm pending transfer (updates stock)
+    Fields: id, fromWarehouseId?, toWarehouseId, productId, quantity, status, confirmedAt
+
+    Transfer types: incoming (no fromWarehouse), outgoing (no toWarehouse), internal (both)
+    Status enum: pending → confirmed | cancelled
+    Business rule: confirming a transfer must atomically update stock quantities
+
+
+FRONTEND RULES
+--------------
+Follow style.txt for all UI. Additional Inventory-specific rules:
+
+- Dashboard page (/dashboard/inventory):
+    Summary cards: total products, total warehouses, pending transfers, low-stock alerts
+    Low-stock table (products where quantity ≤ reorderLevel)
+
+- Products page (/dashboard/inventory/products):
+    Table with SKU, stock quantity badge, reorder level indicator
+    Color-coded StockBadge: green (ok), amber (low), red (out of stock)
+    Search by name/SKU, filter by warehouse
+
+- Warehouses page (/dashboard/inventory/warehouses):
+    Card grid — each card shows name, location, product count, total units
+    "Default" badge on default warehouse
+
+- Transfers page (/dashboard/inventory/transfers):
+    Table with type icon, status badge, date
+    "New Transfer" opens a form: select product, from/to warehouse, quantity
+    Confirm button on pending transfers
+
+Platform quirks (MUST follow):
+- shadcn/ui uses @base-ui — NO asChild prop on <Button>
+    WRONG:  <Button asChild><Link href="...">...</Link></Button>
+    RIGHT:  <Link href="..." className={buttonVariants({ variant: "default" })}>...</Link>
+- useSearchParams() requires <Suspense> wrapper — extract into child component
+- Pages using useAuth() must be "use client"
+- Tailwind only — no inline styles, no hardcoded colors
+- Max 300 lines per file — split into components if exceeded
+
+
+DATABASE MIGRATION (migrations/001_inventory_initial.sql)
+---------------------------------------------------------
+Runs inside the TENANT database (org-specific DB), not the shared DB.
+
+Tables to create:
+  inv_products    (id, name, sku UNIQUE, description, unit, reorder_level, active, created_at, updated_at)
+  inv_warehouses  (id, name, location, is_default, created_at, updated_at)
+  inv_stock       (id, product_id, warehouse_id, quantity, updated_at)
+                  UNIQUE(product_id, warehouse_id)
+  inv_transfers   (id, from_warehouse_id, to_warehouse_id, product_id, quantity, status, confirmed_at, created_at)
+
+Rules:
+- id column: TEXT PRIMARY KEY DEFAULT gen_random_uuid()
+- All timestamps: TIMESTAMPTZ DEFAULT NOW()
+- inv_stock.quantity must be >= 0 (add CHECK constraint)
+- Foreign keys between inv_* tables must CASCADE on delete
+- No org_id column (tenant DB is org-scoped)
+- Migration must be idempotent: CREATE TABLE IF NOT EXISTS
+
+
+INSTALLATION FLOW (engine calls these in order)
+------------------------------------------------
+1. Engine reads manifest.ts → validates requiredPlan against org.plan
+2. Engine checks InstalledModule table — rejects if already installed
+3. Engine runs migrations/001_inventory_initial.sql on tenant DB
+4. Engine saves InstalledModule { orgId, moduleKey: "inventory", isActive: true }
+5. Engine registers backend routes under /api/inventory/*
+6. Engine exposes frontend routes from manifest.routes to sidebar
+
+Uninstall:
+- Sets InstalledModule.isActive = false (tables preserved, data safe)
+- Routes deregistered immediately
+
+
+CODE QUALITY CHECKLIST (before marking phase complete)
+------------------------------------------------------
+  ✔ No TypeScript "any"
+  ✔ No console.log
+  ✔ Max 300 lines per file
+  ✔ One React component per file
+  ✔ No unused imports
+  ✔ All API routes protected by requireAuth
+  ✔ Transfer confirmation is atomic (transaction — no partial stock updates)
+  ✔ Stock quantity never goes negative (enforced in service + DB constraint)
+  ✔ Mobile layout works at 375px
+  ✔ Migration is idempotent
+  ✔ manifest.ts key = "inventory" (exact match)
+
+================================================================
+END
+================================================================
