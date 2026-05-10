@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2, Download } from "lucide-react";
+import {
+  Plus, Pencil, Trash2, Download, Users, TrendingUp,
+  Phone, Mail, Building2, ClipboardList, DollarSign,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,9 +13,13 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
+import { useCurrency, formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 import { ConfirmDialog, useConfirm } from "@/components/ui/confirm-dialog";
 import { exportCSV } from "@/lib/csv";
@@ -21,7 +28,13 @@ import { Pagination } from "@/components/ui/pagination";
 
 const PAGE_SIZE = 20;
 
-type Deal = { id: string; title: string; status: string; value: number | null };
+type Deal = {
+  id: string;
+  title: string;
+  status: string;
+  value: number | null;
+  currency: string;
+};
 
 type Customer = {
   id: string;
@@ -35,6 +48,40 @@ type Customer = {
   deals: Deal[];
 };
 
+type Contact = {
+  id: string;
+  companyId: string;
+  name: string;
+  position: string | null;
+  email: string | null;
+  phone: string | null;
+  company: { id: string; name: string; industry: string | null } | null;
+};
+
+type CompanyLog = {
+  id: string;
+  companyId: string;
+  type: "call" | "visit" | "email" | "note" | "other";
+  subject: string | null;
+  body: string | null;
+  loggedAt: string;
+  createdAt: string;
+};
+
+const LOG_LABELS: Record<string, string> = {
+  call: "Call", visit: "Visit", email: "Email", note: "Note", other: "Other",
+};
+const LOG_EMOJIS: Record<string, string> = {
+  call: "📞", visit: "🏢", email: "📧", note: "📝", other: "💬",
+};
+const LOG_COLORS: Record<string, string> = {
+  call:  "border-emerald-200 bg-emerald-50 text-emerald-700",
+  visit: "border-blue-200 bg-blue-50 text-blue-700",
+  email: "border-violet-200 bg-violet-50 text-violet-700",
+  note:  "border-amber-200 bg-amber-50 text-amber-700",
+  other: "border-slate-200 bg-slate-50 text-slate-700",
+};
+
 const DEAL_STATUS_COLOR: Record<string, string> = {
   prospect:    "bg-slate-100 text-slate-700",
   qualified:   "bg-blue-100 text-blue-700",
@@ -44,9 +91,9 @@ const DEAL_STATUS_COLOR: Record<string, string> = {
   lost:        "bg-red-100 text-red-700",
 };
 
-const EMPTY: Record<string, string> = {
-  name: "", email: "", phone: "", company: "", address: "", notes: "",
-};
+const CUSTOMER_EMPTY = { name: "", email: "", phone: "", company: "", address: "", notes: "" };
+const DEAL_EMPTY_BASE = { title: "", value: "", status: "prospect", closeDate: "" };
+const LOG_EMPTY = { type: "note", subject: "", body: "" };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -57,83 +104,217 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function CustomerAvatar({ name }: { name: string }) {
+  const initials = name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  return (
+    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
+      {initials}
+    </div>
+  );
+}
+
 export default function CustomersPage() {
+  const currency = useCurrency();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [contacts, setContacts]   = useState<Contact[]>([]);
   const [loading, setLoading]     = useState(true);
-  const [open, setOpen]           = useState(false);
-  const [editing, setEditing]     = useState<Customer | null>(null);
-  const [form, setForm]           = useState(EMPTY);
-  const [saving, setSaving]       = useState(false);
-  const [error, setError]         = useState<string | null>(null);
   const [search, setSearch]       = useState("");
   const [page, setPage]           = useState(1);
+
+  const [customerSheetOpen, setCustomerSheetOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer]     = useState<Customer | null>(null);
+  const [customerForm, setCustomerForm]           = useState(CUSTOMER_EMPTY);
+  const [customerSaving, setCustomerSaving]       = useState(false);
+  const [customerError, setCustomerError]         = useState<string | null>(null);
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selected, setSelected]     = useState<Customer | null>(null);
+
+  const [logs, setLogs]               = useState<CompanyLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [addingLog, setAddingLog]     = useState(false);
+  const [logForm, setLogForm]         = useState(LOG_EMPTY);
+  const [logSaving, setLogSaving]     = useState(false);
+  const [logError, setLogError]       = useState<string | null>(null);
+
+  const [addingDeal, setAddingDeal] = useState(false);
+  const [dealForm, setDealForm]     = useState<Record<string, string>>({ ...DEAL_EMPTY_BASE, currency });
+  const [dealSaving, setDealSaving] = useState(false);
+  const [dealError, setDealError]   = useState<string | null>(null);
+
   const { confirm: askConfirm, isOpen: confirmOpen, handleConfirm, handleCancel } = useConfirm();
 
   const load = useCallback(() => {
     setLoading(true);
-    apiGet<{ customers: Customer[] }>("/api/crm/customers")
-      .then((d) => setCustomers(d.customers))
+    Promise.all([
+      apiGet<{ customers: Customer[] }>("/api/crm/customers"),
+      apiGet<{ contacts: Contact[] }>("/api/contacts/contacts?limit=200"),
+    ])
+      .then(([cd, cnd]) => {
+        setCustomers(cd.customers);
+        setContacts(cnd.contacts);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    void (async () => { load(); })();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { setPage(1); }, [search]);
+
+  function getCustomerContacts(customer: Customer): Contact[] {
+    if (!customer.company) return [];
+    const q = customer.company.toLowerCase();
+    return contacts.filter((c) => c.company?.name?.toLowerCase() === q);
+  }
+
+  function getCompanyId(customer: Customer): string | null {
+    return getCustomerContacts(customer)[0]?.companyId ?? null;
+  }
+
+  function loadLogs(customer: Customer) {
+    const companyId = getCompanyId(customer);
+    if (!companyId) { setLogs([]); return; }
+    setLogsLoading(true);
+    apiGet<{ logs: CompanyLog[] }>(`/api/contacts/companies/${companyId}/logs`)
+      .then((d) => setLogs(d.logs))
+      .catch(() => setLogs([]))
+      .finally(() => setLogsLoading(false));
+  }
+
+  function openDetail(customer: Customer) {
+    setSelected(customer);
+    setDetailOpen(true);
+    setAddingLog(false);
+    setAddingDeal(false);
+    setLogForm(LOG_EMPTY);
+    setDealForm({ ...DEAL_EMPTY_BASE, currency });
+    setLogError(null);
+    setDealError(null);
+    loadLogs(customer);
+  }
+
+  function closeDetail() {
+    setDetailOpen(false);
+    setAddingLog(false);
+    setAddingDeal(false);
+  }
 
   function openCreate() {
-    setEditing(null);
-    setForm(EMPTY);
-    setError(null);
-    setOpen(true);
+    setEditingCustomer(null);
+    setCustomerForm(CUSTOMER_EMPTY);
+    setCustomerError(null);
+    setCustomerSheetOpen(true);
   }
 
   function openEdit(c: Customer) {
-    setEditing(c);
-    setForm({
+    setEditingCustomer(c);
+    setCustomerForm({
       name:    c.name,
-      email:   c.email   ?? "",
-      phone:   c.phone   ?? "",
-      company: c.company ?? "",
-      address: c.address ?? "",
-      notes:   c.notes   ?? "",
+      email:   c.email    ?? "",
+      phone:   c.phone    ?? "",
+      company: c.company  ?? "",
+      address: c.address  ?? "",
+      notes:   c.notes    ?? "",
     });
-    setError(null);
-    setOpen(true);
+    setCustomerError(null);
+    setCustomerSheetOpen(true);
   }
 
-  function set(key: string, val: string) {
-    setForm((f) => ({ ...f, [key]: val }));
-  }
-
-  async function handleSave() {
-    if (!form.name.trim()) { setError("Name is required"); return; }
-    setSaving(true);
-    setError(null);
+  async function handleSaveCustomer() {
+    if (!customerForm.name.trim()) { setCustomerError("Name is required"); return; }
+    setCustomerSaving(true); setCustomerError(null);
     try {
-      const payload = { ...form, email: form.email || undefined };
-      if (editing) {
-        await apiPatch(`/api/crm/customers/${editing.id}`, payload);
+      const payload = { ...customerForm, email: customerForm.email || undefined };
+      if (editingCustomer) {
+        await apiPatch(`/api/crm/customers/${editingCustomer.id}`, payload);
+        toast.success("Saved successfully");
       } else {
         await apiPost("/api/crm/customers", payload);
+        toast.success("Created successfully");
       }
-      setOpen(false);
-      toast.success(editing ? "Saved successfully" : "Created successfully");
+      setCustomerSheetOpen(false);
       load();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Save failed";
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setSaving(false);
-    }
+      setCustomerError(msg); toast.error(msg);
+    } finally { setCustomerSaving(false); }
   }
 
-  async function handleDelete(id: string) {
+  async function handleDeleteCustomer(id: string) {
     const ok = await askConfirm();
     if (!ok) return;
-    try { await apiDelete(`/api/crm/customers/${id}`); toast.success("Deleted successfully"); load(); }
-    catch (err) { toast.error(err instanceof Error ? err.message : "Delete failed"); }
+    try {
+      await apiDelete(`/api/crm/customers/${id}`);
+      if (selected?.id === id) setDetailOpen(false);
+      toast.success("Deleted");
+      load();
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Delete failed"); }
+  }
+
+  async function handleAddDeal() {
+    if (!selected || !dealForm.title.trim()) { setDealError("Title is required"); return; }
+    setDealSaving(true); setDealError(null);
+    try {
+      const { deal } = await apiPost<{ deal: Deal }>("/api/crm/deals", {
+        title:      dealForm.title,
+        value:      dealForm.value ? parseFloat(dealForm.value) : undefined,
+        currency:   dealForm.currency,
+        status:     dealForm.status,
+        customerId: selected.id,
+        closeDate:  dealForm.closeDate ? new Date(dealForm.closeDate).toISOString() : undefined,
+      });
+      const newDeal = deal as Deal;
+      setSelected((prev) => prev ? { ...prev, deals: [newDeal, ...prev.deals] } : prev);
+      setCustomers((prev) =>
+        prev.map((c) => c.id === selected.id ? { ...c, deals: [newDeal, ...c.deals] } : c)
+      );
+      setAddingDeal(false);
+      setDealForm({ ...DEAL_EMPTY_BASE, currency });
+      toast.success("Deal created");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to create deal";
+      setDealError(msg); toast.error(msg);
+    } finally { setDealSaving(false); }
+  }
+
+  async function handleAddLog() {
+    if (!selected) return;
+    const companyId = getCompanyId(selected);
+    if (!companyId) {
+      toast.error("No linked company — add this customer's company in Contacts first");
+      return;
+    }
+    if (!logForm.subject.trim() && !logForm.body.trim()) {
+      setLogError("Subject or details are required");
+      return;
+    }
+    setLogSaving(true); setLogError(null);
+    try {
+      const { log } = await apiPost<{ log: CompanyLog }>(
+        `/api/contacts/companies/${companyId}/logs`,
+        { type: logForm.type, subject: logForm.subject || undefined, body: logForm.body || undefined },
+      );
+      setLogs((prev) => [log, ...prev]);
+      setAddingLog(false);
+      setLogForm(LOG_EMPTY);
+      toast.success("Activity logged");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to log";
+      setLogError(msg); toast.error(msg);
+    } finally { setLogSaving(false); }
+  }
+
+  async function handleDeleteLog(logId: string) {
+    if (!selected) return;
+    const companyId = getCompanyId(selected);
+    if (!companyId) return;
+    const ok = await askConfirm();
+    if (!ok) return;
+    try {
+      await apiDelete(`/api/contacts/companies/${companyId}/logs/${logId}`);
+      setLogs((prev) => prev.filter((l) => l.id !== logId));
+      toast.success("Log deleted");
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Delete failed"); }
   }
 
   const filtered = customers.filter((c) => {
@@ -141,16 +322,14 @@ export default function CustomersPage() {
     return (
       c.name.toLowerCase().includes(q) ||
       (c.company ?? "").toLowerCase().includes(q) ||
-      (c.email ?? "").toLowerCase().includes(q)
+      (c.email   ?? "").toLowerCase().includes(q)
     );
   });
-
-  useEffect(() => { setPage(1); }, [search]);
-
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="space-y-4">
+
       <div className="flex items-center gap-3">
         <Input
           placeholder="Search customers…"
@@ -159,13 +338,16 @@ export default function CustomersPage() {
           className="max-w-xs h-8 text-sm"
         />
         <div className="ml-auto flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => exportCSV("customers.csv",
-            ["Name","Email","Phone","Company"],
-            filtered.map((c) => [c.name, c.email, c.phone, c.company])
-          )}><Download className="w-3.5 h-3.5 mr-1" />Export</Button>
+          <Button size="sm" variant="outline" onClick={() =>
+            exportCSV("customers.csv",
+              ["Name", "Email", "Phone", "Company"],
+              filtered.map((c) => [c.name, c.email, c.phone, c.company]),
+            )
+          }>
+            <Download className="w-3.5 h-3.5 mr-1" />Export
+          </Button>
           <Button size="sm" onClick={openCreate}>
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            Add Customer
+            <Plus className="w-3.5 h-3.5 mr-1" />Add Customer
           </Button>
         </div>
       </div>
@@ -177,10 +359,10 @@ export default function CustomersPage() {
               <TableHead>Name</TableHead>
               <TableHead>Company</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
+              <TableHead>Contacts</TableHead>
               <TableHead>Deals</TableHead>
               <TableHead>Since</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-20" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -195,14 +377,27 @@ export default function CustomersPage() {
                 </TableCell>
               </TableRow>
             ) : paginated.map((c) => {
+              const linked      = getCustomerContacts(c);
               const activeDeals = c.deals.filter((d) => !["won", "lost"].includes(d.status));
               const wonDeals    = c.deals.filter((d) => d.status === "won");
               return (
-                <TableRow key={c.id}>
+                <TableRow
+                  key={c.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => openDetail(c)}
+                >
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell className="text-muted-foreground">{c.company ?? "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{c.email ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.phone ?? "—"}</TableCell>
+                  <TableCell>
+                    {linked.length > 0 ? (
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
+                        <Users className="w-3 h-3" />{linked.length}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 flex-wrap">
                       {c.deals.length === 0 ? (
@@ -226,12 +421,12 @@ export default function CustomersPage() {
                   <TableCell className="text-muted-foreground text-xs">
                     {new Date(c.createdAt).toLocaleDateString()}
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="icon-sm" onClick={() => openEdit(c)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(c.id)}>
+                      <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteCustomer(c.id)}>
                         <Trash2 className="w-3.5 h-3.5 text-destructive" />
                       </Button>
                     </div>
@@ -245,71 +440,417 @@ export default function CustomersPage() {
 
       <Pagination page={page} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} />
 
-      {/* deals panel shown when editing */}
-      {editing && editing.deals.length > 0 && open && (
-        <div className="hidden" />
-      )}
-
-      <Sheet open={open} onOpenChange={setOpen}>
+      {/* Create / Edit Customer Sheet */}
+      <Sheet open={customerSheetOpen} onOpenChange={setCustomerSheetOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editing ? "Edit Customer" : "New Customer"}</SheetTitle>
+            <SheetTitle>{editingCustomer ? "Edit Customer" : "New Customer"}</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
-            {error && (
+            {customerError && (
               <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">
-                {error}
+                {customerError}
               </p>
             )}
             <Field label="Name *">
-              <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Full name" />
+              <Input
+                value={customerForm.name}
+                onChange={(e) => setCustomerForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Full name"
+              />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Company">
-                <Input value={form.company} onChange={(e) => set("company", e.target.value)} placeholder="Acme Inc." />
+                <Input
+                  value={customerForm.company}
+                  onChange={(e) => setCustomerForm((f) => ({ ...f, company: e.target.value }))}
+                  placeholder="Acme Inc."
+                />
               </Field>
               <Field label="Phone">
-                <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+1 555 0100" />
+                <Input
+                  value={customerForm.phone}
+                  onChange={(e) => setCustomerForm((f) => ({ ...f, phone: e.target.value }))}
+                  placeholder="+1 555 0100"
+                />
               </Field>
             </div>
             <Field label="Email">
-              <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="email@example.com" />
+              <Input
+                type="email"
+                value={customerForm.email}
+                onChange={(e) => setCustomerForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="email@example.com"
+              />
             </Field>
             <Field label="Address">
-              <Input value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="123 Main St, City" />
+              <Input
+                value={customerForm.address}
+                onChange={(e) => setCustomerForm((f) => ({ ...f, address: e.target.value }))}
+                placeholder="123 Main St, City"
+              />
             </Field>
             <Field label="Notes">
-              <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Any notes…" rows={3} />
+              <Textarea
+                value={customerForm.notes}
+                onChange={(e) => setCustomerForm((f) => ({ ...f, notes: e.target.value }))}
+                placeholder="Any notes…"
+                rows={3}
+              />
             </Field>
-
-            {editing && editing.deals.length > 0 && (
-              <div className="pt-2 border-t space-y-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Associated Deals</p>
-                {editing.deals.map((deal) => (
-                  <div key={deal.id} className="flex items-center justify-between text-xs py-1">
-                    <span className="font-medium truncate max-w-[140px]">{deal.title}</span>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {deal.value != null && (
-                        <span className="text-muted-foreground">${deal.value.toLocaleString()}</span>
-                      )}
-                      <span className={cn("px-1.5 py-0.5 rounded-full font-medium capitalize", DEAL_STATUS_COLOR[deal.status] ?? "bg-muted")}>
-                        {deal.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
           <SheetFooter>
             <SheetClose render={<Button variant="outline" size="sm" />}>Cancel</SheetClose>
-            <Button size="sm" onClick={handleSave} disabled={saving}>
-              {saving ? "Saving…" : editing ? "Save Changes" : "Create Customer"}
+            <Button size="sm" onClick={handleSaveCustomer} disabled={customerSaving}>
+              {customerSaving ? "Saving…" : editingCustomer ? "Save Changes" : "Create Customer"}
             </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
-      <ConfirmDialog open={confirmOpen} description="This action cannot be undone." onConfirm={handleConfirm} onCancel={handleCancel} />
+
+      {/* Customer Detail Sheet */}
+      <Sheet open={detailOpen} onOpenChange={(open) => { if (!open) closeDetail(); else setDetailOpen(true); }}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          {selected && (
+            <>
+              <SheetHeader>
+                <div className="flex items-start gap-3 pr-6">
+                  <CustomerAvatar name={selected.name} />
+                  <div className="min-w-0 flex-1">
+                    <SheetTitle className="text-lg leading-tight">{selected.name}</SheetTitle>
+                    {selected.company && (
+                      <p className="text-sm text-muted-foreground">{selected.company}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon-sm" onClick={() => { setDetailOpen(false); openEdit(selected); }}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteCustomer(selected.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </SheetHeader>
+
+              <div className="px-4 py-4 space-y-6">
+
+                <div className="space-y-1.5">
+                  {selected.email && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="w-4 h-4 text-muted-foreground shrink-0" />{selected.email}
+                    </div>
+                  )}
+                  {selected.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="w-4 h-4 text-muted-foreground shrink-0" />{selected.phone}
+                    </div>
+                  )}
+                  {selected.address && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />{selected.address}
+                    </div>
+                  )}
+                  {selected.notes && (
+                    <p className="text-sm text-muted-foreground italic border-t pt-2 mt-2">{selected.notes}</p>
+                  )}
+                </div>
+
+                {/* Contacts */}
+                <div className="space-y-3 border-t pt-4">
+                  <p className="text-sm font-semibold flex items-center gap-1.5">
+                    <Users className="w-4 h-4" />
+                    Contacts
+                    <span className="ml-1 text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                      {getCustomerContacts(selected).length}
+                    </span>
+                  </p>
+                  {getCustomerContacts(selected).length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg">
+                      {selected.company
+                        ? `No contacts found for "${selected.company}" — add them in the Contacts module`
+                        : "Set a company name to see linked contacts"}
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {getCustomerContacts(selected).map((contact) => (
+                        <div key={contact.id} className="flex items-start gap-3 rounded-lg border p-3">
+                          <CustomerAvatar name={contact.name} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium text-sm">{contact.name}</span>
+                              {contact.position && (
+                                <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                                  {contact.position}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1 space-y-0.5">
+                              {contact.email && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Mail className="w-3 h-3 shrink-0" />{contact.email}
+                                </p>
+                              )}
+                              {contact.phone && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Phone className="w-3 h-3 shrink-0" />{contact.phone}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Deals */}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold flex items-center gap-1.5">
+                      <TrendingUp className="w-4 h-4" />
+                      Deals
+                      <span className="ml-1 text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                        {selected.deals.length}
+                      </span>
+                    </p>
+                    {!addingDeal && (
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setDealForm({ ...DEAL_EMPTY_BASE, currency });
+                        setDealError(null);
+                        setAddingDeal(true);
+                      }}>
+                        <Plus className="w-3.5 h-3.5 mr-1" />Add Deal
+                      </Button>
+                    )}
+                  </div>
+
+                  {addingDeal && (
+                    <div className="rounded-lg border p-3 space-y-3">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">New Deal</p>
+                      {dealError && (
+                        <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">
+                          {dealError}
+                        </p>
+                      )}
+                      <Field label="Title *">
+                        <Input
+                          value={dealForm.title}
+                          onChange={(e) => setDealForm((f) => ({ ...f, title: e.target.value }))}
+                          placeholder="Deal title"
+                        />
+                      </Field>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Field label={`Value (${currency})`}>
+                          <Input
+                            type="number"
+                            value={dealForm.value}
+                            onChange={(e) => setDealForm((f) => ({ ...f, value: e.target.value }))}
+                            placeholder="0"
+                            min="0"
+                          />
+                        </Field>
+                        <Field label="Stage">
+                          <Select value={dealForm.status} onValueChange={(v) => v && setDealForm((f) => ({ ...f, status: v }))}>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="prospect">Prospect</SelectItem>
+                              <SelectItem value="qualified">Qualified</SelectItem>
+                              <SelectItem value="proposal">Proposal</SelectItem>
+                              <SelectItem value="negotiation">Negotiation</SelectItem>
+                              <SelectItem value="won">Won</SelectItem>
+                              <SelectItem value="lost">Lost</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </Field>
+                      </div>
+                      <Field label="Close Date">
+                        <Input
+                          type="date"
+                          value={dealForm.closeDate}
+                          onChange={(e) => setDealForm((f) => ({ ...f, closeDate: e.target.value }))}
+                        />
+                      </Field>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={handleAddDeal} disabled={dealSaving}>
+                          {dealSaving ? "Creating…" : "Create Deal"}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setAddingDeal(false)}>Cancel</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {selected.deals.length === 0 && !addingDeal ? (
+                    <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg">
+                      No deals yet — click Add Deal to create one
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {selected.deals.map((deal) => (
+                        <div key={deal.id} className="flex items-center justify-between rounded-lg border p-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <DollarSign className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            <span className="font-medium text-sm truncate">{deal.title}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {deal.value != null && (
+                              <span className="text-sm font-medium">
+                                {formatCurrency(deal.value, currency)}
+                              </span>
+                            )}
+                            <span className={cn(
+                              "text-xs px-1.5 py-0.5 rounded-full font-medium capitalize",
+                              DEAL_STATUS_COLOR[deal.status] ?? "bg-muted",
+                            )}>
+                              {deal.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Activity Log */}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold flex items-center gap-1.5">
+                      <ClipboardList className="w-4 h-4" />
+                      Activity
+                      <span className="ml-1 text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                        {logs.length}
+                      </span>
+                    </p>
+                    {!addingLog && getCompanyId(selected) != null && (
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setLogForm(LOG_EMPTY);
+                        setLogError(null);
+                        setAddingLog(true);
+                      }}>
+                        <Plus className="w-3.5 h-3.5 mr-1" />Log Activity
+                      </Button>
+                    )}
+                  </div>
+
+                  {getCompanyId(selected) == null && (
+                    <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg">
+                      {selected.company
+                        ? `Add "${selected.company}" to the Contacts module to enable activity logging`
+                        : "Set a company name and add it to Contacts to track activity"}
+                    </p>
+                  )}
+
+                  {addingLog && (
+                    <div className="rounded-lg border p-3 space-y-3">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Log Activity</p>
+                      {logError && (
+                        <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">
+                          {logError}
+                        </p>
+                      )}
+                      <Field label="Type">
+                        <Select value={logForm.type} onValueChange={(v) => v && setLogForm((f) => ({ ...f, type: v }))}>
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="call">📞 Call</SelectItem>
+                            <SelectItem value="visit">🏢 Visit</SelectItem>
+                            <SelectItem value="email">📧 Email</SelectItem>
+                            <SelectItem value="note">📝 Note</SelectItem>
+                            <SelectItem value="other">💬 Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                      <Field label="Subject">
+                        <Input
+                          value={logForm.subject}
+                          onChange={(e) => setLogForm((f) => ({ ...f, subject: e.target.value }))}
+                          placeholder="Brief summary…"
+                        />
+                      </Field>
+                      <Field label="Details">
+                        <Textarea
+                          value={logForm.body}
+                          onChange={(e) => setLogForm((f) => ({ ...f, body: e.target.value }))}
+                          placeholder="Additional notes…"
+                          rows={3}
+                        />
+                      </Field>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={handleAddLog} disabled={logSaving}>
+                          {logSaving ? "Logging…" : "Save Log"}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setAddingLog(false)}>Cancel</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {getCompanyId(selected) != null && (
+                    logsLoading ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">Loading activity…</p>
+                    ) : logs.length === 0 && !addingLog ? (
+                      <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg">
+                        No activity yet — click Log Activity to add one
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {logs.map((log) => (
+                          <div
+                            key={log.id}
+                            className={cn(
+                              "flex items-start gap-3 rounded-lg border p-3",
+                              LOG_COLORS[log.type] ?? LOG_COLORS.other,
+                            )}
+                          >
+                            <span className="text-base shrink-0 mt-0.5" aria-hidden>
+                              {LOG_EMOJIS[log.type] ?? "💬"}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold uppercase tracking-wide">
+                                  {LOG_LABELS[log.type] ?? log.type}
+                                </span>
+                                <span className="text-xs text-muted-foreground ml-auto shrink-0">
+                                  {new Date(log.loggedAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              {log.subject && (
+                                <p className="text-sm font-medium mt-0.5">{log.subject}</p>
+                              )}
+                              {log.body && (
+                                <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line">{log.body}</p>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              className="shrink-0 hover:text-destructive opacity-60 hover:opacity-100"
+                              onClick={() => handleDeleteLog(log.id)}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  )}
+                </div>
+
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        description="This action cannot be undone."
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }

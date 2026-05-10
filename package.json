@@ -6,13 +6,15 @@
     "apps/*",
     "packages/*",
     "engine",
-    "modules/*"
+    "modules/*",
+    "erpai"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=apps/web & npm run dev --workspace=apps/api",
     "build": "npm run build --workspace=apps/web && npm run build --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
-    "dev:api": "npm run dev --workspace=apps/api"
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:erpai": "npm run dev --workspace=erpai"
   },
   "devDependencies": {
     "typescript": "^5.4.5"

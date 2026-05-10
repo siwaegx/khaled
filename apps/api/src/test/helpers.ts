@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "../middleware/errorHandler";
@@ -7,11 +8,13 @@ export type MockTenantDb = {
   lead: Record<string, ReturnType<typeof vi.fn>>;
   customer: Record<string, ReturnType<typeof vi.fn>>;
   deal: Record<string, ReturnType<typeof vi.fn>>;
+  crmCompany: Record<string, ReturnType<typeof vi.fn>>;
+  crmContact: Record<string, ReturnType<typeof vi.fn>>;
 };
 
 export function makeApp(
   router: express.Router,
-  user: JwtPayload = { userId: "u1", orgId: "org1", role: "owner" },
+  user: JwtPayload = { userId: "u1", orgId: "org1", role: "owner", isAdmin: false },
   tenantDb?: MockTenantDb
 ) {
   const app = express();
@@ -33,9 +36,11 @@ export function makeTenantDb(): MockTenantDb {
   return {
     lead: {
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      count: vi.fn(),
       groupBy: vi.fn(),
     },
     customer: {
@@ -53,6 +58,24 @@ export function makeTenantDb(): MockTenantDb {
       delete: vi.fn(),
       count: vi.fn(),
       groupBy: vi.fn(),
+    },
+    crmCompany: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    crmContact: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
     },
   };
 }

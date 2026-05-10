@@ -138,6 +138,41 @@ exports.Prisma.ActivityLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.CrmCompanyScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  industry: 'industry',
+  website: 'website',
+  phone: 'phone',
+  email: 'email',
+  address: 'address',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CrmContactScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  name: 'name',
+  position: 'position',
+  email: 'email',
+  phone: 'phone',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CrmCompanyLogScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  type: 'type',
+  subject: 'subject',
+  body: 'body',
+  loggedAt: 'loggedAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.LeadScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -329,6 +364,35 @@ exports.Prisma.TaskScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CalendarEventScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  startAt: 'startAt',
+  endAt: 'endAt',
+  allDay: 'allDay',
+  type: 'type',
+  entityType: 'entityType',
+  entityId: 'entityId',
+  color: 'color',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DocumentScalarFieldEnum = {
+  id: 'id',
+  entityType: 'entityType',
+  entityId: 'entityId',
+  name: 'name',
+  originalName: 'originalName',
+  mimeType: 'mimeType',
+  size: 'size',
+  storagePath: 'storagePath',
+  uploadedBy: 'uploadedBy',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -354,6 +418,14 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.CrmLogType = exports.$Enums.CrmLogType = {
+  call: 'call',
+  visit: 'visit',
+  email: 'email',
+  note: 'note',
+  other: 'other'
+};
+
 exports.LeadStatus = exports.$Enums.LeadStatus = {
   new: 'new',
   contacted: 'contacted',
@@ -438,9 +510,20 @@ exports.TaskPriority = exports.$Enums.TaskPriority = {
   urgent: 'urgent'
 };
 
+exports.CalendarEventType = exports.$Enums.CalendarEventType = {
+  meeting: 'meeting',
+  deadline: 'deadline',
+  reminder: 'reminder',
+  task: 'task',
+  other: 'other'
+};
+
 exports.Prisma.ModelName = {
   TenantMeta: 'TenantMeta',
   ActivityLog: 'ActivityLog',
+  CrmCompany: 'CrmCompany',
+  CrmContact: 'CrmContact',
+  CrmCompanyLog: 'CrmCompanyLog',
   Lead: 'Lead',
   Customer: 'Customer',
   Deal: 'Deal',
@@ -455,7 +538,9 @@ exports.Prisma.ModelName = {
   Employee: 'Employee',
   LeaveRequest: 'LeaveRequest',
   Project: 'Project',
-  Task: 'Task'
+  Task: 'Task',
+  CalendarEvent: 'CalendarEvent',
+  Document: 'Document'
 };
 
 /**

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import { makeApp, makeTenantDb } from "./helpers";
-import { router } from "../modules/crm/backend/router";
+import { router } from "../../../../modules/crm/backend/router";
 
 describe("CRM — GET /stats", () => {
   let db: ReturnType<typeof makeTenantDb>;
@@ -16,16 +16,18 @@ describe("CRM — GET /stats", () => {
     db.deal.groupBy = vi.fn().mockResolvedValue([
       { status: "won", _count: { id: 1 }, _sum: { value: 5000 } },
     ]);
-
-    // patch count methods
-    (db as unknown as { lead: { count: ReturnType<typeof vi.fn> } }).lead.count = vi.fn().mockResolvedValue(10);
-    (db as unknown as { customer: { count: ReturnType<typeof vi.fn> } }).customer.count = vi.fn().mockResolvedValue(3);
+    db.lead.count = vi.fn().mockResolvedValue(10);
+    db.customer.count = vi.fn().mockResolvedValue(3);
+    db.crmCompany.count = vi.fn().mockResolvedValue(2);
+    db.crmContact.count = vi.fn().mockResolvedValue(7);
 
     const res = await request(makeApp(router, undefined, db)).get("/stats");
     expect(res.status).toBe(200);
     expect(res.body.totalLeads).toBe(10);
     expect(res.body.totalCustomers).toBe(3);
     expect(res.body.totalDeals).toBe(5);
+    expect(res.body.totalCompanies).toBe(2);
+    expect(res.body.totalContacts).toBe(7);
     expect(res.body.leadsByStatus).toEqual([{ status: "new", _count: { id: 2 } }]);
     expect(res.body.dealsByStatus[0].status).toBe("won");
   });
@@ -236,3 +238,4 @@ describe("CRM Deals", () => {
     expect(res.body.success).toBe(true);
   });
 });
+

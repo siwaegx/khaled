@@ -3,8 +3,8 @@ import request from "supertest";
 import { makeApp } from "./helpers";
 
 vi.mock("../middleware/requireAuth", () => ({
-  requireAuth: (req: { user?: { userId: string; orgId: string; role: string } }, _res: unknown, next: () => void) => {
-    req.user = { userId: "u1", orgId: "org1", role: "owner" };
+  requireAuth: (req: { user?: { userId: string; orgId: string; role: string; isAdmin: boolean } }, _res: unknown, next: () => void) => {
+    req.user = { userId: "u1", orgId: "org1", role: "owner", isAdmin: false };
     next();
   },
 }));
@@ -28,7 +28,6 @@ vi.mock("@business360/engine", () => ({
 }));
 
 vi.mock("../engine/module_loader", () => ({
-  loadAllManifests: vi.fn(() => []),
   getManifest: vi.fn(),
 }));
 
@@ -40,7 +39,7 @@ vi.mock("../engine/module_installer", () => ({
 import { modulesRouter } from "../routes/modules";
 import { prisma } from "../lib/prisma";
 import { installModule, uninstallModule } from "../engine/module_installer";
-import { loadAllManifests } from "../engine/module_loader";
+import { getAllManifests } from "@business360/engine";
 import { AppError } from "../middleware/errorHandler";
 
 function app() {
@@ -53,8 +52,8 @@ describe("GET /api/modules", () => {
   it("returns module list", async () => {
     vi.mocked(prisma.installedModule.findMany).mockResolvedValue([{ moduleKey: "crm" }] as never);
     vi.mocked(prisma.organization.findUnique).mockResolvedValue({ plan: "starter" } as never);
-    vi.mocked(loadAllManifests).mockReturnValue([
-      { key: "crm", name: "CRM", planRequired: "starter" } as never,
+    vi.mocked(getAllManifests).mockReturnValue([
+      { key: "crm", name: "CRM", requiredPlan: "starter" } as never,
     ]);
 
     const res = await request(app()).get("/");
@@ -67,8 +66,8 @@ describe("GET /api/modules", () => {
   it("marks unavailable for plan", async () => {
     vi.mocked(prisma.installedModule.findMany).mockResolvedValue([]);
     vi.mocked(prisma.organization.findUnique).mockResolvedValue({ plan: "starter" } as never);
-    vi.mocked(loadAllManifests).mockReturnValue([
-      { key: "reports", name: "Reports", planRequired: "enterprise" } as never,
+    vi.mocked(getAllManifests).mockReturnValue([
+      { key: "reports", name: "Reports", requiredPlan: "enterprise" } as never,
     ]);
 
     const res = await request(app()).get("/");

@@ -5,7 +5,9 @@ build/
 .env
 .env.local
 .env.*.local
+deploy/.env.production
 *.log
 .DS_Store
 prisma/generated/
 .claude/
+*.node.tmp*

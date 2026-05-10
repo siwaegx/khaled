@@ -24,6 +24,21 @@ export type TenantMeta = $Result.DefaultSelection<Prisma.$TenantMetaPayload>
  */
 export type ActivityLog = $Result.DefaultSelection<Prisma.$ActivityLogPayload>
 /**
+ * Model CrmCompany
+ * 
+ */
+export type CrmCompany = $Result.DefaultSelection<Prisma.$CrmCompanyPayload>
+/**
+ * Model CrmContact
+ * 
+ */
+export type CrmContact = $Result.DefaultSelection<Prisma.$CrmContactPayload>
+/**
+ * Model CrmCompanyLog
+ * 
+ */
+export type CrmCompanyLog = $Result.DefaultSelection<Prisma.$CrmCompanyLogPayload>
+/**
  * Model Lead
  * 
  */
@@ -98,12 +113,33 @@ export type Project = $Result.DefaultSelection<Prisma.$ProjectPayload>
  * 
  */
 export type Task = $Result.DefaultSelection<Prisma.$TaskPayload>
+/**
+ * Model CalendarEvent
+ * 
+ */
+export type CalendarEvent = $Result.DefaultSelection<Prisma.$CalendarEventPayload>
+/**
+ * Model Document
+ * 
+ */
+export type Document = $Result.DefaultSelection<Prisma.$DocumentPayload>
 
 /**
  * Enums
  */
 export namespace $Enums {
-  export const LeadStatus: {
+  export const CrmLogType: {
+  call: 'call',
+  visit: 'visit',
+  email: 'email',
+  note: 'note',
+  other: 'other'
+};
+
+export type CrmLogType = (typeof CrmLogType)[keyof typeof CrmLogType]
+
+
+export const LeadStatus: {
   new: 'new',
   contacted: 'contacted',
   qualified: 'qualified',
@@ -219,7 +255,22 @@ export const TaskPriority: {
 
 export type TaskPriority = (typeof TaskPriority)[keyof typeof TaskPriority]
 
+
+export const CalendarEventType: {
+  meeting: 'meeting',
+  deadline: 'deadline',
+  reminder: 'reminder',
+  task: 'task',
+  other: 'other'
+};
+
+export type CalendarEventType = (typeof CalendarEventType)[keyof typeof CalendarEventType]
+
 }
+
+export type CrmLogType = $Enums.CrmLogType
+
+export const CrmLogType: typeof $Enums.CrmLogType
 
 export type LeadStatus = $Enums.LeadStatus
 
@@ -264,6 +315,10 @@ export const TaskStatus: typeof $Enums.TaskStatus
 export type TaskPriority = $Enums.TaskPriority
 
 export const TaskPriority: typeof $Enums.TaskPriority
+
+export type CalendarEventType = $Enums.CalendarEventType
+
+export const CalendarEventType: typeof $Enums.CalendarEventType
 
 /**
  * ##  Prisma Client ʲˢ
@@ -407,6 +462,36 @@ export class PrismaClient<
     * ```
     */
   get activityLog(): Prisma.ActivityLogDelegate<ExtArgs>;
+
+  /**
+   * `prisma.crmCompany`: Exposes CRUD operations for the **CrmCompany** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CrmCompanies
+    * const crmCompanies = await prisma.crmCompany.findMany()
+    * ```
+    */
+  get crmCompany(): Prisma.CrmCompanyDelegate<ExtArgs>;
+
+  /**
+   * `prisma.crmContact`: Exposes CRUD operations for the **CrmContact** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CrmContacts
+    * const crmContacts = await prisma.crmContact.findMany()
+    * ```
+    */
+  get crmContact(): Prisma.CrmContactDelegate<ExtArgs>;
+
+  /**
+   * `prisma.crmCompanyLog`: Exposes CRUD operations for the **CrmCompanyLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CrmCompanyLogs
+    * const crmCompanyLogs = await prisma.crmCompanyLog.findMany()
+    * ```
+    */
+  get crmCompanyLog(): Prisma.CrmCompanyLogDelegate<ExtArgs>;
 
   /**
    * `prisma.lead`: Exposes CRUD operations for the **Lead** model.
@@ -557,6 +642,26 @@ export class PrismaClient<
     * ```
     */
   get task(): Prisma.TaskDelegate<ExtArgs>;
+
+  /**
+   * `prisma.calendarEvent`: Exposes CRUD operations for the **CalendarEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CalendarEvents
+    * const calendarEvents = await prisma.calendarEvent.findMany()
+    * ```
+    */
+  get calendarEvent(): Prisma.CalendarEventDelegate<ExtArgs>;
+
+  /**
+   * `prisma.document`: Exposes CRUD operations for the **Document** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Documents
+    * const documents = await prisma.document.findMany()
+    * ```
+    */
+  get document(): Prisma.DocumentDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -1000,6 +1105,9 @@ export namespace Prisma {
   export const ModelName: {
     TenantMeta: 'TenantMeta',
     ActivityLog: 'ActivityLog',
+    CrmCompany: 'CrmCompany',
+    CrmContact: 'CrmContact',
+    CrmCompanyLog: 'CrmCompanyLog',
     Lead: 'Lead',
     Customer: 'Customer',
     Deal: 'Deal',
@@ -1014,7 +1122,9 @@ export namespace Prisma {
     Employee: 'Employee',
     LeaveRequest: 'LeaveRequest',
     Project: 'Project',
-    Task: 'Task'
+    Task: 'Task',
+    CalendarEvent: 'CalendarEvent',
+    Document: 'Document'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1030,7 +1140,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "tenantMeta" | "activityLog" | "lead" | "customer" | "deal" | "product" | "warehouse" | "stockLevel" | "purchaseOrder" | "purchaseOrderItem" | "invoice" | "invoiceItem" | "expense" | "employee" | "leaveRequest" | "project" | "task"
+      modelProps: "tenantMeta" | "activityLog" | "crmCompany" | "crmContact" | "crmCompanyLog" | "lead" | "customer" | "deal" | "product" | "warehouse" | "stockLevel" | "purchaseOrder" | "purchaseOrderItem" | "invoice" | "invoiceItem" | "expense" | "employee" | "leaveRequest" | "project" | "task" | "calendarEvent" | "document"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1171,6 +1281,216 @@ export namespace Prisma {
           count: {
             args: Prisma.ActivityLogCountArgs<ExtArgs>
             result: $Utils.Optional<ActivityLogCountAggregateOutputType> | number
+          }
+        }
+      }
+      CrmCompany: {
+        payload: Prisma.$CrmCompanyPayload<ExtArgs>
+        fields: Prisma.CrmCompanyFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CrmCompanyFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CrmCompanyFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload>
+          }
+          findFirst: {
+            args: Prisma.CrmCompanyFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CrmCompanyFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload>
+          }
+          findMany: {
+            args: Prisma.CrmCompanyFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload>[]
+          }
+          create: {
+            args: Prisma.CrmCompanyCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload>
+          }
+          createMany: {
+            args: Prisma.CrmCompanyCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CrmCompanyCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload>[]
+          }
+          delete: {
+            args: Prisma.CrmCompanyDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload>
+          }
+          update: {
+            args: Prisma.CrmCompanyUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload>
+          }
+          deleteMany: {
+            args: Prisma.CrmCompanyDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CrmCompanyUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.CrmCompanyUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyPayload>
+          }
+          aggregate: {
+            args: Prisma.CrmCompanyAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCrmCompany>
+          }
+          groupBy: {
+            args: Prisma.CrmCompanyGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CrmCompanyGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CrmCompanyCountArgs<ExtArgs>
+            result: $Utils.Optional<CrmCompanyCountAggregateOutputType> | number
+          }
+        }
+      }
+      CrmContact: {
+        payload: Prisma.$CrmContactPayload<ExtArgs>
+        fields: Prisma.CrmContactFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CrmContactFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CrmContactFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload>
+          }
+          findFirst: {
+            args: Prisma.CrmContactFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CrmContactFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload>
+          }
+          findMany: {
+            args: Prisma.CrmContactFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload>[]
+          }
+          create: {
+            args: Prisma.CrmContactCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload>
+          }
+          createMany: {
+            args: Prisma.CrmContactCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CrmContactCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload>[]
+          }
+          delete: {
+            args: Prisma.CrmContactDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload>
+          }
+          update: {
+            args: Prisma.CrmContactUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload>
+          }
+          deleteMany: {
+            args: Prisma.CrmContactDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CrmContactUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.CrmContactUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmContactPayload>
+          }
+          aggregate: {
+            args: Prisma.CrmContactAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCrmContact>
+          }
+          groupBy: {
+            args: Prisma.CrmContactGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CrmContactGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CrmContactCountArgs<ExtArgs>
+            result: $Utils.Optional<CrmContactCountAggregateOutputType> | number
+          }
+        }
+      }
+      CrmCompanyLog: {
+        payload: Prisma.$CrmCompanyLogPayload<ExtArgs>
+        fields: Prisma.CrmCompanyLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CrmCompanyLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CrmCompanyLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload>
+          }
+          findFirst: {
+            args: Prisma.CrmCompanyLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CrmCompanyLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload>
+          }
+          findMany: {
+            args: Prisma.CrmCompanyLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload>[]
+          }
+          create: {
+            args: Prisma.CrmCompanyLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload>
+          }
+          createMany: {
+            args: Prisma.CrmCompanyLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CrmCompanyLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload>[]
+          }
+          delete: {
+            args: Prisma.CrmCompanyLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload>
+          }
+          update: {
+            args: Prisma.CrmCompanyLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.CrmCompanyLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CrmCompanyLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.CrmCompanyLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrmCompanyLogPayload>
+          }
+          aggregate: {
+            args: Prisma.CrmCompanyLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCrmCompanyLog>
+          }
+          groupBy: {
+            args: Prisma.CrmCompanyLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CrmCompanyLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CrmCompanyLogCountArgs<ExtArgs>
+            result: $Utils.Optional<CrmCompanyLogCountAggregateOutputType> | number
           }
         }
       }
@@ -2224,6 +2544,146 @@ export namespace Prisma {
           }
         }
       }
+      CalendarEvent: {
+        payload: Prisma.$CalendarEventPayload<ExtArgs>
+        fields: Prisma.CalendarEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CalendarEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CalendarEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload>
+          }
+          findFirst: {
+            args: Prisma.CalendarEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CalendarEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload>
+          }
+          findMany: {
+            args: Prisma.CalendarEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload>[]
+          }
+          create: {
+            args: Prisma.CalendarEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload>
+          }
+          createMany: {
+            args: Prisma.CalendarEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CalendarEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload>[]
+          }
+          delete: {
+            args: Prisma.CalendarEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload>
+          }
+          update: {
+            args: Prisma.CalendarEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.CalendarEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CalendarEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.CalendarEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CalendarEventPayload>
+          }
+          aggregate: {
+            args: Prisma.CalendarEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCalendarEvent>
+          }
+          groupBy: {
+            args: Prisma.CalendarEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CalendarEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CalendarEventCountArgs<ExtArgs>
+            result: $Utils.Optional<CalendarEventCountAggregateOutputType> | number
+          }
+        }
+      }
+      Document: {
+        payload: Prisma.$DocumentPayload<ExtArgs>
+        fields: Prisma.DocumentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DocumentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DocumentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          findFirst: {
+            args: Prisma.DocumentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DocumentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          findMany: {
+            args: Prisma.DocumentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>[]
+          }
+          create: {
+            args: Prisma.DocumentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          createMany: {
+            args: Prisma.DocumentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.DocumentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>[]
+          }
+          delete: {
+            args: Prisma.DocumentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          update: {
+            args: Prisma.DocumentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          deleteMany: {
+            args: Prisma.DocumentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DocumentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.DocumentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          aggregate: {
+            args: Prisma.DocumentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDocument>
+          }
+          groupBy: {
+            args: Prisma.DocumentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DocumentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DocumentCountArgs<ExtArgs>
+            result: $Utils.Optional<DocumentCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2378,6 +2838,46 @@ export namespace Prisma {
   /**
    * Count Types
    */
+
+
+  /**
+   * Count Type CrmCompanyCountOutputType
+   */
+
+  export type CrmCompanyCountOutputType = {
+    contacts: number
+    logs: number
+  }
+
+  export type CrmCompanyCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    contacts?: boolean | CrmCompanyCountOutputTypeCountContactsArgs
+    logs?: boolean | CrmCompanyCountOutputTypeCountLogsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CrmCompanyCountOutputType without action
+   */
+  export type CrmCompanyCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyCountOutputType
+     */
+    select?: CrmCompanyCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CrmCompanyCountOutputType without action
+   */
+  export type CrmCompanyCountOutputTypeCountContactsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CrmContactWhereInput
+  }
+
+  /**
+   * CrmCompanyCountOutputType without action
+   */
+  export type CrmCompanyCountOutputTypeCountLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CrmCompanyLogWhereInput
+  }
 
 
   /**
@@ -4359,6 +4859,2976 @@ export namespace Prisma {
      * Select specific fields to fetch from the ActivityLog
      */
     select?: ActivityLogSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CrmCompany
+   */
+
+  export type AggregateCrmCompany = {
+    _count: CrmCompanyCountAggregateOutputType | null
+    _min: CrmCompanyMinAggregateOutputType | null
+    _max: CrmCompanyMaxAggregateOutputType | null
+  }
+
+  export type CrmCompanyMinAggregateOutputType = {
+    id: string | null
+    name: string | null
+    industry: string | null
+    website: string | null
+    phone: string | null
+    email: string | null
+    address: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CrmCompanyMaxAggregateOutputType = {
+    id: string | null
+    name: string | null
+    industry: string | null
+    website: string | null
+    phone: string | null
+    email: string | null
+    address: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CrmCompanyCountAggregateOutputType = {
+    id: number
+    name: number
+    industry: number
+    website: number
+    phone: number
+    email: number
+    address: number
+    notes: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CrmCompanyMinAggregateInputType = {
+    id?: true
+    name?: true
+    industry?: true
+    website?: true
+    phone?: true
+    email?: true
+    address?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CrmCompanyMaxAggregateInputType = {
+    id?: true
+    name?: true
+    industry?: true
+    website?: true
+    phone?: true
+    email?: true
+    address?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CrmCompanyCountAggregateInputType = {
+    id?: true
+    name?: true
+    industry?: true
+    website?: true
+    phone?: true
+    email?: true
+    address?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CrmCompanyAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CrmCompany to aggregate.
+     */
+    where?: CrmCompanyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmCompanies to fetch.
+     */
+    orderBy?: CrmCompanyOrderByWithRelationInput | CrmCompanyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CrmCompanyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmCompanies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmCompanies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CrmCompanies
+    **/
+    _count?: true | CrmCompanyCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CrmCompanyMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CrmCompanyMaxAggregateInputType
+  }
+
+  export type GetCrmCompanyAggregateType<T extends CrmCompanyAggregateArgs> = {
+        [P in keyof T & keyof AggregateCrmCompany]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCrmCompany[P]>
+      : GetScalarType<T[P], AggregateCrmCompany[P]>
+  }
+
+
+
+
+  export type CrmCompanyGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CrmCompanyWhereInput
+    orderBy?: CrmCompanyOrderByWithAggregationInput | CrmCompanyOrderByWithAggregationInput[]
+    by: CrmCompanyScalarFieldEnum[] | CrmCompanyScalarFieldEnum
+    having?: CrmCompanyScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CrmCompanyCountAggregateInputType | true
+    _min?: CrmCompanyMinAggregateInputType
+    _max?: CrmCompanyMaxAggregateInputType
+  }
+
+  export type CrmCompanyGroupByOutputType = {
+    id: string
+    name: string
+    industry: string | null
+    website: string | null
+    phone: string | null
+    email: string | null
+    address: string | null
+    notes: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: CrmCompanyCountAggregateOutputType | null
+    _min: CrmCompanyMinAggregateOutputType | null
+    _max: CrmCompanyMaxAggregateOutputType | null
+  }
+
+  type GetCrmCompanyGroupByPayload<T extends CrmCompanyGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CrmCompanyGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CrmCompanyGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CrmCompanyGroupByOutputType[P]>
+            : GetScalarType<T[P], CrmCompanyGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CrmCompanySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    industry?: boolean
+    website?: boolean
+    phone?: boolean
+    email?: boolean
+    address?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    contacts?: boolean | CrmCompany$contactsArgs<ExtArgs>
+    logs?: boolean | CrmCompany$logsArgs<ExtArgs>
+    _count?: boolean | CrmCompanyCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["crmCompany"]>
+
+  export type CrmCompanySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    industry?: boolean
+    website?: boolean
+    phone?: boolean
+    email?: boolean
+    address?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["crmCompany"]>
+
+  export type CrmCompanySelectScalar = {
+    id?: boolean
+    name?: boolean
+    industry?: boolean
+    website?: boolean
+    phone?: boolean
+    email?: boolean
+    address?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CrmCompanyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    contacts?: boolean | CrmCompany$contactsArgs<ExtArgs>
+    logs?: boolean | CrmCompany$logsArgs<ExtArgs>
+    _count?: boolean | CrmCompanyCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type CrmCompanyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $CrmCompanyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CrmCompany"
+    objects: {
+      contacts: Prisma.$CrmContactPayload<ExtArgs>[]
+      logs: Prisma.$CrmCompanyLogPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      name: string
+      industry: string | null
+      website: string | null
+      phone: string | null
+      email: string | null
+      address: string | null
+      notes: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["crmCompany"]>
+    composites: {}
+  }
+
+  type CrmCompanyGetPayload<S extends boolean | null | undefined | CrmCompanyDefaultArgs> = $Result.GetResult<Prisma.$CrmCompanyPayload, S>
+
+  type CrmCompanyCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<CrmCompanyFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: CrmCompanyCountAggregateInputType | true
+    }
+
+  export interface CrmCompanyDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CrmCompany'], meta: { name: 'CrmCompany' } }
+    /**
+     * Find zero or one CrmCompany that matches the filter.
+     * @param {CrmCompanyFindUniqueArgs} args - Arguments to find a CrmCompany
+     * @example
+     * // Get one CrmCompany
+     * const crmCompany = await prisma.crmCompany.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CrmCompanyFindUniqueArgs>(args: SelectSubset<T, CrmCompanyFindUniqueArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one CrmCompany that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {CrmCompanyFindUniqueOrThrowArgs} args - Arguments to find a CrmCompany
+     * @example
+     * // Get one CrmCompany
+     * const crmCompany = await prisma.crmCompany.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CrmCompanyFindUniqueOrThrowArgs>(args: SelectSubset<T, CrmCompanyFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first CrmCompany that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyFindFirstArgs} args - Arguments to find a CrmCompany
+     * @example
+     * // Get one CrmCompany
+     * const crmCompany = await prisma.crmCompany.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CrmCompanyFindFirstArgs>(args?: SelectSubset<T, CrmCompanyFindFirstArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first CrmCompany that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyFindFirstOrThrowArgs} args - Arguments to find a CrmCompany
+     * @example
+     * // Get one CrmCompany
+     * const crmCompany = await prisma.crmCompany.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CrmCompanyFindFirstOrThrowArgs>(args?: SelectSubset<T, CrmCompanyFindFirstOrThrowArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more CrmCompanies that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CrmCompanies
+     * const crmCompanies = await prisma.crmCompany.findMany()
+     * 
+     * // Get first 10 CrmCompanies
+     * const crmCompanies = await prisma.crmCompany.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const crmCompanyWithIdOnly = await prisma.crmCompany.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CrmCompanyFindManyArgs>(args?: SelectSubset<T, CrmCompanyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a CrmCompany.
+     * @param {CrmCompanyCreateArgs} args - Arguments to create a CrmCompany.
+     * @example
+     * // Create one CrmCompany
+     * const CrmCompany = await prisma.crmCompany.create({
+     *   data: {
+     *     // ... data to create a CrmCompany
+     *   }
+     * })
+     * 
+     */
+    create<T extends CrmCompanyCreateArgs>(args: SelectSubset<T, CrmCompanyCreateArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many CrmCompanies.
+     * @param {CrmCompanyCreateManyArgs} args - Arguments to create many CrmCompanies.
+     * @example
+     * // Create many CrmCompanies
+     * const crmCompany = await prisma.crmCompany.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CrmCompanyCreateManyArgs>(args?: SelectSubset<T, CrmCompanyCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CrmCompanies and returns the data saved in the database.
+     * @param {CrmCompanyCreateManyAndReturnArgs} args - Arguments to create many CrmCompanies.
+     * @example
+     * // Create many CrmCompanies
+     * const crmCompany = await prisma.crmCompany.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CrmCompanies and only return the `id`
+     * const crmCompanyWithIdOnly = await prisma.crmCompany.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CrmCompanyCreateManyAndReturnArgs>(args?: SelectSubset<T, CrmCompanyCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a CrmCompany.
+     * @param {CrmCompanyDeleteArgs} args - Arguments to delete one CrmCompany.
+     * @example
+     * // Delete one CrmCompany
+     * const CrmCompany = await prisma.crmCompany.delete({
+     *   where: {
+     *     // ... filter to delete one CrmCompany
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CrmCompanyDeleteArgs>(args: SelectSubset<T, CrmCompanyDeleteArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one CrmCompany.
+     * @param {CrmCompanyUpdateArgs} args - Arguments to update one CrmCompany.
+     * @example
+     * // Update one CrmCompany
+     * const crmCompany = await prisma.crmCompany.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CrmCompanyUpdateArgs>(args: SelectSubset<T, CrmCompanyUpdateArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more CrmCompanies.
+     * @param {CrmCompanyDeleteManyArgs} args - Arguments to filter CrmCompanies to delete.
+     * @example
+     * // Delete a few CrmCompanies
+     * const { count } = await prisma.crmCompany.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CrmCompanyDeleteManyArgs>(args?: SelectSubset<T, CrmCompanyDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CrmCompanies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CrmCompanies
+     * const crmCompany = await prisma.crmCompany.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CrmCompanyUpdateManyArgs>(args: SelectSubset<T, CrmCompanyUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one CrmCompany.
+     * @param {CrmCompanyUpsertArgs} args - Arguments to update or create a CrmCompany.
+     * @example
+     * // Update or create a CrmCompany
+     * const crmCompany = await prisma.crmCompany.upsert({
+     *   create: {
+     *     // ... data to create a CrmCompany
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CrmCompany we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CrmCompanyUpsertArgs>(args: SelectSubset<T, CrmCompanyUpsertArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of CrmCompanies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyCountArgs} args - Arguments to filter CrmCompanies to count.
+     * @example
+     * // Count the number of CrmCompanies
+     * const count = await prisma.crmCompany.count({
+     *   where: {
+     *     // ... the filter for the CrmCompanies we want to count
+     *   }
+     * })
+    **/
+    count<T extends CrmCompanyCountArgs>(
+      args?: Subset<T, CrmCompanyCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CrmCompanyCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CrmCompany.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CrmCompanyAggregateArgs>(args: Subset<T, CrmCompanyAggregateArgs>): Prisma.PrismaPromise<GetCrmCompanyAggregateType<T>>
+
+    /**
+     * Group by CrmCompany.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CrmCompanyGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CrmCompanyGroupByArgs['orderBy'] }
+        : { orderBy?: CrmCompanyGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CrmCompanyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCrmCompanyGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CrmCompany model
+   */
+  readonly fields: CrmCompanyFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CrmCompany.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CrmCompanyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    contacts<T extends CrmCompany$contactsArgs<ExtArgs> = {}>(args?: Subset<T, CrmCompany$contactsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "findMany"> | Null>
+    logs<T extends CrmCompany$logsArgs<ExtArgs> = {}>(args?: Subset<T, CrmCompany$logsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CrmCompany model
+   */ 
+  interface CrmCompanyFieldRefs {
+    readonly id: FieldRef<"CrmCompany", 'String'>
+    readonly name: FieldRef<"CrmCompany", 'String'>
+    readonly industry: FieldRef<"CrmCompany", 'String'>
+    readonly website: FieldRef<"CrmCompany", 'String'>
+    readonly phone: FieldRef<"CrmCompany", 'String'>
+    readonly email: FieldRef<"CrmCompany", 'String'>
+    readonly address: FieldRef<"CrmCompany", 'String'>
+    readonly notes: FieldRef<"CrmCompany", 'String'>
+    readonly createdAt: FieldRef<"CrmCompany", 'DateTime'>
+    readonly updatedAt: FieldRef<"CrmCompany", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CrmCompany findUnique
+   */
+  export type CrmCompanyFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompany to fetch.
+     */
+    where: CrmCompanyWhereUniqueInput
+  }
+
+  /**
+   * CrmCompany findUniqueOrThrow
+   */
+  export type CrmCompanyFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompany to fetch.
+     */
+    where: CrmCompanyWhereUniqueInput
+  }
+
+  /**
+   * CrmCompany findFirst
+   */
+  export type CrmCompanyFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompany to fetch.
+     */
+    where?: CrmCompanyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmCompanies to fetch.
+     */
+    orderBy?: CrmCompanyOrderByWithRelationInput | CrmCompanyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CrmCompanies.
+     */
+    cursor?: CrmCompanyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmCompanies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmCompanies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CrmCompanies.
+     */
+    distinct?: CrmCompanyScalarFieldEnum | CrmCompanyScalarFieldEnum[]
+  }
+
+  /**
+   * CrmCompany findFirstOrThrow
+   */
+  export type CrmCompanyFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompany to fetch.
+     */
+    where?: CrmCompanyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmCompanies to fetch.
+     */
+    orderBy?: CrmCompanyOrderByWithRelationInput | CrmCompanyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CrmCompanies.
+     */
+    cursor?: CrmCompanyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmCompanies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmCompanies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CrmCompanies.
+     */
+    distinct?: CrmCompanyScalarFieldEnum | CrmCompanyScalarFieldEnum[]
+  }
+
+  /**
+   * CrmCompany findMany
+   */
+  export type CrmCompanyFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompanies to fetch.
+     */
+    where?: CrmCompanyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmCompanies to fetch.
+     */
+    orderBy?: CrmCompanyOrderByWithRelationInput | CrmCompanyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CrmCompanies.
+     */
+    cursor?: CrmCompanyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmCompanies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmCompanies.
+     */
+    skip?: number
+    distinct?: CrmCompanyScalarFieldEnum | CrmCompanyScalarFieldEnum[]
+  }
+
+  /**
+   * CrmCompany create
+   */
+  export type CrmCompanyCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CrmCompany.
+     */
+    data: XOR<CrmCompanyCreateInput, CrmCompanyUncheckedCreateInput>
+  }
+
+  /**
+   * CrmCompany createMany
+   */
+  export type CrmCompanyCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CrmCompanies.
+     */
+    data: CrmCompanyCreateManyInput | CrmCompanyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CrmCompany createManyAndReturn
+   */
+  export type CrmCompanyCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many CrmCompanies.
+     */
+    data: CrmCompanyCreateManyInput | CrmCompanyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CrmCompany update
+   */
+  export type CrmCompanyUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CrmCompany.
+     */
+    data: XOR<CrmCompanyUpdateInput, CrmCompanyUncheckedUpdateInput>
+    /**
+     * Choose, which CrmCompany to update.
+     */
+    where: CrmCompanyWhereUniqueInput
+  }
+
+  /**
+   * CrmCompany updateMany
+   */
+  export type CrmCompanyUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CrmCompanies.
+     */
+    data: XOR<CrmCompanyUpdateManyMutationInput, CrmCompanyUncheckedUpdateManyInput>
+    /**
+     * Filter which CrmCompanies to update
+     */
+    where?: CrmCompanyWhereInput
+  }
+
+  /**
+   * CrmCompany upsert
+   */
+  export type CrmCompanyUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CrmCompany to update in case it exists.
+     */
+    where: CrmCompanyWhereUniqueInput
+    /**
+     * In case the CrmCompany found by the `where` argument doesn't exist, create a new CrmCompany with this data.
+     */
+    create: XOR<CrmCompanyCreateInput, CrmCompanyUncheckedCreateInput>
+    /**
+     * In case the CrmCompany was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CrmCompanyUpdateInput, CrmCompanyUncheckedUpdateInput>
+  }
+
+  /**
+   * CrmCompany delete
+   */
+  export type CrmCompanyDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+    /**
+     * Filter which CrmCompany to delete.
+     */
+    where: CrmCompanyWhereUniqueInput
+  }
+
+  /**
+   * CrmCompany deleteMany
+   */
+  export type CrmCompanyDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CrmCompanies to delete
+     */
+    where?: CrmCompanyWhereInput
+  }
+
+  /**
+   * CrmCompany.contacts
+   */
+  export type CrmCompany$contactsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    where?: CrmContactWhereInput
+    orderBy?: CrmContactOrderByWithRelationInput | CrmContactOrderByWithRelationInput[]
+    cursor?: CrmContactWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CrmContactScalarFieldEnum | CrmContactScalarFieldEnum[]
+  }
+
+  /**
+   * CrmCompany.logs
+   */
+  export type CrmCompany$logsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    where?: CrmCompanyLogWhereInput
+    orderBy?: CrmCompanyLogOrderByWithRelationInput | CrmCompanyLogOrderByWithRelationInput[]
+    cursor?: CrmCompanyLogWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CrmCompanyLogScalarFieldEnum | CrmCompanyLogScalarFieldEnum[]
+  }
+
+  /**
+   * CrmCompany without action
+   */
+  export type CrmCompanyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompany
+     */
+    select?: CrmCompanySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CrmContact
+   */
+
+  export type AggregateCrmContact = {
+    _count: CrmContactCountAggregateOutputType | null
+    _min: CrmContactMinAggregateOutputType | null
+    _max: CrmContactMaxAggregateOutputType | null
+  }
+
+  export type CrmContactMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    name: string | null
+    position: string | null
+    email: string | null
+    phone: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CrmContactMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    name: string | null
+    position: string | null
+    email: string | null
+    phone: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CrmContactCountAggregateOutputType = {
+    id: number
+    companyId: number
+    name: number
+    position: number
+    email: number
+    phone: number
+    notes: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CrmContactMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    position?: true
+    email?: true
+    phone?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CrmContactMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    position?: true
+    email?: true
+    phone?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CrmContactCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    position?: true
+    email?: true
+    phone?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CrmContactAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CrmContact to aggregate.
+     */
+    where?: CrmContactWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmContacts to fetch.
+     */
+    orderBy?: CrmContactOrderByWithRelationInput | CrmContactOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CrmContactWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmContacts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmContacts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CrmContacts
+    **/
+    _count?: true | CrmContactCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CrmContactMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CrmContactMaxAggregateInputType
+  }
+
+  export type GetCrmContactAggregateType<T extends CrmContactAggregateArgs> = {
+        [P in keyof T & keyof AggregateCrmContact]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCrmContact[P]>
+      : GetScalarType<T[P], AggregateCrmContact[P]>
+  }
+
+
+
+
+  export type CrmContactGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CrmContactWhereInput
+    orderBy?: CrmContactOrderByWithAggregationInput | CrmContactOrderByWithAggregationInput[]
+    by: CrmContactScalarFieldEnum[] | CrmContactScalarFieldEnum
+    having?: CrmContactScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CrmContactCountAggregateInputType | true
+    _min?: CrmContactMinAggregateInputType
+    _max?: CrmContactMaxAggregateInputType
+  }
+
+  export type CrmContactGroupByOutputType = {
+    id: string
+    companyId: string
+    name: string
+    position: string | null
+    email: string | null
+    phone: string | null
+    notes: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: CrmContactCountAggregateOutputType | null
+    _min: CrmContactMinAggregateOutputType | null
+    _max: CrmContactMaxAggregateOutputType | null
+  }
+
+  type GetCrmContactGroupByPayload<T extends CrmContactGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CrmContactGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CrmContactGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CrmContactGroupByOutputType[P]>
+            : GetScalarType<T[P], CrmContactGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CrmContactSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    position?: boolean
+    email?: boolean
+    phone?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    company?: boolean | CrmCompanyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["crmContact"]>
+
+  export type CrmContactSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    position?: boolean
+    email?: boolean
+    phone?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    company?: boolean | CrmCompanyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["crmContact"]>
+
+  export type CrmContactSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    position?: boolean
+    email?: boolean
+    phone?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CrmContactInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    company?: boolean | CrmCompanyDefaultArgs<ExtArgs>
+  }
+  export type CrmContactIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    company?: boolean | CrmCompanyDefaultArgs<ExtArgs>
+  }
+
+  export type $CrmContactPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CrmContact"
+    objects: {
+      company: Prisma.$CrmCompanyPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      name: string
+      position: string | null
+      email: string | null
+      phone: string | null
+      notes: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["crmContact"]>
+    composites: {}
+  }
+
+  type CrmContactGetPayload<S extends boolean | null | undefined | CrmContactDefaultArgs> = $Result.GetResult<Prisma.$CrmContactPayload, S>
+
+  type CrmContactCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<CrmContactFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: CrmContactCountAggregateInputType | true
+    }
+
+  export interface CrmContactDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CrmContact'], meta: { name: 'CrmContact' } }
+    /**
+     * Find zero or one CrmContact that matches the filter.
+     * @param {CrmContactFindUniqueArgs} args - Arguments to find a CrmContact
+     * @example
+     * // Get one CrmContact
+     * const crmContact = await prisma.crmContact.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CrmContactFindUniqueArgs>(args: SelectSubset<T, CrmContactFindUniqueArgs<ExtArgs>>): Prisma__CrmContactClient<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one CrmContact that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {CrmContactFindUniqueOrThrowArgs} args - Arguments to find a CrmContact
+     * @example
+     * // Get one CrmContact
+     * const crmContact = await prisma.crmContact.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CrmContactFindUniqueOrThrowArgs>(args: SelectSubset<T, CrmContactFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CrmContactClient<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first CrmContact that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmContactFindFirstArgs} args - Arguments to find a CrmContact
+     * @example
+     * // Get one CrmContact
+     * const crmContact = await prisma.crmContact.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CrmContactFindFirstArgs>(args?: SelectSubset<T, CrmContactFindFirstArgs<ExtArgs>>): Prisma__CrmContactClient<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first CrmContact that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmContactFindFirstOrThrowArgs} args - Arguments to find a CrmContact
+     * @example
+     * // Get one CrmContact
+     * const crmContact = await prisma.crmContact.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CrmContactFindFirstOrThrowArgs>(args?: SelectSubset<T, CrmContactFindFirstOrThrowArgs<ExtArgs>>): Prisma__CrmContactClient<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more CrmContacts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmContactFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CrmContacts
+     * const crmContacts = await prisma.crmContact.findMany()
+     * 
+     * // Get first 10 CrmContacts
+     * const crmContacts = await prisma.crmContact.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const crmContactWithIdOnly = await prisma.crmContact.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CrmContactFindManyArgs>(args?: SelectSubset<T, CrmContactFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a CrmContact.
+     * @param {CrmContactCreateArgs} args - Arguments to create a CrmContact.
+     * @example
+     * // Create one CrmContact
+     * const CrmContact = await prisma.crmContact.create({
+     *   data: {
+     *     // ... data to create a CrmContact
+     *   }
+     * })
+     * 
+     */
+    create<T extends CrmContactCreateArgs>(args: SelectSubset<T, CrmContactCreateArgs<ExtArgs>>): Prisma__CrmContactClient<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many CrmContacts.
+     * @param {CrmContactCreateManyArgs} args - Arguments to create many CrmContacts.
+     * @example
+     * // Create many CrmContacts
+     * const crmContact = await prisma.crmContact.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CrmContactCreateManyArgs>(args?: SelectSubset<T, CrmContactCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CrmContacts and returns the data saved in the database.
+     * @param {CrmContactCreateManyAndReturnArgs} args - Arguments to create many CrmContacts.
+     * @example
+     * // Create many CrmContacts
+     * const crmContact = await prisma.crmContact.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CrmContacts and only return the `id`
+     * const crmContactWithIdOnly = await prisma.crmContact.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CrmContactCreateManyAndReturnArgs>(args?: SelectSubset<T, CrmContactCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a CrmContact.
+     * @param {CrmContactDeleteArgs} args - Arguments to delete one CrmContact.
+     * @example
+     * // Delete one CrmContact
+     * const CrmContact = await prisma.crmContact.delete({
+     *   where: {
+     *     // ... filter to delete one CrmContact
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CrmContactDeleteArgs>(args: SelectSubset<T, CrmContactDeleteArgs<ExtArgs>>): Prisma__CrmContactClient<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one CrmContact.
+     * @param {CrmContactUpdateArgs} args - Arguments to update one CrmContact.
+     * @example
+     * // Update one CrmContact
+     * const crmContact = await prisma.crmContact.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CrmContactUpdateArgs>(args: SelectSubset<T, CrmContactUpdateArgs<ExtArgs>>): Prisma__CrmContactClient<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more CrmContacts.
+     * @param {CrmContactDeleteManyArgs} args - Arguments to filter CrmContacts to delete.
+     * @example
+     * // Delete a few CrmContacts
+     * const { count } = await prisma.crmContact.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CrmContactDeleteManyArgs>(args?: SelectSubset<T, CrmContactDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CrmContacts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmContactUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CrmContacts
+     * const crmContact = await prisma.crmContact.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CrmContactUpdateManyArgs>(args: SelectSubset<T, CrmContactUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one CrmContact.
+     * @param {CrmContactUpsertArgs} args - Arguments to update or create a CrmContact.
+     * @example
+     * // Update or create a CrmContact
+     * const crmContact = await prisma.crmContact.upsert({
+     *   create: {
+     *     // ... data to create a CrmContact
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CrmContact we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CrmContactUpsertArgs>(args: SelectSubset<T, CrmContactUpsertArgs<ExtArgs>>): Prisma__CrmContactClient<$Result.GetResult<Prisma.$CrmContactPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of CrmContacts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmContactCountArgs} args - Arguments to filter CrmContacts to count.
+     * @example
+     * // Count the number of CrmContacts
+     * const count = await prisma.crmContact.count({
+     *   where: {
+     *     // ... the filter for the CrmContacts we want to count
+     *   }
+     * })
+    **/
+    count<T extends CrmContactCountArgs>(
+      args?: Subset<T, CrmContactCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CrmContactCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CrmContact.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmContactAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CrmContactAggregateArgs>(args: Subset<T, CrmContactAggregateArgs>): Prisma.PrismaPromise<GetCrmContactAggregateType<T>>
+
+    /**
+     * Group by CrmContact.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmContactGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CrmContactGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CrmContactGroupByArgs['orderBy'] }
+        : { orderBy?: CrmContactGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CrmContactGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCrmContactGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CrmContact model
+   */
+  readonly fields: CrmContactFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CrmContact.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CrmContactClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    company<T extends CrmCompanyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CrmCompanyDefaultArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CrmContact model
+   */ 
+  interface CrmContactFieldRefs {
+    readonly id: FieldRef<"CrmContact", 'String'>
+    readonly companyId: FieldRef<"CrmContact", 'String'>
+    readonly name: FieldRef<"CrmContact", 'String'>
+    readonly position: FieldRef<"CrmContact", 'String'>
+    readonly email: FieldRef<"CrmContact", 'String'>
+    readonly phone: FieldRef<"CrmContact", 'String'>
+    readonly notes: FieldRef<"CrmContact", 'String'>
+    readonly createdAt: FieldRef<"CrmContact", 'DateTime'>
+    readonly updatedAt: FieldRef<"CrmContact", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CrmContact findUnique
+   */
+  export type CrmContactFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmContact to fetch.
+     */
+    where: CrmContactWhereUniqueInput
+  }
+
+  /**
+   * CrmContact findUniqueOrThrow
+   */
+  export type CrmContactFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmContact to fetch.
+     */
+    where: CrmContactWhereUniqueInput
+  }
+
+  /**
+   * CrmContact findFirst
+   */
+  export type CrmContactFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmContact to fetch.
+     */
+    where?: CrmContactWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmContacts to fetch.
+     */
+    orderBy?: CrmContactOrderByWithRelationInput | CrmContactOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CrmContacts.
+     */
+    cursor?: CrmContactWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmContacts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmContacts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CrmContacts.
+     */
+    distinct?: CrmContactScalarFieldEnum | CrmContactScalarFieldEnum[]
+  }
+
+  /**
+   * CrmContact findFirstOrThrow
+   */
+  export type CrmContactFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmContact to fetch.
+     */
+    where?: CrmContactWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmContacts to fetch.
+     */
+    orderBy?: CrmContactOrderByWithRelationInput | CrmContactOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CrmContacts.
+     */
+    cursor?: CrmContactWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmContacts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmContacts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CrmContacts.
+     */
+    distinct?: CrmContactScalarFieldEnum | CrmContactScalarFieldEnum[]
+  }
+
+  /**
+   * CrmContact findMany
+   */
+  export type CrmContactFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmContacts to fetch.
+     */
+    where?: CrmContactWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmContacts to fetch.
+     */
+    orderBy?: CrmContactOrderByWithRelationInput | CrmContactOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CrmContacts.
+     */
+    cursor?: CrmContactWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmContacts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmContacts.
+     */
+    skip?: number
+    distinct?: CrmContactScalarFieldEnum | CrmContactScalarFieldEnum[]
+  }
+
+  /**
+   * CrmContact create
+   */
+  export type CrmContactCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CrmContact.
+     */
+    data: XOR<CrmContactCreateInput, CrmContactUncheckedCreateInput>
+  }
+
+  /**
+   * CrmContact createMany
+   */
+  export type CrmContactCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CrmContacts.
+     */
+    data: CrmContactCreateManyInput | CrmContactCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CrmContact createManyAndReturn
+   */
+  export type CrmContactCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many CrmContacts.
+     */
+    data: CrmContactCreateManyInput | CrmContactCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CrmContact update
+   */
+  export type CrmContactUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CrmContact.
+     */
+    data: XOR<CrmContactUpdateInput, CrmContactUncheckedUpdateInput>
+    /**
+     * Choose, which CrmContact to update.
+     */
+    where: CrmContactWhereUniqueInput
+  }
+
+  /**
+   * CrmContact updateMany
+   */
+  export type CrmContactUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CrmContacts.
+     */
+    data: XOR<CrmContactUpdateManyMutationInput, CrmContactUncheckedUpdateManyInput>
+    /**
+     * Filter which CrmContacts to update
+     */
+    where?: CrmContactWhereInput
+  }
+
+  /**
+   * CrmContact upsert
+   */
+  export type CrmContactUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CrmContact to update in case it exists.
+     */
+    where: CrmContactWhereUniqueInput
+    /**
+     * In case the CrmContact found by the `where` argument doesn't exist, create a new CrmContact with this data.
+     */
+    create: XOR<CrmContactCreateInput, CrmContactUncheckedCreateInput>
+    /**
+     * In case the CrmContact was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CrmContactUpdateInput, CrmContactUncheckedUpdateInput>
+  }
+
+  /**
+   * CrmContact delete
+   */
+  export type CrmContactDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+    /**
+     * Filter which CrmContact to delete.
+     */
+    where: CrmContactWhereUniqueInput
+  }
+
+  /**
+   * CrmContact deleteMany
+   */
+  export type CrmContactDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CrmContacts to delete
+     */
+    where?: CrmContactWhereInput
+  }
+
+  /**
+   * CrmContact without action
+   */
+  export type CrmContactDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmContact
+     */
+    select?: CrmContactSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmContactInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CrmCompanyLog
+   */
+
+  export type AggregateCrmCompanyLog = {
+    _count: CrmCompanyLogCountAggregateOutputType | null
+    _min: CrmCompanyLogMinAggregateOutputType | null
+    _max: CrmCompanyLogMaxAggregateOutputType | null
+  }
+
+  export type CrmCompanyLogMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    type: $Enums.CrmLogType | null
+    subject: string | null
+    body: string | null
+    loggedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type CrmCompanyLogMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    type: $Enums.CrmLogType | null
+    subject: string | null
+    body: string | null
+    loggedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type CrmCompanyLogCountAggregateOutputType = {
+    id: number
+    companyId: number
+    type: number
+    subject: number
+    body: number
+    loggedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type CrmCompanyLogMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    type?: true
+    subject?: true
+    body?: true
+    loggedAt?: true
+    createdAt?: true
+  }
+
+  export type CrmCompanyLogMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    type?: true
+    subject?: true
+    body?: true
+    loggedAt?: true
+    createdAt?: true
+  }
+
+  export type CrmCompanyLogCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    type?: true
+    subject?: true
+    body?: true
+    loggedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type CrmCompanyLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CrmCompanyLog to aggregate.
+     */
+    where?: CrmCompanyLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmCompanyLogs to fetch.
+     */
+    orderBy?: CrmCompanyLogOrderByWithRelationInput | CrmCompanyLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CrmCompanyLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmCompanyLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmCompanyLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CrmCompanyLogs
+    **/
+    _count?: true | CrmCompanyLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CrmCompanyLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CrmCompanyLogMaxAggregateInputType
+  }
+
+  export type GetCrmCompanyLogAggregateType<T extends CrmCompanyLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateCrmCompanyLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCrmCompanyLog[P]>
+      : GetScalarType<T[P], AggregateCrmCompanyLog[P]>
+  }
+
+
+
+
+  export type CrmCompanyLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CrmCompanyLogWhereInput
+    orderBy?: CrmCompanyLogOrderByWithAggregationInput | CrmCompanyLogOrderByWithAggregationInput[]
+    by: CrmCompanyLogScalarFieldEnum[] | CrmCompanyLogScalarFieldEnum
+    having?: CrmCompanyLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CrmCompanyLogCountAggregateInputType | true
+    _min?: CrmCompanyLogMinAggregateInputType
+    _max?: CrmCompanyLogMaxAggregateInputType
+  }
+
+  export type CrmCompanyLogGroupByOutputType = {
+    id: string
+    companyId: string
+    type: $Enums.CrmLogType
+    subject: string | null
+    body: string | null
+    loggedAt: Date
+    createdAt: Date
+    _count: CrmCompanyLogCountAggregateOutputType | null
+    _min: CrmCompanyLogMinAggregateOutputType | null
+    _max: CrmCompanyLogMaxAggregateOutputType | null
+  }
+
+  type GetCrmCompanyLogGroupByPayload<T extends CrmCompanyLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CrmCompanyLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CrmCompanyLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CrmCompanyLogGroupByOutputType[P]>
+            : GetScalarType<T[P], CrmCompanyLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CrmCompanyLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    type?: boolean
+    subject?: boolean
+    body?: boolean
+    loggedAt?: boolean
+    createdAt?: boolean
+    company?: boolean | CrmCompanyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["crmCompanyLog"]>
+
+  export type CrmCompanyLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    type?: boolean
+    subject?: boolean
+    body?: boolean
+    loggedAt?: boolean
+    createdAt?: boolean
+    company?: boolean | CrmCompanyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["crmCompanyLog"]>
+
+  export type CrmCompanyLogSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    type?: boolean
+    subject?: boolean
+    body?: boolean
+    loggedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type CrmCompanyLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    company?: boolean | CrmCompanyDefaultArgs<ExtArgs>
+  }
+  export type CrmCompanyLogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    company?: boolean | CrmCompanyDefaultArgs<ExtArgs>
+  }
+
+  export type $CrmCompanyLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CrmCompanyLog"
+    objects: {
+      company: Prisma.$CrmCompanyPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      type: $Enums.CrmLogType
+      subject: string | null
+      body: string | null
+      loggedAt: Date
+      createdAt: Date
+    }, ExtArgs["result"]["crmCompanyLog"]>
+    composites: {}
+  }
+
+  type CrmCompanyLogGetPayload<S extends boolean | null | undefined | CrmCompanyLogDefaultArgs> = $Result.GetResult<Prisma.$CrmCompanyLogPayload, S>
+
+  type CrmCompanyLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<CrmCompanyLogFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: CrmCompanyLogCountAggregateInputType | true
+    }
+
+  export interface CrmCompanyLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CrmCompanyLog'], meta: { name: 'CrmCompanyLog' } }
+    /**
+     * Find zero or one CrmCompanyLog that matches the filter.
+     * @param {CrmCompanyLogFindUniqueArgs} args - Arguments to find a CrmCompanyLog
+     * @example
+     * // Get one CrmCompanyLog
+     * const crmCompanyLog = await prisma.crmCompanyLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CrmCompanyLogFindUniqueArgs>(args: SelectSubset<T, CrmCompanyLogFindUniqueArgs<ExtArgs>>): Prisma__CrmCompanyLogClient<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one CrmCompanyLog that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {CrmCompanyLogFindUniqueOrThrowArgs} args - Arguments to find a CrmCompanyLog
+     * @example
+     * // Get one CrmCompanyLog
+     * const crmCompanyLog = await prisma.crmCompanyLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CrmCompanyLogFindUniqueOrThrowArgs>(args: SelectSubset<T, CrmCompanyLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CrmCompanyLogClient<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first CrmCompanyLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyLogFindFirstArgs} args - Arguments to find a CrmCompanyLog
+     * @example
+     * // Get one CrmCompanyLog
+     * const crmCompanyLog = await prisma.crmCompanyLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CrmCompanyLogFindFirstArgs>(args?: SelectSubset<T, CrmCompanyLogFindFirstArgs<ExtArgs>>): Prisma__CrmCompanyLogClient<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first CrmCompanyLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyLogFindFirstOrThrowArgs} args - Arguments to find a CrmCompanyLog
+     * @example
+     * // Get one CrmCompanyLog
+     * const crmCompanyLog = await prisma.crmCompanyLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CrmCompanyLogFindFirstOrThrowArgs>(args?: SelectSubset<T, CrmCompanyLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__CrmCompanyLogClient<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more CrmCompanyLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CrmCompanyLogs
+     * const crmCompanyLogs = await prisma.crmCompanyLog.findMany()
+     * 
+     * // Get first 10 CrmCompanyLogs
+     * const crmCompanyLogs = await prisma.crmCompanyLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const crmCompanyLogWithIdOnly = await prisma.crmCompanyLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CrmCompanyLogFindManyArgs>(args?: SelectSubset<T, CrmCompanyLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a CrmCompanyLog.
+     * @param {CrmCompanyLogCreateArgs} args - Arguments to create a CrmCompanyLog.
+     * @example
+     * // Create one CrmCompanyLog
+     * const CrmCompanyLog = await prisma.crmCompanyLog.create({
+     *   data: {
+     *     // ... data to create a CrmCompanyLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends CrmCompanyLogCreateArgs>(args: SelectSubset<T, CrmCompanyLogCreateArgs<ExtArgs>>): Prisma__CrmCompanyLogClient<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many CrmCompanyLogs.
+     * @param {CrmCompanyLogCreateManyArgs} args - Arguments to create many CrmCompanyLogs.
+     * @example
+     * // Create many CrmCompanyLogs
+     * const crmCompanyLog = await prisma.crmCompanyLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CrmCompanyLogCreateManyArgs>(args?: SelectSubset<T, CrmCompanyLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CrmCompanyLogs and returns the data saved in the database.
+     * @param {CrmCompanyLogCreateManyAndReturnArgs} args - Arguments to create many CrmCompanyLogs.
+     * @example
+     * // Create many CrmCompanyLogs
+     * const crmCompanyLog = await prisma.crmCompanyLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CrmCompanyLogs and only return the `id`
+     * const crmCompanyLogWithIdOnly = await prisma.crmCompanyLog.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CrmCompanyLogCreateManyAndReturnArgs>(args?: SelectSubset<T, CrmCompanyLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a CrmCompanyLog.
+     * @param {CrmCompanyLogDeleteArgs} args - Arguments to delete one CrmCompanyLog.
+     * @example
+     * // Delete one CrmCompanyLog
+     * const CrmCompanyLog = await prisma.crmCompanyLog.delete({
+     *   where: {
+     *     // ... filter to delete one CrmCompanyLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CrmCompanyLogDeleteArgs>(args: SelectSubset<T, CrmCompanyLogDeleteArgs<ExtArgs>>): Prisma__CrmCompanyLogClient<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one CrmCompanyLog.
+     * @param {CrmCompanyLogUpdateArgs} args - Arguments to update one CrmCompanyLog.
+     * @example
+     * // Update one CrmCompanyLog
+     * const crmCompanyLog = await prisma.crmCompanyLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CrmCompanyLogUpdateArgs>(args: SelectSubset<T, CrmCompanyLogUpdateArgs<ExtArgs>>): Prisma__CrmCompanyLogClient<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more CrmCompanyLogs.
+     * @param {CrmCompanyLogDeleteManyArgs} args - Arguments to filter CrmCompanyLogs to delete.
+     * @example
+     * // Delete a few CrmCompanyLogs
+     * const { count } = await prisma.crmCompanyLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CrmCompanyLogDeleteManyArgs>(args?: SelectSubset<T, CrmCompanyLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CrmCompanyLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CrmCompanyLogs
+     * const crmCompanyLog = await prisma.crmCompanyLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CrmCompanyLogUpdateManyArgs>(args: SelectSubset<T, CrmCompanyLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one CrmCompanyLog.
+     * @param {CrmCompanyLogUpsertArgs} args - Arguments to update or create a CrmCompanyLog.
+     * @example
+     * // Update or create a CrmCompanyLog
+     * const crmCompanyLog = await prisma.crmCompanyLog.upsert({
+     *   create: {
+     *     // ... data to create a CrmCompanyLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CrmCompanyLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CrmCompanyLogUpsertArgs>(args: SelectSubset<T, CrmCompanyLogUpsertArgs<ExtArgs>>): Prisma__CrmCompanyLogClient<$Result.GetResult<Prisma.$CrmCompanyLogPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of CrmCompanyLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyLogCountArgs} args - Arguments to filter CrmCompanyLogs to count.
+     * @example
+     * // Count the number of CrmCompanyLogs
+     * const count = await prisma.crmCompanyLog.count({
+     *   where: {
+     *     // ... the filter for the CrmCompanyLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends CrmCompanyLogCountArgs>(
+      args?: Subset<T, CrmCompanyLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CrmCompanyLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CrmCompanyLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CrmCompanyLogAggregateArgs>(args: Subset<T, CrmCompanyLogAggregateArgs>): Prisma.PrismaPromise<GetCrmCompanyLogAggregateType<T>>
+
+    /**
+     * Group by CrmCompanyLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrmCompanyLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CrmCompanyLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CrmCompanyLogGroupByArgs['orderBy'] }
+        : { orderBy?: CrmCompanyLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CrmCompanyLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCrmCompanyLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CrmCompanyLog model
+   */
+  readonly fields: CrmCompanyLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CrmCompanyLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CrmCompanyLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    company<T extends CrmCompanyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CrmCompanyDefaultArgs<ExtArgs>>): Prisma__CrmCompanyClient<$Result.GetResult<Prisma.$CrmCompanyPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CrmCompanyLog model
+   */ 
+  interface CrmCompanyLogFieldRefs {
+    readonly id: FieldRef<"CrmCompanyLog", 'String'>
+    readonly companyId: FieldRef<"CrmCompanyLog", 'String'>
+    readonly type: FieldRef<"CrmCompanyLog", 'CrmLogType'>
+    readonly subject: FieldRef<"CrmCompanyLog", 'String'>
+    readonly body: FieldRef<"CrmCompanyLog", 'String'>
+    readonly loggedAt: FieldRef<"CrmCompanyLog", 'DateTime'>
+    readonly createdAt: FieldRef<"CrmCompanyLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CrmCompanyLog findUnique
+   */
+  export type CrmCompanyLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompanyLog to fetch.
+     */
+    where: CrmCompanyLogWhereUniqueInput
+  }
+
+  /**
+   * CrmCompanyLog findUniqueOrThrow
+   */
+  export type CrmCompanyLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompanyLog to fetch.
+     */
+    where: CrmCompanyLogWhereUniqueInput
+  }
+
+  /**
+   * CrmCompanyLog findFirst
+   */
+  export type CrmCompanyLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompanyLog to fetch.
+     */
+    where?: CrmCompanyLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmCompanyLogs to fetch.
+     */
+    orderBy?: CrmCompanyLogOrderByWithRelationInput | CrmCompanyLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CrmCompanyLogs.
+     */
+    cursor?: CrmCompanyLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmCompanyLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmCompanyLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CrmCompanyLogs.
+     */
+    distinct?: CrmCompanyLogScalarFieldEnum | CrmCompanyLogScalarFieldEnum[]
+  }
+
+  /**
+   * CrmCompanyLog findFirstOrThrow
+   */
+  export type CrmCompanyLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompanyLog to fetch.
+     */
+    where?: CrmCompanyLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmCompanyLogs to fetch.
+     */
+    orderBy?: CrmCompanyLogOrderByWithRelationInput | CrmCompanyLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CrmCompanyLogs.
+     */
+    cursor?: CrmCompanyLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmCompanyLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmCompanyLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CrmCompanyLogs.
+     */
+    distinct?: CrmCompanyLogScalarFieldEnum | CrmCompanyLogScalarFieldEnum[]
+  }
+
+  /**
+   * CrmCompanyLog findMany
+   */
+  export type CrmCompanyLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    /**
+     * Filter, which CrmCompanyLogs to fetch.
+     */
+    where?: CrmCompanyLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrmCompanyLogs to fetch.
+     */
+    orderBy?: CrmCompanyLogOrderByWithRelationInput | CrmCompanyLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CrmCompanyLogs.
+     */
+    cursor?: CrmCompanyLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrmCompanyLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrmCompanyLogs.
+     */
+    skip?: number
+    distinct?: CrmCompanyLogScalarFieldEnum | CrmCompanyLogScalarFieldEnum[]
+  }
+
+  /**
+   * CrmCompanyLog create
+   */
+  export type CrmCompanyLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CrmCompanyLog.
+     */
+    data: XOR<CrmCompanyLogCreateInput, CrmCompanyLogUncheckedCreateInput>
+  }
+
+  /**
+   * CrmCompanyLog createMany
+   */
+  export type CrmCompanyLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CrmCompanyLogs.
+     */
+    data: CrmCompanyLogCreateManyInput | CrmCompanyLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CrmCompanyLog createManyAndReturn
+   */
+  export type CrmCompanyLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many CrmCompanyLogs.
+     */
+    data: CrmCompanyLogCreateManyInput | CrmCompanyLogCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CrmCompanyLog update
+   */
+  export type CrmCompanyLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CrmCompanyLog.
+     */
+    data: XOR<CrmCompanyLogUpdateInput, CrmCompanyLogUncheckedUpdateInput>
+    /**
+     * Choose, which CrmCompanyLog to update.
+     */
+    where: CrmCompanyLogWhereUniqueInput
+  }
+
+  /**
+   * CrmCompanyLog updateMany
+   */
+  export type CrmCompanyLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CrmCompanyLogs.
+     */
+    data: XOR<CrmCompanyLogUpdateManyMutationInput, CrmCompanyLogUncheckedUpdateManyInput>
+    /**
+     * Filter which CrmCompanyLogs to update
+     */
+    where?: CrmCompanyLogWhereInput
+  }
+
+  /**
+   * CrmCompanyLog upsert
+   */
+  export type CrmCompanyLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CrmCompanyLog to update in case it exists.
+     */
+    where: CrmCompanyLogWhereUniqueInput
+    /**
+     * In case the CrmCompanyLog found by the `where` argument doesn't exist, create a new CrmCompanyLog with this data.
+     */
+    create: XOR<CrmCompanyLogCreateInput, CrmCompanyLogUncheckedCreateInput>
+    /**
+     * In case the CrmCompanyLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CrmCompanyLogUpdateInput, CrmCompanyLogUncheckedUpdateInput>
+  }
+
+  /**
+   * CrmCompanyLog delete
+   */
+  export type CrmCompanyLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
+    /**
+     * Filter which CrmCompanyLog to delete.
+     */
+    where: CrmCompanyLogWhereUniqueInput
+  }
+
+  /**
+   * CrmCompanyLog deleteMany
+   */
+  export type CrmCompanyLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CrmCompanyLogs to delete
+     */
+    where?: CrmCompanyLogWhereInput
+  }
+
+  /**
+   * CrmCompanyLog without action
+   */
+  export type CrmCompanyLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrmCompanyLog
+     */
+    select?: CrmCompanyLogSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrmCompanyLogInclude<ExtArgs> | null
   }
 
 
@@ -19658,6 +23128,1952 @@ export namespace Prisma {
 
 
   /**
+   * Model CalendarEvent
+   */
+
+  export type AggregateCalendarEvent = {
+    _count: CalendarEventCountAggregateOutputType | null
+    _min: CalendarEventMinAggregateOutputType | null
+    _max: CalendarEventMaxAggregateOutputType | null
+  }
+
+  export type CalendarEventMinAggregateOutputType = {
+    id: string | null
+    title: string | null
+    description: string | null
+    startAt: Date | null
+    endAt: Date | null
+    allDay: boolean | null
+    type: $Enums.CalendarEventType | null
+    entityType: string | null
+    entityId: string | null
+    color: string | null
+    createdBy: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CalendarEventMaxAggregateOutputType = {
+    id: string | null
+    title: string | null
+    description: string | null
+    startAt: Date | null
+    endAt: Date | null
+    allDay: boolean | null
+    type: $Enums.CalendarEventType | null
+    entityType: string | null
+    entityId: string | null
+    color: string | null
+    createdBy: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CalendarEventCountAggregateOutputType = {
+    id: number
+    title: number
+    description: number
+    startAt: number
+    endAt: number
+    allDay: number
+    type: number
+    entityType: number
+    entityId: number
+    color: number
+    createdBy: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CalendarEventMinAggregateInputType = {
+    id?: true
+    title?: true
+    description?: true
+    startAt?: true
+    endAt?: true
+    allDay?: true
+    type?: true
+    entityType?: true
+    entityId?: true
+    color?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CalendarEventMaxAggregateInputType = {
+    id?: true
+    title?: true
+    description?: true
+    startAt?: true
+    endAt?: true
+    allDay?: true
+    type?: true
+    entityType?: true
+    entityId?: true
+    color?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CalendarEventCountAggregateInputType = {
+    id?: true
+    title?: true
+    description?: true
+    startAt?: true
+    endAt?: true
+    allDay?: true
+    type?: true
+    entityType?: true
+    entityId?: true
+    color?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CalendarEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CalendarEvent to aggregate.
+     */
+    where?: CalendarEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CalendarEvents to fetch.
+     */
+    orderBy?: CalendarEventOrderByWithRelationInput | CalendarEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CalendarEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CalendarEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CalendarEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CalendarEvents
+    **/
+    _count?: true | CalendarEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CalendarEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CalendarEventMaxAggregateInputType
+  }
+
+  export type GetCalendarEventAggregateType<T extends CalendarEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateCalendarEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCalendarEvent[P]>
+      : GetScalarType<T[P], AggregateCalendarEvent[P]>
+  }
+
+
+
+
+  export type CalendarEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CalendarEventWhereInput
+    orderBy?: CalendarEventOrderByWithAggregationInput | CalendarEventOrderByWithAggregationInput[]
+    by: CalendarEventScalarFieldEnum[] | CalendarEventScalarFieldEnum
+    having?: CalendarEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CalendarEventCountAggregateInputType | true
+    _min?: CalendarEventMinAggregateInputType
+    _max?: CalendarEventMaxAggregateInputType
+  }
+
+  export type CalendarEventGroupByOutputType = {
+    id: string
+    title: string
+    description: string | null
+    startAt: Date
+    endAt: Date
+    allDay: boolean
+    type: $Enums.CalendarEventType
+    entityType: string | null
+    entityId: string | null
+    color: string | null
+    createdBy: string
+    createdAt: Date
+    updatedAt: Date
+    _count: CalendarEventCountAggregateOutputType | null
+    _min: CalendarEventMinAggregateOutputType | null
+    _max: CalendarEventMaxAggregateOutputType | null
+  }
+
+  type GetCalendarEventGroupByPayload<T extends CalendarEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CalendarEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CalendarEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CalendarEventGroupByOutputType[P]>
+            : GetScalarType<T[P], CalendarEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CalendarEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    title?: boolean
+    description?: boolean
+    startAt?: boolean
+    endAt?: boolean
+    allDay?: boolean
+    type?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    color?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["calendarEvent"]>
+
+  export type CalendarEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    title?: boolean
+    description?: boolean
+    startAt?: boolean
+    endAt?: boolean
+    allDay?: boolean
+    type?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    color?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["calendarEvent"]>
+
+  export type CalendarEventSelectScalar = {
+    id?: boolean
+    title?: boolean
+    description?: boolean
+    startAt?: boolean
+    endAt?: boolean
+    allDay?: boolean
+    type?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    color?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $CalendarEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CalendarEvent"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      title: string
+      description: string | null
+      startAt: Date
+      endAt: Date
+      allDay: boolean
+      type: $Enums.CalendarEventType
+      entityType: string | null
+      entityId: string | null
+      color: string | null
+      createdBy: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["calendarEvent"]>
+    composites: {}
+  }
+
+  type CalendarEventGetPayload<S extends boolean | null | undefined | CalendarEventDefaultArgs> = $Result.GetResult<Prisma.$CalendarEventPayload, S>
+
+  type CalendarEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<CalendarEventFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: CalendarEventCountAggregateInputType | true
+    }
+
+  export interface CalendarEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CalendarEvent'], meta: { name: 'CalendarEvent' } }
+    /**
+     * Find zero or one CalendarEvent that matches the filter.
+     * @param {CalendarEventFindUniqueArgs} args - Arguments to find a CalendarEvent
+     * @example
+     * // Get one CalendarEvent
+     * const calendarEvent = await prisma.calendarEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CalendarEventFindUniqueArgs>(args: SelectSubset<T, CalendarEventFindUniqueArgs<ExtArgs>>): Prisma__CalendarEventClient<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one CalendarEvent that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {CalendarEventFindUniqueOrThrowArgs} args - Arguments to find a CalendarEvent
+     * @example
+     * // Get one CalendarEvent
+     * const calendarEvent = await prisma.calendarEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CalendarEventFindUniqueOrThrowArgs>(args: SelectSubset<T, CalendarEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CalendarEventClient<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first CalendarEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CalendarEventFindFirstArgs} args - Arguments to find a CalendarEvent
+     * @example
+     * // Get one CalendarEvent
+     * const calendarEvent = await prisma.calendarEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CalendarEventFindFirstArgs>(args?: SelectSubset<T, CalendarEventFindFirstArgs<ExtArgs>>): Prisma__CalendarEventClient<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first CalendarEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CalendarEventFindFirstOrThrowArgs} args - Arguments to find a CalendarEvent
+     * @example
+     * // Get one CalendarEvent
+     * const calendarEvent = await prisma.calendarEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CalendarEventFindFirstOrThrowArgs>(args?: SelectSubset<T, CalendarEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__CalendarEventClient<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more CalendarEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CalendarEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CalendarEvents
+     * const calendarEvents = await prisma.calendarEvent.findMany()
+     * 
+     * // Get first 10 CalendarEvents
+     * const calendarEvents = await prisma.calendarEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const calendarEventWithIdOnly = await prisma.calendarEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CalendarEventFindManyArgs>(args?: SelectSubset<T, CalendarEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a CalendarEvent.
+     * @param {CalendarEventCreateArgs} args - Arguments to create a CalendarEvent.
+     * @example
+     * // Create one CalendarEvent
+     * const CalendarEvent = await prisma.calendarEvent.create({
+     *   data: {
+     *     // ... data to create a CalendarEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends CalendarEventCreateArgs>(args: SelectSubset<T, CalendarEventCreateArgs<ExtArgs>>): Prisma__CalendarEventClient<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many CalendarEvents.
+     * @param {CalendarEventCreateManyArgs} args - Arguments to create many CalendarEvents.
+     * @example
+     * // Create many CalendarEvents
+     * const calendarEvent = await prisma.calendarEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CalendarEventCreateManyArgs>(args?: SelectSubset<T, CalendarEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CalendarEvents and returns the data saved in the database.
+     * @param {CalendarEventCreateManyAndReturnArgs} args - Arguments to create many CalendarEvents.
+     * @example
+     * // Create many CalendarEvents
+     * const calendarEvent = await prisma.calendarEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CalendarEvents and only return the `id`
+     * const calendarEventWithIdOnly = await prisma.calendarEvent.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CalendarEventCreateManyAndReturnArgs>(args?: SelectSubset<T, CalendarEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a CalendarEvent.
+     * @param {CalendarEventDeleteArgs} args - Arguments to delete one CalendarEvent.
+     * @example
+     * // Delete one CalendarEvent
+     * const CalendarEvent = await prisma.calendarEvent.delete({
+     *   where: {
+     *     // ... filter to delete one CalendarEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CalendarEventDeleteArgs>(args: SelectSubset<T, CalendarEventDeleteArgs<ExtArgs>>): Prisma__CalendarEventClient<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one CalendarEvent.
+     * @param {CalendarEventUpdateArgs} args - Arguments to update one CalendarEvent.
+     * @example
+     * // Update one CalendarEvent
+     * const calendarEvent = await prisma.calendarEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CalendarEventUpdateArgs>(args: SelectSubset<T, CalendarEventUpdateArgs<ExtArgs>>): Prisma__CalendarEventClient<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more CalendarEvents.
+     * @param {CalendarEventDeleteManyArgs} args - Arguments to filter CalendarEvents to delete.
+     * @example
+     * // Delete a few CalendarEvents
+     * const { count } = await prisma.calendarEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CalendarEventDeleteManyArgs>(args?: SelectSubset<T, CalendarEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CalendarEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CalendarEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CalendarEvents
+     * const calendarEvent = await prisma.calendarEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CalendarEventUpdateManyArgs>(args: SelectSubset<T, CalendarEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one CalendarEvent.
+     * @param {CalendarEventUpsertArgs} args - Arguments to update or create a CalendarEvent.
+     * @example
+     * // Update or create a CalendarEvent
+     * const calendarEvent = await prisma.calendarEvent.upsert({
+     *   create: {
+     *     // ... data to create a CalendarEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CalendarEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CalendarEventUpsertArgs>(args: SelectSubset<T, CalendarEventUpsertArgs<ExtArgs>>): Prisma__CalendarEventClient<$Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of CalendarEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CalendarEventCountArgs} args - Arguments to filter CalendarEvents to count.
+     * @example
+     * // Count the number of CalendarEvents
+     * const count = await prisma.calendarEvent.count({
+     *   where: {
+     *     // ... the filter for the CalendarEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends CalendarEventCountArgs>(
+      args?: Subset<T, CalendarEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CalendarEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CalendarEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CalendarEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CalendarEventAggregateArgs>(args: Subset<T, CalendarEventAggregateArgs>): Prisma.PrismaPromise<GetCalendarEventAggregateType<T>>
+
+    /**
+     * Group by CalendarEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CalendarEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CalendarEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CalendarEventGroupByArgs['orderBy'] }
+        : { orderBy?: CalendarEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CalendarEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCalendarEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CalendarEvent model
+   */
+  readonly fields: CalendarEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CalendarEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CalendarEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CalendarEvent model
+   */ 
+  interface CalendarEventFieldRefs {
+    readonly id: FieldRef<"CalendarEvent", 'String'>
+    readonly title: FieldRef<"CalendarEvent", 'String'>
+    readonly description: FieldRef<"CalendarEvent", 'String'>
+    readonly startAt: FieldRef<"CalendarEvent", 'DateTime'>
+    readonly endAt: FieldRef<"CalendarEvent", 'DateTime'>
+    readonly allDay: FieldRef<"CalendarEvent", 'Boolean'>
+    readonly type: FieldRef<"CalendarEvent", 'CalendarEventType'>
+    readonly entityType: FieldRef<"CalendarEvent", 'String'>
+    readonly entityId: FieldRef<"CalendarEvent", 'String'>
+    readonly color: FieldRef<"CalendarEvent", 'String'>
+    readonly createdBy: FieldRef<"CalendarEvent", 'String'>
+    readonly createdAt: FieldRef<"CalendarEvent", 'DateTime'>
+    readonly updatedAt: FieldRef<"CalendarEvent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CalendarEvent findUnique
+   */
+  export type CalendarEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+    /**
+     * Filter, which CalendarEvent to fetch.
+     */
+    where: CalendarEventWhereUniqueInput
+  }
+
+  /**
+   * CalendarEvent findUniqueOrThrow
+   */
+  export type CalendarEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+    /**
+     * Filter, which CalendarEvent to fetch.
+     */
+    where: CalendarEventWhereUniqueInput
+  }
+
+  /**
+   * CalendarEvent findFirst
+   */
+  export type CalendarEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+    /**
+     * Filter, which CalendarEvent to fetch.
+     */
+    where?: CalendarEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CalendarEvents to fetch.
+     */
+    orderBy?: CalendarEventOrderByWithRelationInput | CalendarEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CalendarEvents.
+     */
+    cursor?: CalendarEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CalendarEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CalendarEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CalendarEvents.
+     */
+    distinct?: CalendarEventScalarFieldEnum | CalendarEventScalarFieldEnum[]
+  }
+
+  /**
+   * CalendarEvent findFirstOrThrow
+   */
+  export type CalendarEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+    /**
+     * Filter, which CalendarEvent to fetch.
+     */
+    where?: CalendarEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CalendarEvents to fetch.
+     */
+    orderBy?: CalendarEventOrderByWithRelationInput | CalendarEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CalendarEvents.
+     */
+    cursor?: CalendarEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CalendarEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CalendarEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CalendarEvents.
+     */
+    distinct?: CalendarEventScalarFieldEnum | CalendarEventScalarFieldEnum[]
+  }
+
+  /**
+   * CalendarEvent findMany
+   */
+  export type CalendarEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+    /**
+     * Filter, which CalendarEvents to fetch.
+     */
+    where?: CalendarEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CalendarEvents to fetch.
+     */
+    orderBy?: CalendarEventOrderByWithRelationInput | CalendarEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CalendarEvents.
+     */
+    cursor?: CalendarEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CalendarEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CalendarEvents.
+     */
+    skip?: number
+    distinct?: CalendarEventScalarFieldEnum | CalendarEventScalarFieldEnum[]
+  }
+
+  /**
+   * CalendarEvent create
+   */
+  export type CalendarEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+    /**
+     * The data needed to create a CalendarEvent.
+     */
+    data: XOR<CalendarEventCreateInput, CalendarEventUncheckedCreateInput>
+  }
+
+  /**
+   * CalendarEvent createMany
+   */
+  export type CalendarEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CalendarEvents.
+     */
+    data: CalendarEventCreateManyInput | CalendarEventCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CalendarEvent createManyAndReturn
+   */
+  export type CalendarEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many CalendarEvents.
+     */
+    data: CalendarEventCreateManyInput | CalendarEventCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CalendarEvent update
+   */
+  export type CalendarEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+    /**
+     * The data needed to update a CalendarEvent.
+     */
+    data: XOR<CalendarEventUpdateInput, CalendarEventUncheckedUpdateInput>
+    /**
+     * Choose, which CalendarEvent to update.
+     */
+    where: CalendarEventWhereUniqueInput
+  }
+
+  /**
+   * CalendarEvent updateMany
+   */
+  export type CalendarEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CalendarEvents.
+     */
+    data: XOR<CalendarEventUpdateManyMutationInput, CalendarEventUncheckedUpdateManyInput>
+    /**
+     * Filter which CalendarEvents to update
+     */
+    where?: CalendarEventWhereInput
+  }
+
+  /**
+   * CalendarEvent upsert
+   */
+  export type CalendarEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+    /**
+     * The filter to search for the CalendarEvent to update in case it exists.
+     */
+    where: CalendarEventWhereUniqueInput
+    /**
+     * In case the CalendarEvent found by the `where` argument doesn't exist, create a new CalendarEvent with this data.
+     */
+    create: XOR<CalendarEventCreateInput, CalendarEventUncheckedCreateInput>
+    /**
+     * In case the CalendarEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CalendarEventUpdateInput, CalendarEventUncheckedUpdateInput>
+  }
+
+  /**
+   * CalendarEvent delete
+   */
+  export type CalendarEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+    /**
+     * Filter which CalendarEvent to delete.
+     */
+    where: CalendarEventWhereUniqueInput
+  }
+
+  /**
+   * CalendarEvent deleteMany
+   */
+  export type CalendarEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CalendarEvents to delete
+     */
+    where?: CalendarEventWhereInput
+  }
+
+  /**
+   * CalendarEvent without action
+   */
+  export type CalendarEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CalendarEvent
+     */
+    select?: CalendarEventSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Document
+   */
+
+  export type AggregateDocument = {
+    _count: DocumentCountAggregateOutputType | null
+    _avg: DocumentAvgAggregateOutputType | null
+    _sum: DocumentSumAggregateOutputType | null
+    _min: DocumentMinAggregateOutputType | null
+    _max: DocumentMaxAggregateOutputType | null
+  }
+
+  export type DocumentAvgAggregateOutputType = {
+    size: number | null
+  }
+
+  export type DocumentSumAggregateOutputType = {
+    size: number | null
+  }
+
+  export type DocumentMinAggregateOutputType = {
+    id: string | null
+    entityType: string | null
+    entityId: string | null
+    name: string | null
+    originalName: string | null
+    mimeType: string | null
+    size: number | null
+    storagePath: string | null
+    uploadedBy: string | null
+    createdAt: Date | null
+  }
+
+  export type DocumentMaxAggregateOutputType = {
+    id: string | null
+    entityType: string | null
+    entityId: string | null
+    name: string | null
+    originalName: string | null
+    mimeType: string | null
+    size: number | null
+    storagePath: string | null
+    uploadedBy: string | null
+    createdAt: Date | null
+  }
+
+  export type DocumentCountAggregateOutputType = {
+    id: number
+    entityType: number
+    entityId: number
+    name: number
+    originalName: number
+    mimeType: number
+    size: number
+    storagePath: number
+    uploadedBy: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type DocumentAvgAggregateInputType = {
+    size?: true
+  }
+
+  export type DocumentSumAggregateInputType = {
+    size?: true
+  }
+
+  export type DocumentMinAggregateInputType = {
+    id?: true
+    entityType?: true
+    entityId?: true
+    name?: true
+    originalName?: true
+    mimeType?: true
+    size?: true
+    storagePath?: true
+    uploadedBy?: true
+    createdAt?: true
+  }
+
+  export type DocumentMaxAggregateInputType = {
+    id?: true
+    entityType?: true
+    entityId?: true
+    name?: true
+    originalName?: true
+    mimeType?: true
+    size?: true
+    storagePath?: true
+    uploadedBy?: true
+    createdAt?: true
+  }
+
+  export type DocumentCountAggregateInputType = {
+    id?: true
+    entityType?: true
+    entityId?: true
+    name?: true
+    originalName?: true
+    mimeType?: true
+    size?: true
+    storagePath?: true
+    uploadedBy?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type DocumentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Document to aggregate.
+     */
+    where?: DocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documents to fetch.
+     */
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Documents
+    **/
+    _count?: true | DocumentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DocumentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DocumentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DocumentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DocumentMaxAggregateInputType
+  }
+
+  export type GetDocumentAggregateType<T extends DocumentAggregateArgs> = {
+        [P in keyof T & keyof AggregateDocument]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDocument[P]>
+      : GetScalarType<T[P], AggregateDocument[P]>
+  }
+
+
+
+
+  export type DocumentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentWhereInput
+    orderBy?: DocumentOrderByWithAggregationInput | DocumentOrderByWithAggregationInput[]
+    by: DocumentScalarFieldEnum[] | DocumentScalarFieldEnum
+    having?: DocumentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DocumentCountAggregateInputType | true
+    _avg?: DocumentAvgAggregateInputType
+    _sum?: DocumentSumAggregateInputType
+    _min?: DocumentMinAggregateInputType
+    _max?: DocumentMaxAggregateInputType
+  }
+
+  export type DocumentGroupByOutputType = {
+    id: string
+    entityType: string
+    entityId: string
+    name: string
+    originalName: string
+    mimeType: string
+    size: number
+    storagePath: string
+    uploadedBy: string
+    createdAt: Date
+    _count: DocumentCountAggregateOutputType | null
+    _avg: DocumentAvgAggregateOutputType | null
+    _sum: DocumentSumAggregateOutputType | null
+    _min: DocumentMinAggregateOutputType | null
+    _max: DocumentMaxAggregateOutputType | null
+  }
+
+  type GetDocumentGroupByPayload<T extends DocumentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DocumentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DocumentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DocumentGroupByOutputType[P]>
+            : GetScalarType<T[P], DocumentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DocumentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    name?: boolean
+    originalName?: boolean
+    mimeType?: boolean
+    size?: boolean
+    storagePath?: boolean
+    uploadedBy?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["document"]>
+
+  export type DocumentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    name?: boolean
+    originalName?: boolean
+    mimeType?: boolean
+    size?: boolean
+    storagePath?: boolean
+    uploadedBy?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["document"]>
+
+  export type DocumentSelectScalar = {
+    id?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    name?: boolean
+    originalName?: boolean
+    mimeType?: boolean
+    size?: boolean
+    storagePath?: boolean
+    uploadedBy?: boolean
+    createdAt?: boolean
+  }
+
+
+  export type $DocumentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Document"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      entityType: string
+      entityId: string
+      name: string
+      originalName: string
+      mimeType: string
+      size: number
+      storagePath: string
+      uploadedBy: string
+      createdAt: Date
+    }, ExtArgs["result"]["document"]>
+    composites: {}
+  }
+
+  type DocumentGetPayload<S extends boolean | null | undefined | DocumentDefaultArgs> = $Result.GetResult<Prisma.$DocumentPayload, S>
+
+  type DocumentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<DocumentFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: DocumentCountAggregateInputType | true
+    }
+
+  export interface DocumentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Document'], meta: { name: 'Document' } }
+    /**
+     * Find zero or one Document that matches the filter.
+     * @param {DocumentFindUniqueArgs} args - Arguments to find a Document
+     * @example
+     * // Get one Document
+     * const document = await prisma.document.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DocumentFindUniqueArgs>(args: SelectSubset<T, DocumentFindUniqueArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Document that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {DocumentFindUniqueOrThrowArgs} args - Arguments to find a Document
+     * @example
+     * // Get one Document
+     * const document = await prisma.document.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DocumentFindUniqueOrThrowArgs>(args: SelectSubset<T, DocumentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Document that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentFindFirstArgs} args - Arguments to find a Document
+     * @example
+     * // Get one Document
+     * const document = await prisma.document.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DocumentFindFirstArgs>(args?: SelectSubset<T, DocumentFindFirstArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Document that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentFindFirstOrThrowArgs} args - Arguments to find a Document
+     * @example
+     * // Get one Document
+     * const document = await prisma.document.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DocumentFindFirstOrThrowArgs>(args?: SelectSubset<T, DocumentFindFirstOrThrowArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Documents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Documents
+     * const documents = await prisma.document.findMany()
+     * 
+     * // Get first 10 Documents
+     * const documents = await prisma.document.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const documentWithIdOnly = await prisma.document.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DocumentFindManyArgs>(args?: SelectSubset<T, DocumentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Document.
+     * @param {DocumentCreateArgs} args - Arguments to create a Document.
+     * @example
+     * // Create one Document
+     * const Document = await prisma.document.create({
+     *   data: {
+     *     // ... data to create a Document
+     *   }
+     * })
+     * 
+     */
+    create<T extends DocumentCreateArgs>(args: SelectSubset<T, DocumentCreateArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Documents.
+     * @param {DocumentCreateManyArgs} args - Arguments to create many Documents.
+     * @example
+     * // Create many Documents
+     * const document = await prisma.document.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DocumentCreateManyArgs>(args?: SelectSubset<T, DocumentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Documents and returns the data saved in the database.
+     * @param {DocumentCreateManyAndReturnArgs} args - Arguments to create many Documents.
+     * @example
+     * // Create many Documents
+     * const document = await prisma.document.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Documents and only return the `id`
+     * const documentWithIdOnly = await prisma.document.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DocumentCreateManyAndReturnArgs>(args?: SelectSubset<T, DocumentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a Document.
+     * @param {DocumentDeleteArgs} args - Arguments to delete one Document.
+     * @example
+     * // Delete one Document
+     * const Document = await prisma.document.delete({
+     *   where: {
+     *     // ... filter to delete one Document
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DocumentDeleteArgs>(args: SelectSubset<T, DocumentDeleteArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Document.
+     * @param {DocumentUpdateArgs} args - Arguments to update one Document.
+     * @example
+     * // Update one Document
+     * const document = await prisma.document.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DocumentUpdateArgs>(args: SelectSubset<T, DocumentUpdateArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Documents.
+     * @param {DocumentDeleteManyArgs} args - Arguments to filter Documents to delete.
+     * @example
+     * // Delete a few Documents
+     * const { count } = await prisma.document.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DocumentDeleteManyArgs>(args?: SelectSubset<T, DocumentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Documents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Documents
+     * const document = await prisma.document.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DocumentUpdateManyArgs>(args: SelectSubset<T, DocumentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Document.
+     * @param {DocumentUpsertArgs} args - Arguments to update or create a Document.
+     * @example
+     * // Update or create a Document
+     * const document = await prisma.document.upsert({
+     *   create: {
+     *     // ... data to create a Document
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Document we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DocumentUpsertArgs>(args: SelectSubset<T, DocumentUpsertArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Documents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentCountArgs} args - Arguments to filter Documents to count.
+     * @example
+     * // Count the number of Documents
+     * const count = await prisma.document.count({
+     *   where: {
+     *     // ... the filter for the Documents we want to count
+     *   }
+     * })
+    **/
+    count<T extends DocumentCountArgs>(
+      args?: Subset<T, DocumentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DocumentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Document.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DocumentAggregateArgs>(args: Subset<T, DocumentAggregateArgs>): Prisma.PrismaPromise<GetDocumentAggregateType<T>>
+
+    /**
+     * Group by Document.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DocumentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DocumentGroupByArgs['orderBy'] }
+        : { orderBy?: DocumentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DocumentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDocumentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Document model
+   */
+  readonly fields: DocumentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Document.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DocumentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Document model
+   */ 
+  interface DocumentFieldRefs {
+    readonly id: FieldRef<"Document", 'String'>
+    readonly entityType: FieldRef<"Document", 'String'>
+    readonly entityId: FieldRef<"Document", 'String'>
+    readonly name: FieldRef<"Document", 'String'>
+    readonly originalName: FieldRef<"Document", 'String'>
+    readonly mimeType: FieldRef<"Document", 'String'>
+    readonly size: FieldRef<"Document", 'Int'>
+    readonly storagePath: FieldRef<"Document", 'String'>
+    readonly uploadedBy: FieldRef<"Document", 'String'>
+    readonly createdAt: FieldRef<"Document", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Document findUnique
+   */
+  export type DocumentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Filter, which Document to fetch.
+     */
+    where: DocumentWhereUniqueInput
+  }
+
+  /**
+   * Document findUniqueOrThrow
+   */
+  export type DocumentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Filter, which Document to fetch.
+     */
+    where: DocumentWhereUniqueInput
+  }
+
+  /**
+   * Document findFirst
+   */
+  export type DocumentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Filter, which Document to fetch.
+     */
+    where?: DocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documents to fetch.
+     */
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Documents.
+     */
+    cursor?: DocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Documents.
+     */
+    distinct?: DocumentScalarFieldEnum | DocumentScalarFieldEnum[]
+  }
+
+  /**
+   * Document findFirstOrThrow
+   */
+  export type DocumentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Filter, which Document to fetch.
+     */
+    where?: DocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documents to fetch.
+     */
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Documents.
+     */
+    cursor?: DocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Documents.
+     */
+    distinct?: DocumentScalarFieldEnum | DocumentScalarFieldEnum[]
+  }
+
+  /**
+   * Document findMany
+   */
+  export type DocumentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Filter, which Documents to fetch.
+     */
+    where?: DocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documents to fetch.
+     */
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Documents.
+     */
+    cursor?: DocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documents.
+     */
+    skip?: number
+    distinct?: DocumentScalarFieldEnum | DocumentScalarFieldEnum[]
+  }
+
+  /**
+   * Document create
+   */
+  export type DocumentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * The data needed to create a Document.
+     */
+    data: XOR<DocumentCreateInput, DocumentUncheckedCreateInput>
+  }
+
+  /**
+   * Document createMany
+   */
+  export type DocumentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Documents.
+     */
+    data: DocumentCreateManyInput | DocumentCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Document createManyAndReturn
+   */
+  export type DocumentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many Documents.
+     */
+    data: DocumentCreateManyInput | DocumentCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Document update
+   */
+  export type DocumentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * The data needed to update a Document.
+     */
+    data: XOR<DocumentUpdateInput, DocumentUncheckedUpdateInput>
+    /**
+     * Choose, which Document to update.
+     */
+    where: DocumentWhereUniqueInput
+  }
+
+  /**
+   * Document updateMany
+   */
+  export type DocumentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Documents.
+     */
+    data: XOR<DocumentUpdateManyMutationInput, DocumentUncheckedUpdateManyInput>
+    /**
+     * Filter which Documents to update
+     */
+    where?: DocumentWhereInput
+  }
+
+  /**
+   * Document upsert
+   */
+  export type DocumentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * The filter to search for the Document to update in case it exists.
+     */
+    where: DocumentWhereUniqueInput
+    /**
+     * In case the Document found by the `where` argument doesn't exist, create a new Document with this data.
+     */
+    create: XOR<DocumentCreateInput, DocumentUncheckedCreateInput>
+    /**
+     * In case the Document was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DocumentUpdateInput, DocumentUncheckedUpdateInput>
+  }
+
+  /**
+   * Document delete
+   */
+  export type DocumentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Filter which Document to delete.
+     */
+    where: DocumentWhereUniqueInput
+  }
+
+  /**
+   * Document deleteMany
+   */
+  export type DocumentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Documents to delete
+     */
+    where?: DocumentWhereInput
+  }
+
+  /**
+   * Document without action
+   */
+  export type DocumentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -19691,6 +25107,50 @@ export namespace Prisma {
   };
 
   export type ActivityLogScalarFieldEnum = (typeof ActivityLogScalarFieldEnum)[keyof typeof ActivityLogScalarFieldEnum]
+
+
+  export const CrmCompanyScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    industry: 'industry',
+    website: 'website',
+    phone: 'phone',
+    email: 'email',
+    address: 'address',
+    notes: 'notes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CrmCompanyScalarFieldEnum = (typeof CrmCompanyScalarFieldEnum)[keyof typeof CrmCompanyScalarFieldEnum]
+
+
+  export const CrmContactScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    name: 'name',
+    position: 'position',
+    email: 'email',
+    phone: 'phone',
+    notes: 'notes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CrmContactScalarFieldEnum = (typeof CrmContactScalarFieldEnum)[keyof typeof CrmContactScalarFieldEnum]
+
+
+  export const CrmCompanyLogScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    type: 'type',
+    subject: 'subject',
+    body: 'body',
+    loggedAt: 'loggedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type CrmCompanyLogScalarFieldEnum = (typeof CrmCompanyLogScalarFieldEnum)[keyof typeof CrmCompanyLogScalarFieldEnum]
 
 
   export const LeadScalarFieldEnum: {
@@ -19929,6 +25389,41 @@ export namespace Prisma {
   export type TaskScalarFieldEnum = (typeof TaskScalarFieldEnum)[keyof typeof TaskScalarFieldEnum]
 
 
+  export const CalendarEventScalarFieldEnum: {
+    id: 'id',
+    title: 'title',
+    description: 'description',
+    startAt: 'startAt',
+    endAt: 'endAt',
+    allDay: 'allDay',
+    type: 'type',
+    entityType: 'entityType',
+    entityId: 'entityId',
+    color: 'color',
+    createdBy: 'createdBy',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CalendarEventScalarFieldEnum = (typeof CalendarEventScalarFieldEnum)[keyof typeof CalendarEventScalarFieldEnum]
+
+
+  export const DocumentScalarFieldEnum: {
+    id: 'id',
+    entityType: 'entityType',
+    entityId: 'entityId',
+    name: 'name',
+    originalName: 'originalName',
+    mimeType: 'mimeType',
+    size: 'size',
+    storagePath: 'storagePath',
+    uploadedBy: 'uploadedBy',
+    createdAt: 'createdAt'
+  };
+
+  export type DocumentScalarFieldEnum = (typeof DocumentScalarFieldEnum)[keyof typeof DocumentScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -20007,6 +25502,20 @@ export namespace Prisma {
    * Reference to a field of type 'Json'
    */
   export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'CrmLogType'
+   */
+  export type EnumCrmLogTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CrmLogType'>
+    
+
+
+  /**
+   * Reference to a field of type 'CrmLogType[]'
+   */
+  export type ListEnumCrmLogTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CrmLogType[]'>
     
 
 
@@ -20179,6 +25688,27 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
+   * Reference to a field of type 'CalendarEventType'
+   */
+  export type EnumCalendarEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CalendarEventType'>
+    
+
+
+  /**
+   * Reference to a field of type 'CalendarEventType[]'
+   */
+  export type ListEnumCalendarEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CalendarEventType[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -20297,6 +25827,229 @@ export namespace Prisma {
     entityId?: StringNullableWithAggregatesFilter<"ActivityLog"> | string | null
     meta?: JsonNullableWithAggregatesFilter<"ActivityLog">
     createdAt?: DateTimeWithAggregatesFilter<"ActivityLog"> | Date | string
+  }
+
+  export type CrmCompanyWhereInput = {
+    AND?: CrmCompanyWhereInput | CrmCompanyWhereInput[]
+    OR?: CrmCompanyWhereInput[]
+    NOT?: CrmCompanyWhereInput | CrmCompanyWhereInput[]
+    id?: StringFilter<"CrmCompany"> | string
+    name?: StringFilter<"CrmCompany"> | string
+    industry?: StringNullableFilter<"CrmCompany"> | string | null
+    website?: StringNullableFilter<"CrmCompany"> | string | null
+    phone?: StringNullableFilter<"CrmCompany"> | string | null
+    email?: StringNullableFilter<"CrmCompany"> | string | null
+    address?: StringNullableFilter<"CrmCompany"> | string | null
+    notes?: StringNullableFilter<"CrmCompany"> | string | null
+    createdAt?: DateTimeFilter<"CrmCompany"> | Date | string
+    updatedAt?: DateTimeFilter<"CrmCompany"> | Date | string
+    contacts?: CrmContactListRelationFilter
+    logs?: CrmCompanyLogListRelationFilter
+  }
+
+  export type CrmCompanyOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    industry?: SortOrderInput | SortOrder
+    website?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    address?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    contacts?: CrmContactOrderByRelationAggregateInput
+    logs?: CrmCompanyLogOrderByRelationAggregateInput
+  }
+
+  export type CrmCompanyWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: CrmCompanyWhereInput | CrmCompanyWhereInput[]
+    OR?: CrmCompanyWhereInput[]
+    NOT?: CrmCompanyWhereInput | CrmCompanyWhereInput[]
+    name?: StringFilter<"CrmCompany"> | string
+    industry?: StringNullableFilter<"CrmCompany"> | string | null
+    website?: StringNullableFilter<"CrmCompany"> | string | null
+    phone?: StringNullableFilter<"CrmCompany"> | string | null
+    email?: StringNullableFilter<"CrmCompany"> | string | null
+    address?: StringNullableFilter<"CrmCompany"> | string | null
+    notes?: StringNullableFilter<"CrmCompany"> | string | null
+    createdAt?: DateTimeFilter<"CrmCompany"> | Date | string
+    updatedAt?: DateTimeFilter<"CrmCompany"> | Date | string
+    contacts?: CrmContactListRelationFilter
+    logs?: CrmCompanyLogListRelationFilter
+  }, "id">
+
+  export type CrmCompanyOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    industry?: SortOrderInput | SortOrder
+    website?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    address?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CrmCompanyCountOrderByAggregateInput
+    _max?: CrmCompanyMaxOrderByAggregateInput
+    _min?: CrmCompanyMinOrderByAggregateInput
+  }
+
+  export type CrmCompanyScalarWhereWithAggregatesInput = {
+    AND?: CrmCompanyScalarWhereWithAggregatesInput | CrmCompanyScalarWhereWithAggregatesInput[]
+    OR?: CrmCompanyScalarWhereWithAggregatesInput[]
+    NOT?: CrmCompanyScalarWhereWithAggregatesInput | CrmCompanyScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CrmCompany"> | string
+    name?: StringWithAggregatesFilter<"CrmCompany"> | string
+    industry?: StringNullableWithAggregatesFilter<"CrmCompany"> | string | null
+    website?: StringNullableWithAggregatesFilter<"CrmCompany"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"CrmCompany"> | string | null
+    email?: StringNullableWithAggregatesFilter<"CrmCompany"> | string | null
+    address?: StringNullableWithAggregatesFilter<"CrmCompany"> | string | null
+    notes?: StringNullableWithAggregatesFilter<"CrmCompany"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"CrmCompany"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CrmCompany"> | Date | string
+  }
+
+  export type CrmContactWhereInput = {
+    AND?: CrmContactWhereInput | CrmContactWhereInput[]
+    OR?: CrmContactWhereInput[]
+    NOT?: CrmContactWhereInput | CrmContactWhereInput[]
+    id?: StringFilter<"CrmContact"> | string
+    companyId?: StringFilter<"CrmContact"> | string
+    name?: StringFilter<"CrmContact"> | string
+    position?: StringNullableFilter<"CrmContact"> | string | null
+    email?: StringNullableFilter<"CrmContact"> | string | null
+    phone?: StringNullableFilter<"CrmContact"> | string | null
+    notes?: StringNullableFilter<"CrmContact"> | string | null
+    createdAt?: DateTimeFilter<"CrmContact"> | Date | string
+    updatedAt?: DateTimeFilter<"CrmContact"> | Date | string
+    company?: XOR<CrmCompanyRelationFilter, CrmCompanyWhereInput>
+  }
+
+  export type CrmContactOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    position?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    company?: CrmCompanyOrderByWithRelationInput
+  }
+
+  export type CrmContactWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: CrmContactWhereInput | CrmContactWhereInput[]
+    OR?: CrmContactWhereInput[]
+    NOT?: CrmContactWhereInput | CrmContactWhereInput[]
+    companyId?: StringFilter<"CrmContact"> | string
+    name?: StringFilter<"CrmContact"> | string
+    position?: StringNullableFilter<"CrmContact"> | string | null
+    email?: StringNullableFilter<"CrmContact"> | string | null
+    phone?: StringNullableFilter<"CrmContact"> | string | null
+    notes?: StringNullableFilter<"CrmContact"> | string | null
+    createdAt?: DateTimeFilter<"CrmContact"> | Date | string
+    updatedAt?: DateTimeFilter<"CrmContact"> | Date | string
+    company?: XOR<CrmCompanyRelationFilter, CrmCompanyWhereInput>
+  }, "id">
+
+  export type CrmContactOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    position?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CrmContactCountOrderByAggregateInput
+    _max?: CrmContactMaxOrderByAggregateInput
+    _min?: CrmContactMinOrderByAggregateInput
+  }
+
+  export type CrmContactScalarWhereWithAggregatesInput = {
+    AND?: CrmContactScalarWhereWithAggregatesInput | CrmContactScalarWhereWithAggregatesInput[]
+    OR?: CrmContactScalarWhereWithAggregatesInput[]
+    NOT?: CrmContactScalarWhereWithAggregatesInput | CrmContactScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CrmContact"> | string
+    companyId?: StringWithAggregatesFilter<"CrmContact"> | string
+    name?: StringWithAggregatesFilter<"CrmContact"> | string
+    position?: StringNullableWithAggregatesFilter<"CrmContact"> | string | null
+    email?: StringNullableWithAggregatesFilter<"CrmContact"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"CrmContact"> | string | null
+    notes?: StringNullableWithAggregatesFilter<"CrmContact"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"CrmContact"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CrmContact"> | Date | string
+  }
+
+  export type CrmCompanyLogWhereInput = {
+    AND?: CrmCompanyLogWhereInput | CrmCompanyLogWhereInput[]
+    OR?: CrmCompanyLogWhereInput[]
+    NOT?: CrmCompanyLogWhereInput | CrmCompanyLogWhereInput[]
+    id?: StringFilter<"CrmCompanyLog"> | string
+    companyId?: StringFilter<"CrmCompanyLog"> | string
+    type?: EnumCrmLogTypeFilter<"CrmCompanyLog"> | $Enums.CrmLogType
+    subject?: StringNullableFilter<"CrmCompanyLog"> | string | null
+    body?: StringNullableFilter<"CrmCompanyLog"> | string | null
+    loggedAt?: DateTimeFilter<"CrmCompanyLog"> | Date | string
+    createdAt?: DateTimeFilter<"CrmCompanyLog"> | Date | string
+    company?: XOR<CrmCompanyRelationFilter, CrmCompanyWhereInput>
+  }
+
+  export type CrmCompanyLogOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    type?: SortOrder
+    subject?: SortOrderInput | SortOrder
+    body?: SortOrderInput | SortOrder
+    loggedAt?: SortOrder
+    createdAt?: SortOrder
+    company?: CrmCompanyOrderByWithRelationInput
+  }
+
+  export type CrmCompanyLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: CrmCompanyLogWhereInput | CrmCompanyLogWhereInput[]
+    OR?: CrmCompanyLogWhereInput[]
+    NOT?: CrmCompanyLogWhereInput | CrmCompanyLogWhereInput[]
+    companyId?: StringFilter<"CrmCompanyLog"> | string
+    type?: EnumCrmLogTypeFilter<"CrmCompanyLog"> | $Enums.CrmLogType
+    subject?: StringNullableFilter<"CrmCompanyLog"> | string | null
+    body?: StringNullableFilter<"CrmCompanyLog"> | string | null
+    loggedAt?: DateTimeFilter<"CrmCompanyLog"> | Date | string
+    createdAt?: DateTimeFilter<"CrmCompanyLog"> | Date | string
+    company?: XOR<CrmCompanyRelationFilter, CrmCompanyWhereInput>
+  }, "id">
+
+  export type CrmCompanyLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    type?: SortOrder
+    subject?: SortOrderInput | SortOrder
+    body?: SortOrderInput | SortOrder
+    loggedAt?: SortOrder
+    createdAt?: SortOrder
+    _count?: CrmCompanyLogCountOrderByAggregateInput
+    _max?: CrmCompanyLogMaxOrderByAggregateInput
+    _min?: CrmCompanyLogMinOrderByAggregateInput
+  }
+
+  export type CrmCompanyLogScalarWhereWithAggregatesInput = {
+    AND?: CrmCompanyLogScalarWhereWithAggregatesInput | CrmCompanyLogScalarWhereWithAggregatesInput[]
+    OR?: CrmCompanyLogScalarWhereWithAggregatesInput[]
+    NOT?: CrmCompanyLogScalarWhereWithAggregatesInput | CrmCompanyLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CrmCompanyLog"> | string
+    companyId?: StringWithAggregatesFilter<"CrmCompanyLog"> | string
+    type?: EnumCrmLogTypeWithAggregatesFilter<"CrmCompanyLog"> | $Enums.CrmLogType
+    subject?: StringNullableWithAggregatesFilter<"CrmCompanyLog"> | string | null
+    body?: StringNullableWithAggregatesFilter<"CrmCompanyLog"> | string | null
+    loggedAt?: DateTimeWithAggregatesFilter<"CrmCompanyLog"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"CrmCompanyLog"> | Date | string
   }
 
   export type LeadWhereInput = {
@@ -21503,6 +27256,177 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Task"> | Date | string
   }
 
+  export type CalendarEventWhereInput = {
+    AND?: CalendarEventWhereInput | CalendarEventWhereInput[]
+    OR?: CalendarEventWhereInput[]
+    NOT?: CalendarEventWhereInput | CalendarEventWhereInput[]
+    id?: StringFilter<"CalendarEvent"> | string
+    title?: StringFilter<"CalendarEvent"> | string
+    description?: StringNullableFilter<"CalendarEvent"> | string | null
+    startAt?: DateTimeFilter<"CalendarEvent"> | Date | string
+    endAt?: DateTimeFilter<"CalendarEvent"> | Date | string
+    allDay?: BoolFilter<"CalendarEvent"> | boolean
+    type?: EnumCalendarEventTypeFilter<"CalendarEvent"> | $Enums.CalendarEventType
+    entityType?: StringNullableFilter<"CalendarEvent"> | string | null
+    entityId?: StringNullableFilter<"CalendarEvent"> | string | null
+    color?: StringNullableFilter<"CalendarEvent"> | string | null
+    createdBy?: StringFilter<"CalendarEvent"> | string
+    createdAt?: DateTimeFilter<"CalendarEvent"> | Date | string
+    updatedAt?: DateTimeFilter<"CalendarEvent"> | Date | string
+  }
+
+  export type CalendarEventOrderByWithRelationInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    allDay?: SortOrder
+    type?: SortOrder
+    entityType?: SortOrderInput | SortOrder
+    entityId?: SortOrderInput | SortOrder
+    color?: SortOrderInput | SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CalendarEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: CalendarEventWhereInput | CalendarEventWhereInput[]
+    OR?: CalendarEventWhereInput[]
+    NOT?: CalendarEventWhereInput | CalendarEventWhereInput[]
+    title?: StringFilter<"CalendarEvent"> | string
+    description?: StringNullableFilter<"CalendarEvent"> | string | null
+    startAt?: DateTimeFilter<"CalendarEvent"> | Date | string
+    endAt?: DateTimeFilter<"CalendarEvent"> | Date | string
+    allDay?: BoolFilter<"CalendarEvent"> | boolean
+    type?: EnumCalendarEventTypeFilter<"CalendarEvent"> | $Enums.CalendarEventType
+    entityType?: StringNullableFilter<"CalendarEvent"> | string | null
+    entityId?: StringNullableFilter<"CalendarEvent"> | string | null
+    color?: StringNullableFilter<"CalendarEvent"> | string | null
+    createdBy?: StringFilter<"CalendarEvent"> | string
+    createdAt?: DateTimeFilter<"CalendarEvent"> | Date | string
+    updatedAt?: DateTimeFilter<"CalendarEvent"> | Date | string
+  }, "id">
+
+  export type CalendarEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    allDay?: SortOrder
+    type?: SortOrder
+    entityType?: SortOrderInput | SortOrder
+    entityId?: SortOrderInput | SortOrder
+    color?: SortOrderInput | SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CalendarEventCountOrderByAggregateInput
+    _max?: CalendarEventMaxOrderByAggregateInput
+    _min?: CalendarEventMinOrderByAggregateInput
+  }
+
+  export type CalendarEventScalarWhereWithAggregatesInput = {
+    AND?: CalendarEventScalarWhereWithAggregatesInput | CalendarEventScalarWhereWithAggregatesInput[]
+    OR?: CalendarEventScalarWhereWithAggregatesInput[]
+    NOT?: CalendarEventScalarWhereWithAggregatesInput | CalendarEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CalendarEvent"> | string
+    title?: StringWithAggregatesFilter<"CalendarEvent"> | string
+    description?: StringNullableWithAggregatesFilter<"CalendarEvent"> | string | null
+    startAt?: DateTimeWithAggregatesFilter<"CalendarEvent"> | Date | string
+    endAt?: DateTimeWithAggregatesFilter<"CalendarEvent"> | Date | string
+    allDay?: BoolWithAggregatesFilter<"CalendarEvent"> | boolean
+    type?: EnumCalendarEventTypeWithAggregatesFilter<"CalendarEvent"> | $Enums.CalendarEventType
+    entityType?: StringNullableWithAggregatesFilter<"CalendarEvent"> | string | null
+    entityId?: StringNullableWithAggregatesFilter<"CalendarEvent"> | string | null
+    color?: StringNullableWithAggregatesFilter<"CalendarEvent"> | string | null
+    createdBy?: StringWithAggregatesFilter<"CalendarEvent"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"CalendarEvent"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CalendarEvent"> | Date | string
+  }
+
+  export type DocumentWhereInput = {
+    AND?: DocumentWhereInput | DocumentWhereInput[]
+    OR?: DocumentWhereInput[]
+    NOT?: DocumentWhereInput | DocumentWhereInput[]
+    id?: StringFilter<"Document"> | string
+    entityType?: StringFilter<"Document"> | string
+    entityId?: StringFilter<"Document"> | string
+    name?: StringFilter<"Document"> | string
+    originalName?: StringFilter<"Document"> | string
+    mimeType?: StringFilter<"Document"> | string
+    size?: IntFilter<"Document"> | number
+    storagePath?: StringFilter<"Document"> | string
+    uploadedBy?: StringFilter<"Document"> | string
+    createdAt?: DateTimeFilter<"Document"> | Date | string
+  }
+
+  export type DocumentOrderByWithRelationInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    name?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    storagePath?: SortOrder
+    uploadedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DocumentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: DocumentWhereInput | DocumentWhereInput[]
+    OR?: DocumentWhereInput[]
+    NOT?: DocumentWhereInput | DocumentWhereInput[]
+    entityType?: StringFilter<"Document"> | string
+    entityId?: StringFilter<"Document"> | string
+    name?: StringFilter<"Document"> | string
+    originalName?: StringFilter<"Document"> | string
+    mimeType?: StringFilter<"Document"> | string
+    size?: IntFilter<"Document"> | number
+    storagePath?: StringFilter<"Document"> | string
+    uploadedBy?: StringFilter<"Document"> | string
+    createdAt?: DateTimeFilter<"Document"> | Date | string
+  }, "id">
+
+  export type DocumentOrderByWithAggregationInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    name?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    storagePath?: SortOrder
+    uploadedBy?: SortOrder
+    createdAt?: SortOrder
+    _count?: DocumentCountOrderByAggregateInput
+    _avg?: DocumentAvgOrderByAggregateInput
+    _max?: DocumentMaxOrderByAggregateInput
+    _min?: DocumentMinOrderByAggregateInput
+    _sum?: DocumentSumOrderByAggregateInput
+  }
+
+  export type DocumentScalarWhereWithAggregatesInput = {
+    AND?: DocumentScalarWhereWithAggregatesInput | DocumentScalarWhereWithAggregatesInput[]
+    OR?: DocumentScalarWhereWithAggregatesInput[]
+    NOT?: DocumentScalarWhereWithAggregatesInput | DocumentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Document"> | string
+    entityType?: StringWithAggregatesFilter<"Document"> | string
+    entityId?: StringWithAggregatesFilter<"Document"> | string
+    name?: StringWithAggregatesFilter<"Document"> | string
+    originalName?: StringWithAggregatesFilter<"Document"> | string
+    mimeType?: StringWithAggregatesFilter<"Document"> | string
+    size?: IntWithAggregatesFilter<"Document"> | number
+    storagePath?: StringWithAggregatesFilter<"Document"> | string
+    uploadedBy?: StringWithAggregatesFilter<"Document"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"Document"> | Date | string
+  }
+
   export type TenantMetaCreateInput = {
     key: string
     value: string
@@ -21612,6 +27536,257 @@ export namespace Prisma {
     entity?: StringFieldUpdateOperationsInput | string
     entityId?: NullableStringFieldUpdateOperationsInput | string | null
     meta?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmCompanyCreateInput = {
+    id?: string
+    name: string
+    industry?: string | null
+    website?: string | null
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: CrmContactCreateNestedManyWithoutCompanyInput
+    logs?: CrmCompanyLogCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CrmCompanyUncheckedCreateInput = {
+    id?: string
+    name: string
+    industry?: string | null
+    website?: string | null
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: CrmContactUncheckedCreateNestedManyWithoutCompanyInput
+    logs?: CrmCompanyLogUncheckedCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CrmCompanyUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: CrmContactUpdateManyWithoutCompanyNestedInput
+    logs?: CrmCompanyLogUpdateManyWithoutCompanyNestedInput
+  }
+
+  export type CrmCompanyUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: CrmContactUncheckedUpdateManyWithoutCompanyNestedInput
+    logs?: CrmCompanyLogUncheckedUpdateManyWithoutCompanyNestedInput
+  }
+
+  export type CrmCompanyCreateManyInput = {
+    id?: string
+    name: string
+    industry?: string | null
+    website?: string | null
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CrmCompanyUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmCompanyUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmContactCreateInput = {
+    id?: string
+    name: string
+    position?: string | null
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CrmCompanyCreateNestedOneWithoutContactsInput
+  }
+
+  export type CrmContactUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    name: string
+    position?: string | null
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CrmContactUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    position?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CrmCompanyUpdateOneRequiredWithoutContactsNestedInput
+  }
+
+  export type CrmContactUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    position?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmContactCreateManyInput = {
+    id?: string
+    companyId: string
+    name: string
+    position?: string | null
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CrmContactUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    position?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmContactUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    position?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmCompanyLogCreateInput = {
+    id?: string
+    type?: $Enums.CrmLogType
+    subject?: string | null
+    body?: string | null
+    loggedAt?: Date | string
+    createdAt?: Date | string
+    company: CrmCompanyCreateNestedOneWithoutLogsInput
+  }
+
+  export type CrmCompanyLogUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    type?: $Enums.CrmLogType
+    subject?: string | null
+    body?: string | null
+    loggedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type CrmCompanyLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCrmLogTypeFieldUpdateOperationsInput | $Enums.CrmLogType
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: NullableStringFieldUpdateOperationsInput | string | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CrmCompanyUpdateOneRequiredWithoutLogsNestedInput
+  }
+
+  export type CrmCompanyLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumCrmLogTypeFieldUpdateOperationsInput | $Enums.CrmLogType
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: NullableStringFieldUpdateOperationsInput | string | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmCompanyLogCreateManyInput = {
+    id?: string
+    companyId: string
+    type?: $Enums.CrmLogType
+    subject?: string | null
+    body?: string | null
+    loggedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type CrmCompanyLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCrmLogTypeFieldUpdateOperationsInput | $Enums.CrmLogType
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: NullableStringFieldUpdateOperationsInput | string | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmCompanyLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumCrmLogTypeFieldUpdateOperationsInput | $Enums.CrmLogType
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: NullableStringFieldUpdateOperationsInput | string | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -22976,6 +29151,209 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CalendarEventCreateInput = {
+    id?: string
+    title: string
+    description?: string | null
+    startAt: Date | string
+    endAt: Date | string
+    allDay?: boolean
+    type?: $Enums.CalendarEventType
+    entityType?: string | null
+    entityId?: string | null
+    color?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CalendarEventUncheckedCreateInput = {
+    id?: string
+    title: string
+    description?: string | null
+    startAt: Date | string
+    endAt: Date | string
+    allDay?: boolean
+    type?: $Enums.CalendarEventType
+    entityType?: string | null
+    entityId?: string | null
+    color?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CalendarEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    allDay?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumCalendarEventTypeFieldUpdateOperationsInput | $Enums.CalendarEventType
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CalendarEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    allDay?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumCalendarEventTypeFieldUpdateOperationsInput | $Enums.CalendarEventType
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CalendarEventCreateManyInput = {
+    id?: string
+    title: string
+    description?: string | null
+    startAt: Date | string
+    endAt: Date | string
+    allDay?: boolean
+    type?: $Enums.CalendarEventType
+    entityType?: string | null
+    entityId?: string | null
+    color?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CalendarEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    allDay?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumCalendarEventTypeFieldUpdateOperationsInput | $Enums.CalendarEventType
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CalendarEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    allDay?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumCalendarEventTypeFieldUpdateOperationsInput | $Enums.CalendarEventType
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentCreateInput = {
+    id?: string
+    entityType: string
+    entityId: string
+    name: string
+    originalName: string
+    mimeType: string
+    size: number
+    storagePath: string
+    uploadedBy: string
+    createdAt?: Date | string
+  }
+
+  export type DocumentUncheckedCreateInput = {
+    id?: string
+    entityType: string
+    entityId: string
+    name: string
+    originalName: string
+    mimeType: string
+    size: number
+    storagePath: string
+    uploadedBy: string
+    createdAt?: Date | string
+  }
+
+  export type DocumentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    storagePath?: StringFieldUpdateOperationsInput | string
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    storagePath?: StringFieldUpdateOperationsInput | string
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentCreateManyInput = {
+    id?: string
+    entityType: string
+    entityId: string
+    name: string
+    originalName: string
+    mimeType: string
+    size: number
+    storagePath: string
+    uploadedBy: string
+    createdAt?: Date | string
+  }
+
+  export type DocumentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    storagePath?: StringFieldUpdateOperationsInput | string
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    storagePath?: StringFieldUpdateOperationsInput | string
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -23163,6 +29541,153 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedJsonNullableFilter<$PrismaModel>
     _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type CrmContactListRelationFilter = {
+    every?: CrmContactWhereInput
+    some?: CrmContactWhereInput
+    none?: CrmContactWhereInput
+  }
+
+  export type CrmCompanyLogListRelationFilter = {
+    every?: CrmCompanyLogWhereInput
+    some?: CrmCompanyLogWhereInput
+    none?: CrmCompanyLogWhereInput
+  }
+
+  export type CrmContactOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CrmCompanyLogOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CrmCompanyCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    industry?: SortOrder
+    website?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    address?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CrmCompanyMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    industry?: SortOrder
+    website?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    address?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CrmCompanyMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    industry?: SortOrder
+    website?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    address?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CrmCompanyRelationFilter = {
+    is?: CrmCompanyWhereInput
+    isNot?: CrmCompanyWhereInput
+  }
+
+  export type CrmContactCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    position?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CrmContactMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    position?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CrmContactMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    position?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumCrmLogTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CrmLogType | EnumCrmLogTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CrmLogType[] | ListEnumCrmLogTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CrmLogType[] | ListEnumCrmLogTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCrmLogTypeFilter<$PrismaModel> | $Enums.CrmLogType
+  }
+
+  export type CrmCompanyLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    type?: SortOrder
+    subject?: SortOrder
+    body?: SortOrder
+    loggedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CrmCompanyLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    type?: SortOrder
+    subject?: SortOrder
+    body?: SortOrder
+    loggedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CrmCompanyLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    type?: SortOrder
+    subject?: SortOrder
+    body?: SortOrder
+    loggedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type EnumCrmLogTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CrmLogType | EnumCrmLogTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CrmLogType[] | ListEnumCrmLogTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CrmLogType[] | ListEnumCrmLogTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCrmLogTypeWithAggregatesFilter<$PrismaModel> | $Enums.CrmLogType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCrmLogTypeFilter<$PrismaModel>
+    _max?: NestedEnumCrmLogTypeFilter<$PrismaModel>
   }
 
   export type EnumLeadStatusFilter<$PrismaModel = never> = {
@@ -24205,6 +30730,158 @@ export namespace Prisma {
     _max?: NestedEnumTaskPriorityFilter<$PrismaModel>
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type EnumCalendarEventTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CalendarEventType | EnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CalendarEventType[] | ListEnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CalendarEventType[] | ListEnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCalendarEventTypeFilter<$PrismaModel> | $Enums.CalendarEventType
+  }
+
+  export type CalendarEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    allDay?: SortOrder
+    type?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    color?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CalendarEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    allDay?: SortOrder
+    type?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    color?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CalendarEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    allDay?: SortOrder
+    type?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    color?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type EnumCalendarEventTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CalendarEventType | EnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CalendarEventType[] | ListEnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CalendarEventType[] | ListEnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCalendarEventTypeWithAggregatesFilter<$PrismaModel> | $Enums.CalendarEventType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCalendarEventTypeFilter<$PrismaModel>
+    _max?: NestedEnumCalendarEventTypeFilter<$PrismaModel>
+  }
+
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type DocumentCountOrderByAggregateInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    name?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    storagePath?: SortOrder
+    uploadedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DocumentAvgOrderByAggregateInput = {
+    size?: SortOrder
+  }
+
+  export type DocumentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    name?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    storagePath?: SortOrder
+    uploadedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DocumentMinOrderByAggregateInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    name?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    storagePath?: SortOrder
+    uploadedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type DocumentSumOrderByAggregateInput = {
+    size?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -24215,6 +30892,122 @@ export namespace Prisma {
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type CrmContactCreateNestedManyWithoutCompanyInput = {
+    create?: XOR<CrmContactCreateWithoutCompanyInput, CrmContactUncheckedCreateWithoutCompanyInput> | CrmContactCreateWithoutCompanyInput[] | CrmContactUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: CrmContactCreateOrConnectWithoutCompanyInput | CrmContactCreateOrConnectWithoutCompanyInput[]
+    createMany?: CrmContactCreateManyCompanyInputEnvelope
+    connect?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+  }
+
+  export type CrmCompanyLogCreateNestedManyWithoutCompanyInput = {
+    create?: XOR<CrmCompanyLogCreateWithoutCompanyInput, CrmCompanyLogUncheckedCreateWithoutCompanyInput> | CrmCompanyLogCreateWithoutCompanyInput[] | CrmCompanyLogUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: CrmCompanyLogCreateOrConnectWithoutCompanyInput | CrmCompanyLogCreateOrConnectWithoutCompanyInput[]
+    createMany?: CrmCompanyLogCreateManyCompanyInputEnvelope
+    connect?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+  }
+
+  export type CrmContactUncheckedCreateNestedManyWithoutCompanyInput = {
+    create?: XOR<CrmContactCreateWithoutCompanyInput, CrmContactUncheckedCreateWithoutCompanyInput> | CrmContactCreateWithoutCompanyInput[] | CrmContactUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: CrmContactCreateOrConnectWithoutCompanyInput | CrmContactCreateOrConnectWithoutCompanyInput[]
+    createMany?: CrmContactCreateManyCompanyInputEnvelope
+    connect?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+  }
+
+  export type CrmCompanyLogUncheckedCreateNestedManyWithoutCompanyInput = {
+    create?: XOR<CrmCompanyLogCreateWithoutCompanyInput, CrmCompanyLogUncheckedCreateWithoutCompanyInput> | CrmCompanyLogCreateWithoutCompanyInput[] | CrmCompanyLogUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: CrmCompanyLogCreateOrConnectWithoutCompanyInput | CrmCompanyLogCreateOrConnectWithoutCompanyInput[]
+    createMany?: CrmCompanyLogCreateManyCompanyInputEnvelope
+    connect?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+  }
+
+  export type CrmContactUpdateManyWithoutCompanyNestedInput = {
+    create?: XOR<CrmContactCreateWithoutCompanyInput, CrmContactUncheckedCreateWithoutCompanyInput> | CrmContactCreateWithoutCompanyInput[] | CrmContactUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: CrmContactCreateOrConnectWithoutCompanyInput | CrmContactCreateOrConnectWithoutCompanyInput[]
+    upsert?: CrmContactUpsertWithWhereUniqueWithoutCompanyInput | CrmContactUpsertWithWhereUniqueWithoutCompanyInput[]
+    createMany?: CrmContactCreateManyCompanyInputEnvelope
+    set?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+    disconnect?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+    delete?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+    connect?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+    update?: CrmContactUpdateWithWhereUniqueWithoutCompanyInput | CrmContactUpdateWithWhereUniqueWithoutCompanyInput[]
+    updateMany?: CrmContactUpdateManyWithWhereWithoutCompanyInput | CrmContactUpdateManyWithWhereWithoutCompanyInput[]
+    deleteMany?: CrmContactScalarWhereInput | CrmContactScalarWhereInput[]
+  }
+
+  export type CrmCompanyLogUpdateManyWithoutCompanyNestedInput = {
+    create?: XOR<CrmCompanyLogCreateWithoutCompanyInput, CrmCompanyLogUncheckedCreateWithoutCompanyInput> | CrmCompanyLogCreateWithoutCompanyInput[] | CrmCompanyLogUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: CrmCompanyLogCreateOrConnectWithoutCompanyInput | CrmCompanyLogCreateOrConnectWithoutCompanyInput[]
+    upsert?: CrmCompanyLogUpsertWithWhereUniqueWithoutCompanyInput | CrmCompanyLogUpsertWithWhereUniqueWithoutCompanyInput[]
+    createMany?: CrmCompanyLogCreateManyCompanyInputEnvelope
+    set?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+    disconnect?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+    delete?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+    connect?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+    update?: CrmCompanyLogUpdateWithWhereUniqueWithoutCompanyInput | CrmCompanyLogUpdateWithWhereUniqueWithoutCompanyInput[]
+    updateMany?: CrmCompanyLogUpdateManyWithWhereWithoutCompanyInput | CrmCompanyLogUpdateManyWithWhereWithoutCompanyInput[]
+    deleteMany?: CrmCompanyLogScalarWhereInput | CrmCompanyLogScalarWhereInput[]
+  }
+
+  export type CrmContactUncheckedUpdateManyWithoutCompanyNestedInput = {
+    create?: XOR<CrmContactCreateWithoutCompanyInput, CrmContactUncheckedCreateWithoutCompanyInput> | CrmContactCreateWithoutCompanyInput[] | CrmContactUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: CrmContactCreateOrConnectWithoutCompanyInput | CrmContactCreateOrConnectWithoutCompanyInput[]
+    upsert?: CrmContactUpsertWithWhereUniqueWithoutCompanyInput | CrmContactUpsertWithWhereUniqueWithoutCompanyInput[]
+    createMany?: CrmContactCreateManyCompanyInputEnvelope
+    set?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+    disconnect?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+    delete?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+    connect?: CrmContactWhereUniqueInput | CrmContactWhereUniqueInput[]
+    update?: CrmContactUpdateWithWhereUniqueWithoutCompanyInput | CrmContactUpdateWithWhereUniqueWithoutCompanyInput[]
+    updateMany?: CrmContactUpdateManyWithWhereWithoutCompanyInput | CrmContactUpdateManyWithWhereWithoutCompanyInput[]
+    deleteMany?: CrmContactScalarWhereInput | CrmContactScalarWhereInput[]
+  }
+
+  export type CrmCompanyLogUncheckedUpdateManyWithoutCompanyNestedInput = {
+    create?: XOR<CrmCompanyLogCreateWithoutCompanyInput, CrmCompanyLogUncheckedCreateWithoutCompanyInput> | CrmCompanyLogCreateWithoutCompanyInput[] | CrmCompanyLogUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: CrmCompanyLogCreateOrConnectWithoutCompanyInput | CrmCompanyLogCreateOrConnectWithoutCompanyInput[]
+    upsert?: CrmCompanyLogUpsertWithWhereUniqueWithoutCompanyInput | CrmCompanyLogUpsertWithWhereUniqueWithoutCompanyInput[]
+    createMany?: CrmCompanyLogCreateManyCompanyInputEnvelope
+    set?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+    disconnect?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+    delete?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+    connect?: CrmCompanyLogWhereUniqueInput | CrmCompanyLogWhereUniqueInput[]
+    update?: CrmCompanyLogUpdateWithWhereUniqueWithoutCompanyInput | CrmCompanyLogUpdateWithWhereUniqueWithoutCompanyInput[]
+    updateMany?: CrmCompanyLogUpdateManyWithWhereWithoutCompanyInput | CrmCompanyLogUpdateManyWithWhereWithoutCompanyInput[]
+    deleteMany?: CrmCompanyLogScalarWhereInput | CrmCompanyLogScalarWhereInput[]
+  }
+
+  export type CrmCompanyCreateNestedOneWithoutContactsInput = {
+    create?: XOR<CrmCompanyCreateWithoutContactsInput, CrmCompanyUncheckedCreateWithoutContactsInput>
+    connectOrCreate?: CrmCompanyCreateOrConnectWithoutContactsInput
+    connect?: CrmCompanyWhereUniqueInput
+  }
+
+  export type CrmCompanyUpdateOneRequiredWithoutContactsNestedInput = {
+    create?: XOR<CrmCompanyCreateWithoutContactsInput, CrmCompanyUncheckedCreateWithoutContactsInput>
+    connectOrCreate?: CrmCompanyCreateOrConnectWithoutContactsInput
+    upsert?: CrmCompanyUpsertWithoutContactsInput
+    connect?: CrmCompanyWhereUniqueInput
+    update?: XOR<XOR<CrmCompanyUpdateToOneWithWhereWithoutContactsInput, CrmCompanyUpdateWithoutContactsInput>, CrmCompanyUncheckedUpdateWithoutContactsInput>
+  }
+
+  export type CrmCompanyCreateNestedOneWithoutLogsInput = {
+    create?: XOR<CrmCompanyCreateWithoutLogsInput, CrmCompanyUncheckedCreateWithoutLogsInput>
+    connectOrCreate?: CrmCompanyCreateOrConnectWithoutLogsInput
+    connect?: CrmCompanyWhereUniqueInput
+  }
+
+  export type EnumCrmLogTypeFieldUpdateOperationsInput = {
+    set?: $Enums.CrmLogType
+  }
+
+  export type CrmCompanyUpdateOneRequiredWithoutLogsNestedInput = {
+    create?: XOR<CrmCompanyCreateWithoutLogsInput, CrmCompanyUncheckedCreateWithoutLogsInput>
+    connectOrCreate?: CrmCompanyCreateOrConnectWithoutLogsInput
+    upsert?: CrmCompanyUpsertWithoutLogsInput
+    connect?: CrmCompanyWhereUniqueInput
+    update?: XOR<XOR<CrmCompanyUpdateToOneWithWhereWithoutLogsInput, CrmCompanyUpdateWithoutLogsInput>, CrmCompanyUncheckedUpdateWithoutLogsInput>
   }
 
   export type EnumLeadStatusFieldUpdateOperationsInput = {
@@ -24735,6 +31528,22 @@ export namespace Prisma {
     update?: XOR<XOR<ProjectUpdateToOneWithWhereWithoutTasksInput, ProjectUpdateWithoutTasksInput>, ProjectUncheckedUpdateWithoutTasksInput>
   }
 
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
+  export type EnumCalendarEventTypeFieldUpdateOperationsInput = {
+    set?: $Enums.CalendarEventType
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -24864,6 +31673,23 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedEnumCrmLogTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CrmLogType | EnumCrmLogTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CrmLogType[] | ListEnumCrmLogTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CrmLogType[] | ListEnumCrmLogTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCrmLogTypeFilter<$PrismaModel> | $Enums.CrmLogType
+  }
+
+  export type NestedEnumCrmLogTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CrmLogType | EnumCrmLogTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CrmLogType[] | ListEnumCrmLogTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CrmLogType[] | ListEnumCrmLogTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCrmLogTypeWithAggregatesFilter<$PrismaModel> | $Enums.CrmLogType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCrmLogTypeFilter<$PrismaModel>
+    _max?: NestedEnumCrmLogTypeFilter<$PrismaModel>
   }
 
   export type NestedEnumLeadStatusFilter<$PrismaModel = never> = {
@@ -25130,6 +31956,316 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumTaskPriorityFilter<$PrismaModel>
     _max?: NestedEnumTaskPriorityFilter<$PrismaModel>
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedEnumCalendarEventTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CalendarEventType | EnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CalendarEventType[] | ListEnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CalendarEventType[] | ListEnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCalendarEventTypeFilter<$PrismaModel> | $Enums.CalendarEventType
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type NestedEnumCalendarEventTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CalendarEventType | EnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CalendarEventType[] | ListEnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CalendarEventType[] | ListEnumCalendarEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCalendarEventTypeWithAggregatesFilter<$PrismaModel> | $Enums.CalendarEventType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCalendarEventTypeFilter<$PrismaModel>
+    _max?: NestedEnumCalendarEventTypeFilter<$PrismaModel>
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type CrmContactCreateWithoutCompanyInput = {
+    id?: string
+    name: string
+    position?: string | null
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CrmContactUncheckedCreateWithoutCompanyInput = {
+    id?: string
+    name: string
+    position?: string | null
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CrmContactCreateOrConnectWithoutCompanyInput = {
+    where: CrmContactWhereUniqueInput
+    create: XOR<CrmContactCreateWithoutCompanyInput, CrmContactUncheckedCreateWithoutCompanyInput>
+  }
+
+  export type CrmContactCreateManyCompanyInputEnvelope = {
+    data: CrmContactCreateManyCompanyInput | CrmContactCreateManyCompanyInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type CrmCompanyLogCreateWithoutCompanyInput = {
+    id?: string
+    type?: $Enums.CrmLogType
+    subject?: string | null
+    body?: string | null
+    loggedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type CrmCompanyLogUncheckedCreateWithoutCompanyInput = {
+    id?: string
+    type?: $Enums.CrmLogType
+    subject?: string | null
+    body?: string | null
+    loggedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type CrmCompanyLogCreateOrConnectWithoutCompanyInput = {
+    where: CrmCompanyLogWhereUniqueInput
+    create: XOR<CrmCompanyLogCreateWithoutCompanyInput, CrmCompanyLogUncheckedCreateWithoutCompanyInput>
+  }
+
+  export type CrmCompanyLogCreateManyCompanyInputEnvelope = {
+    data: CrmCompanyLogCreateManyCompanyInput | CrmCompanyLogCreateManyCompanyInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type CrmContactUpsertWithWhereUniqueWithoutCompanyInput = {
+    where: CrmContactWhereUniqueInput
+    update: XOR<CrmContactUpdateWithoutCompanyInput, CrmContactUncheckedUpdateWithoutCompanyInput>
+    create: XOR<CrmContactCreateWithoutCompanyInput, CrmContactUncheckedCreateWithoutCompanyInput>
+  }
+
+  export type CrmContactUpdateWithWhereUniqueWithoutCompanyInput = {
+    where: CrmContactWhereUniqueInput
+    data: XOR<CrmContactUpdateWithoutCompanyInput, CrmContactUncheckedUpdateWithoutCompanyInput>
+  }
+
+  export type CrmContactUpdateManyWithWhereWithoutCompanyInput = {
+    where: CrmContactScalarWhereInput
+    data: XOR<CrmContactUpdateManyMutationInput, CrmContactUncheckedUpdateManyWithoutCompanyInput>
+  }
+
+  export type CrmContactScalarWhereInput = {
+    AND?: CrmContactScalarWhereInput | CrmContactScalarWhereInput[]
+    OR?: CrmContactScalarWhereInput[]
+    NOT?: CrmContactScalarWhereInput | CrmContactScalarWhereInput[]
+    id?: StringFilter<"CrmContact"> | string
+    companyId?: StringFilter<"CrmContact"> | string
+    name?: StringFilter<"CrmContact"> | string
+    position?: StringNullableFilter<"CrmContact"> | string | null
+    email?: StringNullableFilter<"CrmContact"> | string | null
+    phone?: StringNullableFilter<"CrmContact"> | string | null
+    notes?: StringNullableFilter<"CrmContact"> | string | null
+    createdAt?: DateTimeFilter<"CrmContact"> | Date | string
+    updatedAt?: DateTimeFilter<"CrmContact"> | Date | string
+  }
+
+  export type CrmCompanyLogUpsertWithWhereUniqueWithoutCompanyInput = {
+    where: CrmCompanyLogWhereUniqueInput
+    update: XOR<CrmCompanyLogUpdateWithoutCompanyInput, CrmCompanyLogUncheckedUpdateWithoutCompanyInput>
+    create: XOR<CrmCompanyLogCreateWithoutCompanyInput, CrmCompanyLogUncheckedCreateWithoutCompanyInput>
+  }
+
+  export type CrmCompanyLogUpdateWithWhereUniqueWithoutCompanyInput = {
+    where: CrmCompanyLogWhereUniqueInput
+    data: XOR<CrmCompanyLogUpdateWithoutCompanyInput, CrmCompanyLogUncheckedUpdateWithoutCompanyInput>
+  }
+
+  export type CrmCompanyLogUpdateManyWithWhereWithoutCompanyInput = {
+    where: CrmCompanyLogScalarWhereInput
+    data: XOR<CrmCompanyLogUpdateManyMutationInput, CrmCompanyLogUncheckedUpdateManyWithoutCompanyInput>
+  }
+
+  export type CrmCompanyLogScalarWhereInput = {
+    AND?: CrmCompanyLogScalarWhereInput | CrmCompanyLogScalarWhereInput[]
+    OR?: CrmCompanyLogScalarWhereInput[]
+    NOT?: CrmCompanyLogScalarWhereInput | CrmCompanyLogScalarWhereInput[]
+    id?: StringFilter<"CrmCompanyLog"> | string
+    companyId?: StringFilter<"CrmCompanyLog"> | string
+    type?: EnumCrmLogTypeFilter<"CrmCompanyLog"> | $Enums.CrmLogType
+    subject?: StringNullableFilter<"CrmCompanyLog"> | string | null
+    body?: StringNullableFilter<"CrmCompanyLog"> | string | null
+    loggedAt?: DateTimeFilter<"CrmCompanyLog"> | Date | string
+    createdAt?: DateTimeFilter<"CrmCompanyLog"> | Date | string
+  }
+
+  export type CrmCompanyCreateWithoutContactsInput = {
+    id?: string
+    name: string
+    industry?: string | null
+    website?: string | null
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    logs?: CrmCompanyLogCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CrmCompanyUncheckedCreateWithoutContactsInput = {
+    id?: string
+    name: string
+    industry?: string | null
+    website?: string | null
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    logs?: CrmCompanyLogUncheckedCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CrmCompanyCreateOrConnectWithoutContactsInput = {
+    where: CrmCompanyWhereUniqueInput
+    create: XOR<CrmCompanyCreateWithoutContactsInput, CrmCompanyUncheckedCreateWithoutContactsInput>
+  }
+
+  export type CrmCompanyUpsertWithoutContactsInput = {
+    update: XOR<CrmCompanyUpdateWithoutContactsInput, CrmCompanyUncheckedUpdateWithoutContactsInput>
+    create: XOR<CrmCompanyCreateWithoutContactsInput, CrmCompanyUncheckedCreateWithoutContactsInput>
+    where?: CrmCompanyWhereInput
+  }
+
+  export type CrmCompanyUpdateToOneWithWhereWithoutContactsInput = {
+    where?: CrmCompanyWhereInput
+    data: XOR<CrmCompanyUpdateWithoutContactsInput, CrmCompanyUncheckedUpdateWithoutContactsInput>
+  }
+
+  export type CrmCompanyUpdateWithoutContactsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: CrmCompanyLogUpdateManyWithoutCompanyNestedInput
+  }
+
+  export type CrmCompanyUncheckedUpdateWithoutContactsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: CrmCompanyLogUncheckedUpdateManyWithoutCompanyNestedInput
+  }
+
+  export type CrmCompanyCreateWithoutLogsInput = {
+    id?: string
+    name: string
+    industry?: string | null
+    website?: string | null
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: CrmContactCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CrmCompanyUncheckedCreateWithoutLogsInput = {
+    id?: string
+    name: string
+    industry?: string | null
+    website?: string | null
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: CrmContactUncheckedCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CrmCompanyCreateOrConnectWithoutLogsInput = {
+    where: CrmCompanyWhereUniqueInput
+    create: XOR<CrmCompanyCreateWithoutLogsInput, CrmCompanyUncheckedCreateWithoutLogsInput>
+  }
+
+  export type CrmCompanyUpsertWithoutLogsInput = {
+    update: XOR<CrmCompanyUpdateWithoutLogsInput, CrmCompanyUncheckedUpdateWithoutLogsInput>
+    create: XOR<CrmCompanyCreateWithoutLogsInput, CrmCompanyUncheckedCreateWithoutLogsInput>
+    where?: CrmCompanyWhereInput
+  }
+
+  export type CrmCompanyUpdateToOneWithWhereWithoutLogsInput = {
+    where?: CrmCompanyWhereInput
+    data: XOR<CrmCompanyUpdateWithoutLogsInput, CrmCompanyUncheckedUpdateWithoutLogsInput>
+  }
+
+  export type CrmCompanyUpdateWithoutLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: CrmContactUpdateManyWithoutCompanyNestedInput
+  }
+
+  export type CrmCompanyUncheckedUpdateWithoutLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: CrmContactUncheckedUpdateManyWithoutCompanyNestedInput
   }
 
   export type DealCreateWithoutCustomerInput = {
@@ -26160,6 +33296,86 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CrmContactCreateManyCompanyInput = {
+    id?: string
+    name: string
+    position?: string | null
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CrmCompanyLogCreateManyCompanyInput = {
+    id?: string
+    type?: $Enums.CrmLogType
+    subject?: string | null
+    body?: string | null
+    loggedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type CrmContactUpdateWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    position?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmContactUncheckedUpdateWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    position?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmContactUncheckedUpdateManyWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    position?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmCompanyLogUpdateWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCrmLogTypeFieldUpdateOperationsInput | $Enums.CrmLogType
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: NullableStringFieldUpdateOperationsInput | string | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmCompanyLogUncheckedUpdateWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCrmLogTypeFieldUpdateOperationsInput | $Enums.CrmLogType
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: NullableStringFieldUpdateOperationsInput | string | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrmCompanyLogUncheckedUpdateManyWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCrmLogTypeFieldUpdateOperationsInput | $Enums.CrmLogType
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: NullableStringFieldUpdateOperationsInput | string | null
+    loggedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type DealCreateManyCustomerInput = {
     id?: string
     title: string
@@ -26506,6 +33722,10 @@ export namespace Prisma {
    * Aliases for legacy arg types
    */
     /**
+     * @deprecated Use CrmCompanyCountOutputTypeDefaultArgs instead
+     */
+    export type CrmCompanyCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CrmCompanyCountOutputTypeDefaultArgs<ExtArgs>
+    /**
      * @deprecated Use CustomerCountOutputTypeDefaultArgs instead
      */
     export type CustomerCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CustomerCountOutputTypeDefaultArgs<ExtArgs>
@@ -26541,6 +33761,18 @@ export namespace Prisma {
      * @deprecated Use ActivityLogDefaultArgs instead
      */
     export type ActivityLogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ActivityLogDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use CrmCompanyDefaultArgs instead
+     */
+    export type CrmCompanyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CrmCompanyDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use CrmContactDefaultArgs instead
+     */
+    export type CrmContactArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CrmContactDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use CrmCompanyLogDefaultArgs instead
+     */
+    export type CrmCompanyLogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CrmCompanyLogDefaultArgs<ExtArgs>
     /**
      * @deprecated Use LeadDefaultArgs instead
      */
@@ -26601,6 +33833,14 @@ export namespace Prisma {
      * @deprecated Use TaskDefaultArgs instead
      */
     export type TaskArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = TaskDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use CalendarEventDefaultArgs instead
+     */
+    export type CalendarEventArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CalendarEventDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use DocumentDefaultArgs instead
+     */
+    export type DocumentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = DocumentDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

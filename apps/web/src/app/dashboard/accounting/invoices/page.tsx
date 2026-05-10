@@ -16,6 +16,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
+import { useCurrency, formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 import { ConfirmDialog, useConfirm } from "@/components/ui/confirm-dialog";
 import { exportCSV } from "@/lib/csv";
@@ -69,6 +70,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function fmt(d: string | null) { return d ? new Date(d).toLocaleDateString() : "—"; }
 
 export default function InvoicesPage() {
+  const currency = useCurrency();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading]   = useState(true);
   const [open, setOpen]         = useState(false);
@@ -112,7 +114,6 @@ export default function InvoicesPage() {
     setNewItem(EMPTY_ITEM);
     setError(null);
     setOpen(true);
-    // Fetch full invoice with items
     try {
       const { invoice } = await apiGet<{ invoice: Invoice & { items: LineItem[] } }>(`/api/accounting/invoices/${inv.id}`);
       setLineItems((invoice.items ?? []).map((i) => ({ ...i })));
@@ -166,11 +167,9 @@ export default function InvoicesPage() {
         invoiceId = res.invoice.id;
       }
 
-      // Delete removed items
       const deletions = lineItems.filter((i) => i._deleted && i.id).map((i) =>
         apiDelete(`/api/accounting/invoices/${invoiceId}/items/${i.id}`)
       );
-      // Add new items
       const additions = lineItems.filter((i) => !i._deleted && !i.id).map((i) =>
         apiPost(`/api/accounting/invoices/${invoiceId}/items`, {
           description: i.description, quantity: i.quantity,
@@ -243,7 +242,7 @@ export default function InvoicesPage() {
                 <TableCell>
                   <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium capitalize", STATUS_COLOR[inv.status] ?? "bg-muted")}>{inv.status}</span>
                 </TableCell>
-                <TableCell className="font-medium">${inv.total.toLocaleString()}</TableCell>
+                <TableCell className="font-medium">{formatCurrency(inv.total, currency)}</TableCell>
                 <TableCell className="text-muted-foreground text-xs">{inv._count.items} item{inv._count.items !== 1 ? "s" : ""}</TableCell>
                 <TableCell className="text-muted-foreground text-xs">{fmt(inv.issueDate)}</TableCell>
                 <TableCell className="text-muted-foreground text-xs">{fmt(inv.dueDate)}</TableCell>
@@ -267,7 +266,6 @@ export default function InvoicesPage() {
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-5">
             {error && <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">{error}</p>}
 
-            {/* Header */}
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Invoice # *"><Input value={form.number} onChange={(e) => setField("number", e.target.value)} placeholder="INV-001" /></Field>
@@ -286,7 +284,6 @@ export default function InvoicesPage() {
               <Field label="Notes"><Textarea value={form.notes} onChange={(e) => setField("notes", e.target.value)} rows={2} /></Field>
             </div>
 
-            {/* Line items */}
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Line Items</p>
               {activeItems.length > 0 && (
@@ -306,8 +303,8 @@ export default function InvoicesPage() {
                         <tr key={idx} className="border-t">
                           <td className="px-3 py-2">{item.description}</td>
                           <td className="px-2 py-2 text-right text-muted-foreground">{item.quantity}</td>
-                          <td className="px-2 py-2 text-right text-muted-foreground">${item.unitPrice.toFixed(2)}</td>
-                          <td className="px-2 py-2 text-right font-medium">${item.amount.toFixed(2)}</td>
+                          <td className="px-2 py-2 text-right text-muted-foreground">{formatCurrency(item.unitPrice, currency)}</td>
+                          <td className="px-2 py-2 text-right font-medium">{formatCurrency(item.amount, currency)}</td>
                           <td className="px-1 py-1">
                             <button onClick={() => removeItem(idx)} className="p-1 hover:text-destructive text-muted-foreground/50 transition-colors rounded">
                               <X className="w-3 h-3" />
@@ -320,7 +317,6 @@ export default function InvoicesPage() {
                 </div>
               )}
 
-              {/* Add item row */}
               <div className="flex gap-2 items-end">
                 <div className="flex-1 space-y-1">
                   <Label className="text-[10px] text-muted-foreground">Description</Label>
@@ -344,13 +340,12 @@ export default function InvoicesPage() {
               </div>
             </div>
 
-            {/* Totals */}
             <div className="rounded-md bg-muted/40 px-4 py-3 space-y-1.5 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span><span className="font-medium">${subtotal.toFixed(2)}</span>
+                <span>Subtotal</span><span className="font-medium">{formatCurrency(subtotal, currency)}</span>
               </div>
               <div className="flex items-center justify-between text-muted-foreground">
-                <span>Tax ($)</span>
+                <span>Tax ({currency})</span>
                 <Input
                   type="number" min="0" step="0.01"
                   value={form.tax}
@@ -359,7 +354,7 @@ export default function InvoicesPage() {
                 />
               </div>
               <div className="flex justify-between font-semibold border-t pt-1.5">
-                <span>Total</span><span>${total.toFixed(2)}</span>
+                <span>Total</span><span>{formatCurrency(total, currency)}</span>
               </div>
             </div>
           </div>

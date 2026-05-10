@@ -1,0 +1,55 @@
+services:
+
+  # ── Express API ──────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.api
+    env_file: ../.env.production
+    environment:
+      NODE_ENV: production
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    env_file: ../.env.production
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-business360}
+      POSTGRES_USER: ${POSTGRES_USER:-b360}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-b360} -d ${POSTGRES_DB:-business360}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  # ── Cloudflare Tunnel (exposes API to the internet without open ports) ───────
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ../cloudflare/tunnel:/etc/cloudflared:ro
+      - cloudflared-creds:/root/.cloudflared
+    restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  cloudflared-creds:

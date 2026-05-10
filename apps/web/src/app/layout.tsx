@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Poppins, Open_Sans, Geist_Mono } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/lib/auth";
 import "./globals.css";
 
-const poppins = Poppins({
-  variable: "--font-poppins",
-  weight: ["400", "500", "600", "700", "800"],
+const inter = Inter({
+  variable: "--font-inter",
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
   display: "swap",
 });
 
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
-  weight: ["300", "400", "500", "600", "700"],
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{__html: `(function(){var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');})()`}} />
       </head>
-      <body className={`${poppins.variable} ${openSans.variable} ${geistMono.variable} h-full antialiased min-h-full flex flex-col bg-background text-foreground`}>
+      <body className={`${inter.variable} ${plusJakarta.variable} ${geistMono.variable} h-full antialiased min-h-full flex flex-col bg-background text-foreground`}>
         <AuthProvider>{children}</AuthProvider>
         <Toaster richColors position="bottom-right" />
       </body>

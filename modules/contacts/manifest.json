@@ -1,0 +1,33 @@
+{
+  "key": "contacts",
+  "name": "Contacts",
+  "version": "1.0.0",
+  "description": "Manage company accounts and all their contacts with positions.",
+  "longDescription": "A dedicated address book for B2B relationships. Create company records with industry, website, and contact details, then add multiple contacts per company with their position, email, and phone.",
+  "icon": "BookUser",
+  "requiredPlan": "starter",
+  "category": "core",
+  "author": "Business360",
+  "rating": 4.7,
+  "reviewCount": 58,
+  "tags": ["contacts", "companies", "address book", "people"],
+  "features": [
+    "Company directory",
+    "Multiple contacts per company",
+    "Position / role tracking",
+    "Search across all contacts",
+    "Inline add/edit/delete"
+  ],
+  "price": null,
+  "routes": [
+    { "path": "/dashboard/contacts",           "label": "Contacts" },
+    { "path": "/dashboard/contacts/companies", "label": "Companies" },
+    { "path": "/dashboard/contacts/contacts",  "label": "All Contacts" }
+  ],
+  "permissions": [
+    { "key": "contacts:companies:read",  "label": "View companies", "roles": ["owner", "manager", "member"] },
+    { "key": "contacts:companies:write", "label": "Edit companies", "roles": ["owner", "manager"] },
+    { "key": "contacts:contacts:read",   "label": "View contacts",  "roles": ["owner", "manager", "member"] },
+    { "key": "contacts:contacts:write",  "label": "Edit contacts",  "roles": ["owner", "manager"] }
+  ]
+}

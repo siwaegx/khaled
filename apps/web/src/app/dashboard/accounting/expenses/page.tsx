@@ -13,6 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
+import { useCurrency, formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 import { ConfirmDialog, useConfirm } from "@/components/ui/confirm-dialog";
 import { Pagination } from "@/components/ui/pagination";
@@ -26,7 +27,7 @@ type Expense = {
   createdAt: string;
 };
 
-const EMPTY = { category: "", description: "", amount: "", currency: "USD", date: "", reference: "", notes: "" };
+const EMPTY_BASE = { category: "", description: "", amount: "", date: "", reference: "", notes: "" };
 
 const CATEGORIES = ["Office", "Travel", "Software", "Hardware", "Marketing", "Payroll", "Utilities", "Rent", "Other"];
 
@@ -40,10 +41,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export default function ExpensesPage() {
+  const sysCurrency = useCurrency();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading]   = useState(true);
   const [open, setOpen]         = useState(false);
   const [editing, setEditing]   = useState<Expense | null>(null);
+  const EMPTY = { ...EMPTY_BASE, currency: sysCurrency };
   const [form, setForm]         = useState(EMPTY);
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
@@ -61,7 +64,7 @@ export default function ExpensesPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  function openCreate() { setEditing(null); setForm(EMPTY); setError(null); setOpen(true); }
+  function openCreate() { setEditing(null); setForm({ ...EMPTY_BASE, currency: sysCurrency }); setError(null); setOpen(true); }
 
   function openEdit(e: Expense) {
     setEditing(e);
@@ -146,7 +149,7 @@ export default function ExpensesPage() {
               <TableRow key={e.id}>
                 <TableCell className="font-medium capitalize">{e.category}</TableCell>
                 <TableCell className="text-muted-foreground">{e.description}</TableCell>
-                <TableCell className="font-medium">${e.amount.toLocaleString()} <span className="text-xs text-muted-foreground">{e.currency}</span></TableCell>
+                <TableCell className="font-medium">{formatCurrency(e.amount, e.currency || sysCurrency)}</TableCell>
                 <TableCell className="text-muted-foreground text-xs">{new Date(e.date).toLocaleDateString()}</TableCell>
                 <TableCell className="text-muted-foreground text-xs">{e.reference ?? "—"}</TableCell>
                 <TableCell>

@@ -1,0 +1,32 @@
+{
+  "key": "calendar",
+  "name": "Calendar & Scheduler",
+  "version": "1.0.0",
+  "description": "Shared team calendar with event scheduling, reminders, and cross-module entity linking.",
+  "author": "Business360",
+  "category": "Productivity",
+  "tags": ["calendar", "scheduling", "events", "reminders"],
+  "features": [
+    "Monthly / weekly event grid",
+    "Link events to CRM leads, deals, projects",
+    "Color-coded event types",
+    "Team-wide shared calendar"
+  ],
+  "icon": "Calendar",
+  "color": "blue",
+  "plan": "starter",
+  "price": 0,
+  "billing": "free",
+  "rating": 4.6,
+  "routes": [
+    { "method": "GET",    "path": "/api/module/calendar/events",    "description": "List events in date range" },
+    { "method": "POST",   "path": "/api/module/calendar/events",    "description": "Create event" },
+    { "method": "PATCH",  "path": "/api/module/calendar/events/:id","description": "Update event" },
+    { "method": "DELETE", "path": "/api/module/calendar/events/:id","description": "Delete event" }
+  ],
+  "permissions": {
+    "member":  ["read"],
+    "manager": ["read", "write"],
+    "owner":   ["read", "write", "delete"]
+  }
+}

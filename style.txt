@@ -1,5 +1,5 @@
 ================================================================
-BUSINESS 360 — FRONTEND STYLE SYSTEM  (v2)
+BUSINESS 360 — FRONTEND STYLE SYSTEM  (v3)
 ================================================================
 
 
@@ -22,9 +22,13 @@ Logo
   - Use: nav, footer, auth pages, onboarding
 
 Primary Color
-  - oklch(0.50 0.26 264)  — rich indigo-blue
-  - Gradient: from primary (#4F46E5 range) → violet (#7C3AED range)
+  - oklch(0.56 0.115 174)  — rich teal
+  - Gradient: from primary → deeper teal
   - CSS: var(--gradient-from) → var(--gradient-to)
+
+CTA Color
+  - oklch(0.62 0.195 38)   — orange #EA580C
+  - Used for conversion actions (sign up, upgrade, etc.)
 
 Accent Colors (module icons only)
   - Blue     bg-blue-50 / text-blue-600      CRM
@@ -40,28 +44,35 @@ COLOR TOKENS
 ================================================================
 
 Light mode (default)
-  --background        white
-  --foreground        near-black (oklch 0.13)
-  --primary           indigo-blue (oklch 0.50 0.26 264)
-  --muted             light gray (oklch 0.968)
-  --muted-foreground  medium gray (oklch 0.50)
-  --border            soft gray (oklch 0.918)
+  --background        teal-tinted white (#F0FDFA / oklch 0.987 0.016 173)
+  --foreground        dark teal (#134E4A / oklch 0.30 0.065 174)
+  --primary           teal (#0D9488 / oklch 0.56 0.115 174)
+  --muted             soft blue-gray (oklch 0.957 0.012 205)
+  --muted-foreground  medium teal-gray (oklch 0.48 0.04 174)
+  --border            subtle teal tint (oklch 0.915 0.030 174)
   --card              white
+  --cta               orange (oklch 0.62 0.195 38)
 
 Dark mode
-  --background        dark indigo-tinted (oklch 0.12 0.01 264)
-  --foreground        near-white (oklch 0.97)
-  --primary           lighter indigo (oklch 0.65 0.22 264)
-  --muted             dark indigo (oklch 0.22)
-  --card              slightly lighter dark (oklch 0.17)
+  --background        dark teal-tinted (oklch 0.13 0.030 174)
+  --foreground        near-white (oklch 0.96 0.005 175)
+  --primary           lighter teal (oklch 0.70 0.10 176)
+  --muted             dark teal (oklch 0.22 0.025 175)
+  --card              slightly lighter dark (oklch 0.17 0.028 174)
 
 
 ================================================================
 TYPOGRAPHY
 ================================================================
 
-Font: Geist Sans (variable font via next/font/google)
-Mono: Geist Mono (code only)
+Body font:    Inter (variable, via next/font/google)
+Heading font: Plus Jakarta Sans (variable, via next/font/google)
+Mono font:    Geist Mono (code only)
+
+CSS variables
+  --font-sans:    var(--font-inter)
+  --font-heading: var(--font-jakarta)
+  --font-mono:    var(--font-geist-mono)
 
 Scale
   Hero H1      5xl–7xl  font-extrabold  tracking-tight  leading-[1.1]
@@ -71,6 +82,8 @@ Scale
   Label/Meta   xs–sm    font-medium
 
 Rules
+  - Body text: Inter — clean, neutral, highly legible at all sizes
+  - All h1–h6: Plus Jakarta Sans — modern geometric, strong weight contrast
   - Never below 14px body text
   - Headings always font-extrabold on marketing pages
   - Tight tracking (-0.025em) on all headings
@@ -195,7 +208,7 @@ Transitions
   - transition-all duration-200  (card hover)
 
 Card hover
-  - .card-hover: -translate-y-1 + shadow-lg + shadow-primary/8
+  - .card-hover: -translate-y-0.5 + shadow
   - Apply to: feature cards, module cards
 
 Pulse dot (hero badge)
@@ -222,7 +235,7 @@ BACKGROUND UTILITIES (globals.css)
   3 radial gradient blobs (subtle, primary tinted)
 
 .card-hover
-  transition-all duration-200 hover:-translate-y-1 hover:shadow-lg
+  transition-all duration-200 hover:-translate-y-0.5
 
 
 ================================================================

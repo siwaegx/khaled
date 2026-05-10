@@ -266,7 +266,6 @@ export default function OrdersPage() {
               <Field label="Notes"><Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} /></Field>
             </div>
 
-            {/* Line items */}
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Line Items</p>
               {activeItems.length > 0 && (

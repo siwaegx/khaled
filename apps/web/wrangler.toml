@@ -1,0 +1,6 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "business360-web"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+pages_build_output_dir = ".vercel/output/static"

@@ -1,0 +1,135 @@
+================================================================
+MODULE RULES — CALENDAR
+================================================================
+Key:          calendar
+Plan:         starter (minimum)
+Icon:         Calendar  (lucide-react)
+================================================================
+
+
+WHAT THIS MODULE IS
+-------------------
+Shared team calendar: create, view, and manage events with date-range
+filtering. Color-coded event types (meeting, deadline, reminder, task,
+other). Fires calendar.created hook on new events. Fully standalone —
+no imports from apps/api/src/.
+
+
+ACTUAL FOLDER STRUCTURE
+-----------------------
+modules/calendar/
+  manifest.json          ← JSON metadata
+  package.json           ← own dependencies
+  rules.txt              ← this file
+  backend/
+    router.ts            ← named export: { router }  (Express Router)
+  frontend/
+    page.tsx             ← /dashboard/calendar  (monthly grid)
+
+Note: No layout.tsx — calendar has only one page, no sub-tabs.
+
+Thin re-export (do not edit):
+  apps/web/src/app/dashboard/calendar/page.tsx
+
+
+HOW THE ENGINE LOADS THIS MODULE
+---------------------------------
+1. At startup:  registerModules.ts reads manifest.json → registers manifest
+2. On request:  /api/:moduleKey wildcard fires
+3.              requireAuth → resolveTenant → attachHookService → requireModule("calendar") → router
+4. Frontend routes appear in sidebar from manifest.json routes array
+
+No migrations folder — CalendarEvent model is in tenant.prisma, provisioned by orgProvisionService.
+
+IMPORTANT: manifest.json format note
+  The calendar manifest currently uses a non-standard format for some fields:
+    "plan" instead of "requiredPlan"
+    "permissions" as an object (not an array)
+    "routes" with method+path (backend routes, not frontend routes)
+  This is a known deviation. When adding new modules, use the standard format
+  (see crm/manifest.json as the reference). Fixing calendar's manifest requires
+  updating registerModules.ts to handle both formats OR migrating calendar's manifest.
+
+
+MANIFEST RULES (manifest.json)
+--------------------------------
+- key must be exactly: "calendar"
+- Standard field: requiredPlan: "starter"
+- Permission key format: calendar:{action}
+- Roles: "owner" | "manager" | "member"
+- Routes array: frontend routes (path + label), not backend routes
+
+
+BACKEND RULES (backend/router.ts)
+-----------------------------------
+Export pattern:
+  import { Router } from "express";
+  export const router = Router();
+
+CRITICAL: This module must be fully standalone.
+  - Do NOT import from apps/api/src/ (e.g., no "../../../middleware/requireRole")
+  - Import only from "@business360/module-sdk" for shared utilities
+  - Import only from node_modules
+
+Available on req (set upstream — never re-apply in module):
+  req.user        → authenticated user
+  req.tenantDb    → org-scoped Prisma client
+  req.hookService → fire webhooks + notifications
+
+RBAC:
+  GET  → open to all roles
+  POST / PATCH / DELETE → guard with requireRole("manager") from "@business360/module-sdk"
+  Exception: members CAN create their own events (meeting type)
+
+Return shape:  { data } on success  |  { error: "message" } on failure
+Status codes:  200 OK, 201 Created, 400 Bad Request, 403 Forbidden, 404 Not Found, 500
+
+API endpoints:
+  GET    /api/calendar/events             — list events (query: start, end date range)
+  POST   /api/calendar/events             — create event  [manager+]  → fires calendar.created hook
+  PATCH  /api/calendar/events/:id         — update event  [manager+]
+  DELETE /api/calendar/events/:id         — delete event  [manager+]
+
+Event type (string enum): meeting | deadline | reminder | task | other
+CalendarEvent fields: id, title, description?, type, startAt, endAt?, allDay, createdBy
+
+Zod validation: use err.message (NOT err.errors[0]) — root zod is v4 in this monorepo.
+
+
+HOOKS FIRED BY THIS MODULE
+----------------------------
+  req.hookService.fireHook("calendar.created", { eventId, title, type, startAt, orgId })
+Fires webhooks registered in OrgWebhook and creates in-app Notification records.
+
+
+FRONTEND RULES (frontend/)
+----------------------------
+- page.tsx: "use client" (uses state for selected month, event dialog)
+- No layout.tsx needed (single page module)
+- @/ resolves to apps/web/src/ — never import from apps/api/
+
+Platform quirks:
+- shadcn/ui uses @base-ui — NO asChild on <Button>
+    RIGHT: <Link href="..." className={buttonVariants({ variant: "default" })}>...</Link>
+- useSearchParams() requires <Suspense>
+- Tailwind only
+
+Page content:
+  /dashboard/calendar — Monthly grid view; colored pills per day for events; click day → event list;
+                         create/edit event dialog; event type color legend; prev/next month navigation
+
+
+CODE QUALITY CHECKLIST
+-----------------------
+  ✔ manifest.json key = "calendar"
+  ✔ backend/router.ts exports named `router`
+  ✔ No imports from apps/api/src/ — fully standalone
+  ✔ No requireAuth/resolveTenant inside router.ts (handled upstream)
+  ✔ Zod: use err.message not err.errors[0]
+  ✔ page.tsx has "use client"
+  ✔ No asChild on Button
+  ✔ No TypeScript errors
+
+================================================================
+END
+================================================================

@@ -7,10 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Skill-recommended: Open Sans body, Poppins headings */
-  --font-sans: var(--font-open-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-poppins);
+  --font-heading: var(--font-jakarta);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -50,40 +49,32 @@
 }
 
 /* ─── Brand tokens — Teal primary + Orange CTA ─────────── */
-/* Source: ui-ux-pro-max skill design system for SaaS/ERP   */
 :root {
-  /* Teal-tinted white background #F0FDFA */
   --background: oklch(0.987 0.016 173);
-  /* Dark teal foreground #134E4A */
   --foreground: oklch(0.30 0.065 174);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.30 0.065 174);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.30 0.065 174);
-  /* Teal primary #0D9488 */
   --primary: oklch(0.56 0.115 174);
   --primary-light: oklch(0.65 0.105 177);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.965 0.018 175);
   --secondary-foreground: oklch(0.30 0.065 174);
-  /* Muted #E8F1F4 */
   --muted: oklch(0.957 0.012 205);
   --muted-foreground: oklch(0.48 0.04 174);
   --accent: oklch(0.965 0.018 175);
   --accent-foreground: oklch(0.30 0.065 174);
   --destructive: oklch(0.577 0.245 27.325);
-  /* Border — subtle teal tint */
   --border: oklch(0.915 0.030 174);
   --input: oklch(0.915 0.030 174);
   --ring: oklch(0.56 0.115 174);
   --radius: 0.875rem;
-  /* Charts */
   --chart-1: oklch(0.56 0.115 174);
   --chart-2: oklch(0.62 0.195 38);
   --chart-3: oklch(0.56 0.18 280);
   --chart-4: oklch(0.65 0.18 52);
   --chart-5: oklch(0.60 0.18 18);
-  /* Sidebar */
   --sidebar: oklch(0.980 0.014 175);
   --sidebar-foreground: oklch(0.30 0.065 174);
   --sidebar-primary: oklch(0.56 0.115 174);
@@ -92,11 +83,9 @@
   --sidebar-accent-foreground: oklch(0.30 0.065 174);
   --sidebar-border: oklch(0.913 0.028 174);
   --sidebar-ring: oklch(0.56 0.115 174);
-  /* Brand gradient — teal to deeper teal */
   --gradient-from: oklch(0.56 0.115 174);
   --gradient-mid: oklch(0.52 0.13 172);
   --gradient-to: oklch(0.48 0.14 170);
-  /* Orange CTA #EA580C */
   --cta: oklch(0.62 0.195 38);
   --cta-hover: oklch(0.58 0.21 36);
 }
@@ -146,9 +135,8 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
-  /* Poppins for all headings (skill rule: heading font = Poppins) */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-poppins), var(--font-heading), sans-serif;
+    font-family: var(--font-jakarta), var(--font-heading), sans-serif;
     @apply tracking-tight;
   }
 }
@@ -162,12 +150,10 @@
     background-clip: text;
   }
 
-  /* Teal brand gradient — logos, icons, active elements */
   .bg-gradient-brand {
     background: linear-gradient(135deg, var(--gradient-from), var(--gradient-mid), var(--gradient-to));
   }
 
-  /* Orange CTA button — main conversion actions */
   .bg-cta {
     background: var(--cta);
   }
@@ -196,7 +182,6 @@
     border: 1px solid oklch(1 0 0 / 0.55);
   }
 
-  /* Teal glow — brand elements */
   .shadow-glow {
     box-shadow: 0 0 40px oklch(0.56 0.115 174 / 0.28), 0 8px 20px oklch(0.56 0.115 174 / 0.16);
   }
@@ -204,7 +189,6 @@
     box-shadow: 0 0 20px oklch(0.56 0.115 174 / 0.22), 0 4px 10px oklch(0.56 0.115 174 / 0.12);
   }
 
-  /* Orange glow — CTA buttons */
   .shadow-cta {
     box-shadow: 0 0 30px oklch(0.62 0.195 38 / 0.35), 0 8px 16px oklch(0.62 0.195 38 / 0.20);
   }

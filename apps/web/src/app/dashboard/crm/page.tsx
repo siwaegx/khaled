@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, TrendingUp, HandshakeIcon, UserCheck, ArrowRight } from "lucide-react";
+import { Users, TrendingUp, HandshakeIcon, UserCheck, BookUser, Building2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/lib/api";
+import { useCurrency, formatCurrency } from "@/lib/currency";
 
 type Stats = {
   totalLeads: number;
   totalCustomers: number;
   totalDeals: number;
+  totalCompanies: number;
+  totalContacts: number;
   leadsByStatus: { status: string; _count: { id: number } }[];
   dealsByStatus: { status: string; _count: { id: number }; _sum: { value: number | null } }[];
 };
@@ -26,6 +29,7 @@ const DEAL_STATUS_COLOR: Record<string, string> = {
 };
 
 export default function CrmOverviewPage() {
+  const currency = useCurrency();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,10 +52,10 @@ export default function CrmOverviewPage() {
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Leads",    value: stats?.totalLeads,     icon: Users,         color: "text-blue-500" },
-          { label: "Customers",      value: stats?.totalCustomers, icon: UserCheck,     color: "text-emerald-500" },
-          { label: "Active Deals",   value: stats?.totalDeals,     icon: TrendingUp,    color: "text-violet-500" },
-          { label: "Won Revenue",    value: wonValue ? `$${wonValue.toLocaleString()}` : "$0", icon: HandshakeIcon, color: "text-amber-500" },
+          { label: "Total Leads",  value: stats?.totalLeads,     icon: Users,         color: "text-blue-500" },
+          { label: "Customers",    value: stats?.totalCustomers, icon: UserCheck,     color: "text-emerald-500" },
+          { label: "Active Deals", value: stats?.totalDeals,     icon: TrendingUp,    color: "text-violet-500" },
+          { label: "Won Revenue",  value: formatCurrency(wonValue ?? 0, currency), icon: HandshakeIcon, color: "text-amber-500" },
         ].map(({ label, value, icon: Icon, color }) => (
           <Card key={label}>
             <CardHeader className="pb-2">
@@ -104,7 +108,7 @@ export default function CrmOverviewPage() {
                 Pipeline Value
                 {totalPipelineValue > 0 && (
                   <span className="ml-2 text-xs font-normal text-muted-foreground">
-                    ${totalPipelineValue.toLocaleString()} total
+                    {formatCurrency(totalPipelineValue, currency)} total
                   </span>
                 )}
               </CardTitle>
@@ -125,13 +129,47 @@ export default function CrmOverviewPage() {
                     <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium capitalize", DEAL_STATUS_COLOR[d.status] ?? "bg-muted")}>{d.status}</span>
                     <span className="text-muted-foreground">{d._count.id} deal{d._count.id !== 1 ? "s" : ""}</span>
                   </div>
-                  <span className="font-medium">${(d._sum.value ?? 0).toLocaleString()}</span>
+                  <span className="font-medium">{formatCurrency(d._sum.value ?? 0, currency)}</span>
                 </div>
               ))
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Contacts module summary */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold">Contacts</CardTitle>
+            <Link href="/dashboard/contacts" className="text-xs text-primary flex items-center gap-1 hover:underline">
+              Open Contacts <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2.5">
+              <span className="p-1.5 rounded-lg bg-primary/10">
+                <Building2 className="w-4 h-4 text-primary" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">{loading ? "—" : (stats?.totalCompanies ?? 0).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Companies</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="p-1.5 rounded-lg bg-violet-50">
+                <BookUser className="w-4 h-4 text-violet-600" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">{loading ? "—" : (stats?.totalContacts ?? 0).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Contacts</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

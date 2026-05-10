@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/lib/api";
+import { useCurrency, formatCurrency } from "@/lib/currency";
 
 type Stats = {
   totalInvoices:       number;
@@ -26,6 +27,7 @@ const INV_STATUS_COLOR: Record<string, string> = {
 };
 
 export default function AccountingOverviewPage() {
+  const currency = useCurrency();
   const [stats, setStats]     = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,8 +43,8 @@ export default function AccountingOverviewPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total Invoices",  value: stats?.totalInvoices,                                icon: FileText,    color: "text-blue-500"    },
-          { label: "Paid Revenue",    value: stats ? `$${stats.paidTotal.toLocaleString()}` : "$0", icon: DollarSign,  color: "text-emerald-500" },
-          { label: "Outstanding",     value: stats ? `$${stats.outstandingTotal.toLocaleString()}` : "$0", icon: AlertCircle, color: "text-amber-500"  },
+          { label: "Paid Revenue",    value: stats ? formatCurrency(stats.paidTotal, currency) : formatCurrency(0, currency), icon: DollarSign,  color: "text-emerald-500" },
+          { label: "Outstanding",     value: stats ? formatCurrency(stats.outstandingTotal, currency) : formatCurrency(0, currency), icon: AlertCircle, color: "text-amber-500"  },
           { label: "Total Expenses",  value: stats?.totalExpenses,                                icon: Receipt,     color: "text-red-500"     },
         ].map(({ label, value, icon: Icon, color }) => (
           <Card key={label}>
@@ -82,7 +84,7 @@ export default function AccountingOverviewPage() {
                   <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium capitalize", INV_STATUS_COLOR[s.status] ?? "bg-muted")}>{s.status}</span>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="font-mono">{s._count.id}</Badge>
-                    <span className="text-muted-foreground text-xs">${(s._sum.total ?? 0).toLocaleString()}</span>
+                    <span className="text-muted-foreground text-xs">{formatCurrency(s._sum.total ?? 0, currency)}</span>
                   </div>
                 </div>
               ))
@@ -108,7 +110,7 @@ export default function AccountingOverviewPage() {
               (stats?.expensesByCategory ?? []).slice(0, 5).map((c) => (
                 <div key={c.category} className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground capitalize">{c.category}</span>
-                  <span className="font-medium">${(c._sum.amount ?? 0).toLocaleString()}</span>
+                  <span className="font-medium">{formatCurrency(c._sum.amount ?? 0, currency)}</span>
                 </div>
               ))
             )}

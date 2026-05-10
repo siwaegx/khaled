@@ -56,7 +56,7 @@ export function StoreModuleCard({ mod, busy = false, onInstall, onUninstall }: P
     )}>
       {/* Top row: icon + badges */}
       <div className="flex items-start justify-between gap-2">
-        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", CAT_COLOR[mod.category] ?? "bg-muted text-muted-foreground")}>
+        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", CAT_COLOR[mod.category ?? "core"] ?? "bg-muted text-muted-foreground")}>
           <Icon className="w-5 h-5" />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -92,9 +92,9 @@ export function StoreModuleCard({ mod, busy = false, onInstall, onUninstall }: P
         {/* Rating */}
         <div className="flex items-center gap-1">
           {[1,2,3,4,5].map((s) => (
-            <Star key={s} className={cn("w-2.5 h-2.5", s <= Math.round(mod.rating) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/20")} />
+            <Star key={s} className={cn("w-2.5 h-2.5", s <= Math.round(mod.rating ?? 0) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/20")} />
           ))}
-          <span className="text-xs text-muted-foreground ml-1">{mod.rating} ({mod.reviewCount})</span>
+          <span className="text-xs text-muted-foreground ml-1">{mod.rating ?? 0} ({mod.reviewCount ?? 0})</span>
         </div>
 
         <p className={cn("text-xs leading-relaxed", available ? "text-muted-foreground" : "text-muted-foreground/40")}>
@@ -103,7 +103,7 @@ export function StoreModuleCard({ mod, busy = false, onInstall, onUninstall }: P
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1 pt-0.5">
-          {mod.tags.slice(0, 3).map((tag) => (
+          {(mod.tags ?? []).slice(0, 3).map((tag) => (
             <span key={tag} className="text-xs px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
               {tag}
             </span>

@@ -39,6 +39,63 @@ model ActivityLog {
 
 // ─── CRM ─────────────────────────────────────────────────────────────────────
 
+model CrmCompany {
+  id        String          @id @default(cuid())
+  name      String
+  industry  String?
+  website   String?
+  phone     String?
+  email     String?
+  address   String?
+  notes     String?
+  contacts  CrmContact[]
+  logs      CrmCompanyLog[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@map("crm_companies")
+}
+
+model CrmContact {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  position  String?
+  email     String?
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company CrmCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("crm_contacts")
+}
+
+enum CrmLogType {
+  call
+  visit
+  email
+  note
+  other
+}
+
+model CrmCompanyLog {
+  id        String     @id @default(cuid())
+  companyId String
+  type      CrmLogType @default(note)
+  subject   String?
+  body      String?
+  loggedAt  DateTime   @default(now())
+  createdAt DateTime   @default(now())
+
+  company CrmCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("crm_company_logs")
+}
+
 enum LeadStatus {
   new
   contacted
@@ -390,4 +447,51 @@ model Task {
 
   @@index([status, priority])
   @@map("proj_tasks")
+}
+
+// ─── Calendar ────────────────────────────────────────────────────────────────
+
+enum CalendarEventType {
+  meeting
+  deadline
+  reminder
+  task
+  other
+}
+
+model CalendarEvent {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime
+  allDay      Boolean           @default(false)
+  type        CalendarEventType @default(meeting)
+  entityType  String?
+  entityId    String?
+  color       String?
+  createdBy   String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([startAt, endAt])
+  @@map("cal_events")
+}
+
+// ─── Documents ───────────────────────────────────────────────────────────────
+
+model Document {
+  id           String   @id @default(cuid())
+  entityType   String
+  entityId     String
+  name         String
+  originalName String
+  mimeType     String
+  size         Int
+  storagePath  String
+  uploadedBy   String
+  createdAt    DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@map("documents")
 }

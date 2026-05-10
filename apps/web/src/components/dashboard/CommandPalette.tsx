@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, Users, Handshake, Package, Warehouse,
   FileText, Receipt, UserCheck, Calendar, FolderKanban,
-  CheckSquare, BarChart3, Settings, Boxes, ClipboardList, Search,
+  CheckSquare, BarChart3, Settings, Boxes, ClipboardList, Search, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { apiGet } from "@/lib/api";
 
-type Item = { id: string; label: string; group: string; href: string; icon: React.ElementType };
+type NavItem  = { id: string; label: string; group: string; href: string; icon: React.ElementType };
+type ApiResult = { id: string; label: string; sublabel?: string; entity: string; href: string };
+type Item = NavItem | (ApiResult & { group: "Records"; icon: React.ElementType });
 
-const ITEMS: Item[] = [
+const NAV_ITEMS: NavItem[] = [
   { id: "dashboard",  label: "Dashboard",       group: "Navigation", href: "/dashboard",                       icon: LayoutDashboard },
   { id: "modules",    label: "My Modules",       group: "Navigation", href: "/dashboard/modules",               icon: Boxes           },
   { id: "settings",   label: "Settings",         group: "Navigation", href: "/dashboard/settings",              icon: Settings        },
@@ -30,26 +33,60 @@ const ITEMS: Item[] = [
   { id: "tasks",      label: "Tasks",            group: "Projects",   href: "/dashboard/projects/tasks",        icon: CheckSquare     },
 ];
 
+const ENTITY_ICON: Record<string, React.ElementType> = {
+  lead: Users, customer: Users, deal: Handshake, product: Package,
+  employee: UserCheck, invoice: FileText, project: FolderKanban, task: CheckSquare,
+};
+
 export function CommandPalette() {
   const router = useRouter();
-  const [open, setOpen]     = useState(false);
-  const [query, setQuery]   = useState("");
+  const [open, setOpen]         = useState(false);
+  const [query, setQuery]       = useState("");
   const [selected, setSelected] = useState(0);
-  const inputRef  = useRef<HTMLInputElement>(null);
-  const listRef   = useRef<HTMLDivElement>(null);
+  const [apiResults, setApiResults] = useState<ApiResult[]>([]);
+  const [searching, setSearching]   = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef  = useRef<HTMLDivElement>(null);
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const filtered = ITEMS.filter((item) => {
+  // Filter nav items by query
+  const filteredNav = NAV_ITEMS.filter((item) => {
     const q = query.toLowerCase();
-    return item.label.toLowerCase().includes(q) || item.group.toLowerCase().includes(q);
+    return !q || item.label.toLowerCase().includes(q) || item.group.toLowerCase().includes(q);
   });
+
+  // Compose final list
+  const items: Item[] = [
+    ...filteredNav,
+    ...apiResults.map((r) => ({
+      ...r,
+      group: "Records" as const,
+      icon: ENTITY_ICON[r.entity] ?? Search,
+    })),
+  ];
+
+  // Live search API (debounced, only when query >= 2 chars)
+  const doSearch = useCallback((q: string) => {
+    if (q.length < 2) { setApiResults([]); return; }
+    setSearching(true);
+    apiGet<{ results: ApiResult[] }>(`/api/search?q=${encodeURIComponent(q)}`)
+      .then((d) => setApiResults(d.results))
+      .catch(() => setApiResults([]))
+      .finally(() => setSearching(false));
+  }, []);
+
+  useEffect(() => {
+    if (debounce.current) clearTimeout(debounce.current);
+    debounce.current = setTimeout(() => doSearch(query), 250);
+    return () => { if (debounce.current) clearTimeout(debounce.current); };
+  }, [query, doSearch]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setOpen((o) => !o);
-        setQuery("");
-        setSelected(0);
+        setQuery(""); setSelected(0); setApiResults([]);
       }
       if (e.key === "Escape") setOpen(false);
     }
@@ -57,28 +94,18 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 10);
-  }, [open]);
-
+  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 10); }, [open]);
   useEffect(() => { setSelected(0); }, [query]);
 
   function navigate(item: Item) {
     router.push(item.href);
-    setOpen(false);
-    setQuery("");
+    setOpen(false); setQuery(""); setApiResults([]);
   }
 
   function onKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelected((i) => Math.min(i + 1, filtered.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelected((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && filtered[selected]) {
-      navigate(filtered[selected]);
-    }
+    if (e.key === "ArrowDown")  { e.preventDefault(); setSelected((i) => Math.min(i + 1, items.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setSelected((i) => Math.max(i - 1, 0)); }
+    else if (e.key === "Enter" && items[selected]) navigate(items[selected]);
   }
 
   useEffect(() => {
@@ -99,30 +126,36 @@ export function CommandPalette() {
       >
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b">
-          <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+          {searching
+            ? <Loader2 className="w-4 h-4 text-muted-foreground shrink-0 animate-spin" />
+            : <Search  className="w-4 h-4 text-muted-foreground shrink-0" />
+          }
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Search pages…"
+            placeholder="Search pages and records…"
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
           <kbd className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border font-mono">ESC</kbd>
         </div>
 
         {/* Results */}
-        <div ref={listRef} className="max-h-72 overflow-y-auto py-1">
-          {filtered.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">No results</p>
+        <div ref={listRef} className="max-h-80 overflow-y-auto py-1">
+          {items.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {searching ? "Searching…" : "No results"}
+            </p>
           ) : (() => {
             let lastGroup = "";
-            return filtered.map((item, idx) => {
+            return items.map((item, idx) => {
               const showGroup = item.group !== lastGroup;
               if (showGroup) lastGroup = item.group;
               const Icon = item.icon;
+              const isRecord = item.group === "Records";
               return (
-                <div key={item.id}>
+                <div key={`${item.group}-${item.id}`}>
                   {showGroup && (
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-4 py-1.5 mt-1">
                       {item.group}
@@ -137,8 +170,13 @@ export function CommandPalette() {
                     onClick={() => navigate(item)}
                   >
                     <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <span>{item.label}</span>
-                    <span className="ml-auto text-[10px] text-muted-foreground/60">{item.group}</span>
+                    <span className="flex-1 truncate">{item.label}</span>
+                    {isRecord && "sublabel" in item && item.sublabel && (
+                      <span className="text-[10px] text-muted-foreground/70 truncate max-w-[120px]">{item.sublabel}</span>
+                    )}
+                    <span className="ml-auto text-[10px] text-muted-foreground/60 shrink-0">
+                      {isRecord ? ("entity" in item ? item.entity : "") : item.group}
+                    </span>
                   </button>
                 </div>
               );

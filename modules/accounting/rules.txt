@@ -4,194 +4,126 @@ MODULE RULES — ACCOUNTING
 Key:          accounting
 Plan:         pro (minimum)
 Icon:         Calculator  (lucide-react)
-Phase:        8
 ================================================================
 
 
-INSTALLATION CONTRACT
----------------------
-The module engine checks these before activating:
-
-1. manifest.ts exports `accountingManifest` typed as ModuleManifest
-2. requiredPlan = "pro"  (engine rejects install if org.plan < pro)
-3. All route paths start with /dashboard/accounting/
-4. All permission keys use format  accounting:{resource}:{action}
-5. dependencies = []  (Accounting has no required module dependencies)
-6. migrations/ folder exists with at least one SQL file
-7. backend/index.ts exports an Express Router as default
-8. frontend/ contains at least the root page for /dashboard/accounting
+WHAT THIS MODULE IS
+-------------------
+Full accounting suite: invoices with line items, expense logging
+by category, payment status tracking, and financial reporting.
+Provides monthly revenue vs expenses data used by the Reports module.
 
 
-REQUIRED FOLDER STRUCTURE
---------------------------
+ACTUAL FOLDER STRUCTURE
+-----------------------
 modules/accounting/
-  manifest.ts          ← already exists — do not rename
-  package.json         ← already exists
-  rules.txt            ← this file
+  manifest.json          ← JSON metadata
+  package.json           ← own dependencies
+  rules.txt              ← this file
   backend/
-    index.ts           ← Express Router (default export)
-    routes/
-      invoices.ts
-      expenses.ts
-      reports.ts
-    services/
-      invoices.service.ts
-      expenses.service.ts
-      reports.service.ts
-    types/
-      accounting.types.ts
+    router.ts            ← named export: { router }  (Express Router)
   frontend/
-    pages/
-      index.tsx          ← /dashboard/accounting
-      invoices/
-        page.tsx         ← /dashboard/accounting/invoices
-      expenses/
-        page.tsx         ← /dashboard/accounting/expenses
-      reports/
-        page.tsx         ← /dashboard/accounting/reports
-    components/
-      InvoiceTable.tsx
-      InvoiceStatusBadge.tsx
-      ExpenseRow.tsx
-      RevenueChart.tsx
-  migrations/
-    001_accounting_initial.sql
+    layout.tsx           ← "use client" — tab nav for accounting/* pages
+    page.tsx             ← /dashboard/accounting  (overview + KPI cards)
+    invoices/
+      page.tsx           ← /dashboard/accounting/invoices
+    expenses/
+      page.tsx           ← /dashboard/accounting/expenses
+
+Thin re-exports (do not edit):
+  apps/web/src/app/dashboard/accounting/page.tsx
+  apps/web/src/app/dashboard/accounting/layout.tsx
+  apps/web/src/app/dashboard/accounting/invoices/page.tsx
+  apps/web/src/app/dashboard/accounting/expenses/page.tsx
 
 
-MANIFEST RULES
---------------
+HOW THE ENGINE LOADS THIS MODULE
+---------------------------------
+1. At startup:  registerModules.ts reads manifest.json → registers manifest
+2. On request:  /api/:moduleKey wildcard fires
+3.              requireAuth → resolveTenant → attachHookService → requireModule("accounting") → router
+4. Frontend routes appear in sidebar from manifest.json routes array
+
+No migrations folder — tenant schema provisioned by orgProvisionService.
+
+
+MANIFEST RULES (manifest.json)
+--------------------------------
 - key must be exactly: "accounting"
-- version: start "1.0.0"
-- routes array must match every page in frontend/pages/
-- permissions must cover all exposed operations
-- roles in each permission: one of ["owner", "admin", "member"]
-- accounting:reports:read — restrict to owner and admin only (financial sensitivity)
+- requiredPlan: "pro"
+- Permission key format: accounting:{resource}:{action}
+- roles values: "owner" | "manager" | "member"
+- routes array must match every frontend page
 
 
-BACKEND RULES
--------------
-- All routes protected by requireAuth — never skip
-- Use tenant DB — never write financial data to the shared DB
-- Logic in services/, not route handlers
-- Return consistent JSON:  { data, error, message }
-- HTTP status codes:
-    200, 201, 400, 401, 403, 404, 500
-- TypeScript strict — no "any"
-- Max 300 lines per file
+BACKEND RULES (backend/router.ts)
+-----------------------------------
+Export pattern:
+  import { Router } from "express";
+  export const router = Router();
 
-Entities and their API endpoints:
+Available on req (set upstream — never re-apply in module):
+  req.user        → authenticated user
+  req.tenantDb    → org-scoped Prisma client
+  req.orgCurrency → currency code string
+  req.hookService → fire webhooks + notifications
 
-  Invoices
-    GET    /api/accounting/invoices          → list invoices (filter by status, date range)
-    POST   /api/accounting/invoices          → create draft invoice
-    GET    /api/accounting/invoices/:id      → get invoice with line items
-    PATCH  /api/accounting/invoices/:id      → update draft invoice
-    POST   /api/accounting/invoices/:id/send → mark as sent (status: draft → sent)
-    POST   /api/accounting/invoices/:id/pay  → mark as paid (status: sent → paid)
-    DELETE /api/accounting/invoices/:id      → delete draft only (cannot delete sent/paid)
-    Fields: id, number (auto-incremented), customerName, customerEmail, issueDate,
-            dueDate, status, subtotal, tax, total, notes
-    Line items: invoiceId, description, quantity, unitPrice, lineTotal
+RBAC:
+  GET  → open to all roles
+  POST / PATCH / DELETE → guard with requireRole("manager") from "@business360/module-sdk"
 
-  Expenses
-    GET    /api/accounting/expenses          → list expenses (paginated)
-    POST   /api/accounting/expenses          → create expense
-    PATCH  /api/accounting/expenses/:id      → update expense
-    DELETE /api/accounting/expenses/:id      → delete expense
-    Fields: id, description, amount, category, date, attachmentUrl?, createdAt
+Return shape:  { data } on success  |  { error: "message" } on failure
+Status codes:  200 OK, 201 Created, 400 Bad Request, 403 Forbidden, 404 Not Found, 500
 
-  Reports (read-only — aggregated queries)
-    GET    /api/accounting/reports/summary   → revenue, expenses, profit (by month)
-    GET    /api/accounting/reports/invoices  → invoice status breakdown
-    GET    /api/accounting/reports/expenses  → expenses by category
+API endpoints:
+  GET    /api/accounting/invoices             — list invoices (paginated, filter by status)
+  POST   /api/accounting/invoices             — create invoice with line items  [manager+]
+  GET    /api/accounting/invoices/:id         — get invoice + line items
+  PATCH  /api/accounting/invoices/:id         — update invoice / change status  [manager+]
+  DELETE /api/accounting/invoices/:id         — delete invoice  [manager+]
 
-  Business rules:
-    - Invoice number must be auto-generated and sequential per org (acc-0001, acc-0002…)
-    - Sent/paid invoices are immutable — reject PATCH
-    - total = subtotal + tax (always recalculate server-side, never trust client total)
+  GET    /api/accounting/expenses             — list expenses (paginated, filter by category)
+  POST   /api/accounting/expenses             — create expense  [manager+]
+  PATCH  /api/accounting/expenses/:id         — update expense  [manager+]
+  DELETE /api/accounting/expenses/:id         — delete expense  [manager+]
+
+  GET    /api/accounting/stats                — KPIs: total revenue, total expenses, outstanding, overdue count
+  GET    /api/accounting/monthly              — monthly revenue vs expenses (last 12 months) — used by Reports
+
+Invoice status (string enum): draft → sent → paid | overdue | cancelled
+Expense category examples: travel, software, office, marketing, other
+
+Zod validation: use err.message (NOT err.errors[0]) — root zod is v4 in this monorepo.
 
 
-FRONTEND RULES
---------------
-Follow style.txt for all UI. Accounting-specific rules:
-
-- Dashboard page (/dashboard/accounting):
-    KPI cards: total revenue (current month), outstanding invoices, total expenses, net profit
-    Mini revenue vs expenses chart (last 6 months)
-
-- Invoices page (/dashboard/accounting/invoices):
-    Table: number, customer, amount, due date, status badge
-    Status badges: draft (gray), sent (blue), paid (green), overdue (red)
-    "New Invoice" → form with line items (add/remove rows dynamically)
-    Filter tabs: All | Draft | Sent | Paid | Overdue
-
-- Expenses page (/dashboard/accounting/expenses):
-    Table: description, category badge, amount, date
-    "New Expense" → quick form (description, amount, category, date)
-    Category filter dropdown
-
-- Reports page (/dashboard/accounting/reports):
-    Revenue vs expenses bar chart (monthly)
-    Invoice status donut chart
-    Expenses by category bar chart
-    Date range picker (last 3/6/12 months)
+FRONTEND RULES (frontend/)
+----------------------------
+- layout.tsx: "use client" — uses usePathname() for active tab
+- @/ resolves to apps/web/src/ — never import from apps/api/
 
 Platform quirks (MUST follow):
-- NO asChild on <Button> — use buttonVariants() + <Link> instead
-- useSearchParams() must be in a child component wrapped by <Suspense>
-- "use client" on any file using hooks
-- No inline styles, no hardcoded colors
-- Max 300 lines per file
+- shadcn/ui uses @base-ui — NO asChild on <Button>
+    RIGHT: <Link href="..." className={buttonVariants({ variant: "default" })}>...</Link>
+- useSearchParams() requires <Suspense>
+- Pages using useAuth() must be "use client"
+- Tailwind only
 
-
-DATABASE MIGRATION (migrations/001_accounting_initial.sql)
-----------------------------------------------------------
-Runs inside TENANT database only.
-
-Tables:
-  acc_invoices      (id, number SERIAL, customer_name, customer_email, issue_date, due_date,
-                     status, subtotal, tax, total, notes, created_at, updated_at)
-                    status CHECK IN ('draft','sent','paid','overdue')
-  acc_invoice_items (id, invoice_id REFERENCES acc_invoices, description, quantity,
-                     unit_price, line_total)
-  acc_expenses      (id, description, amount, category, date, attachment_url, created_at, updated_at)
-
-Rules:
-- id: TEXT PRIMARY KEY DEFAULT gen_random_uuid()
-- Timestamps: TIMESTAMPTZ DEFAULT NOW()
-- acc_invoice_items.invoice_id CASCADE DELETE
-- No org_id column (tenant DB is org-scoped)
-- Migration must be idempotent: CREATE TABLE IF NOT EXISTS
-
-
-INSTALLATION FLOW
------------------
-1. Engine validates requiredPlan = "pro" against org.plan
-2. Engine checks InstalledModule — rejects if already active
-3. Engine runs 001_accounting_initial.sql on tenant DB
-4. Engine saves InstalledModule { orgId, moduleKey: "accounting", isActive: true }
-5. Routes registered under /api/accounting/*
-6. Sidebar updated from manifest.routes
-
-Uninstall:
-- isActive = false (data preserved)
-- Routes deregistered immediately
+Page content:
+  /dashboard/accounting          — KPIs: total revenue, expenses, outstanding invoices, overdue count
+  /dashboard/accounting/invoices — Table with status badge; create invoice dialog (line items); mark paid
+  /dashboard/accounting/expenses — Table with category badge; add expense dialog; edit/delete
 
 
 CODE QUALITY CHECKLIST
-----------------------
-  ✔ No TypeScript "any"
-  ✔ No console.log
-  ✔ Max 300 lines per file
-  ✔ One React component per file
-  ✔ All API routes protected by requireAuth
-  ✔ Invoice total always recalculated server-side
-  ✔ Sent/paid invoices cannot be mutated (enforced in service)
-  ✔ Invoice numbers auto-generated and collision-safe
-  ✔ Report endpoints restricted to owner/admin only
-  ✔ Mobile layout works at 375px
-  ✔ Migration is idempotent
-  ✔ manifest.ts key = "accounting" (exact match)
+-----------------------
+  ✔ manifest.json key = "accounting"
+  ✔ backend/router.ts exports named `router`
+  ✔ No requireAuth/resolveTenant inside router.ts
+  ✔ GET open to members, mutations gated at manager+
+  ✔ Zod: use err.message not err.errors[0]
+  ✔ layout.tsx has "use client"
+  ✔ No asChild on Button
+  ✔ No TypeScript errors
 
 ================================================================
 END

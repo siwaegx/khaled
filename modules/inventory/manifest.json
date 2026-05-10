@@ -1,0 +1,35 @@
+{
+  "key": "inventory",
+  "name": "Inventory",
+  "version": "1.0.0",
+  "description": "Track products, stock levels, warehouses, and purchase orders.",
+  "longDescription": "A complete inventory management system. Manage your product catalog with SKUs, track real-time stock levels across multiple warehouses, and handle purchase orders from draft to received.",
+  "icon": "Package",
+  "requiredPlan": "growth",
+  "category": "core",
+  "author": "Business360",
+  "rating": 4.6,
+  "reviewCount": 89,
+  "tags": ["inventory", "products", "warehouse", "stock", "purchasing"],
+  "features": [
+    "Product catalog with SKU tracking",
+    "Multi-warehouse stock levels",
+    "Stock adjustment tool",
+    "Purchase order management",
+    "Low-stock alerts"
+  ],
+  "price": null,
+  "routes": [
+    { "path": "/dashboard/inventory",            "label": "Inventory" },
+    { "path": "/dashboard/inventory/products",   "label": "Products" },
+    { "path": "/dashboard/inventory/warehouses", "label": "Warehouses" },
+    { "path": "/dashboard/inventory/orders",     "label": "Purchase Orders" }
+  ],
+  "permissions": [
+    { "key": "inventory:products:read",  "label": "View products",        "roles": ["owner", "manager", "member"] },
+    { "key": "inventory:products:write", "label": "Edit products",        "roles": ["owner", "manager"] },
+    { "key": "inventory:stock:manage",   "label": "Adjust stock levels",  "roles": ["owner", "manager"] },
+    { "key": "inventory:orders:read",    "label": "View purchase orders", "roles": ["owner", "manager", "member"] },
+    { "key": "inventory:orders:write",   "label": "Edit purchase orders", "roles": ["owner", "manager"] }
+  ]
+}

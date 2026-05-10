@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Zap, LayoutDashboard, Settings, Users, Boxes,
-  Calculator, UserCheck, Package, BarChart3, Lock, X, Store, Shield,
+  Calculator, Package, BarChart3, Lock, X, Store, Shield, CreditCard, Activity, BookUser,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -17,16 +17,19 @@ const NAV_MAIN = [
 
 const MODULE_NAV = [
   { key: "crm",        href: "/dashboard/crm",        icon: Users,      label: "CRM" },
+  { key: "contacts",   href: "/dashboard/contacts",   icon: BookUser,   label: "Contacts" },
   { key: "inventory",  href: "/dashboard/inventory",  icon: Boxes,      label: "Inventory" },
   { key: "accounting", href: "/dashboard/accounting", icon: Calculator, label: "Accounting" },
-  { key: "hr",         href: "/dashboard/hr",         icon: UserCheck,  label: "HR" },
   { key: "projects",   href: "/dashboard/projects",   icon: Package,    label: "Projects" },
   { key: "reports",    href: "/dashboard/reports",    icon: BarChart3,  label: "Reports" },
 ];
 
+const KNOWN_MODULE_KEYS = new Set(MODULE_NAV.map((m) => m.key));
+
 const NAV_BOTTOM = [
-  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
-  { href: "/dashboard/admin",    icon: Shield,   label: "Admin",    ownerOnly: true },
+  { href: "/dashboard/activity", icon: Activity,   label: "Activity"  },
+  { href: "/dashboard/billing",  icon: CreditCard, label: "Billing"   },
+  { href: "/dashboard/settings", icon: Settings,   label: "Settings"  },
 ];
 
 const PLAN_COLORS: Record<string, string> = {
@@ -43,7 +46,7 @@ interface Props {
 
 export function AppSidebar({ mobileOpen = false, onMobileClose }: Props) {
   const pathname = usePathname();
-  const { org, role } = useAuth();
+  const { org, isAdmin } = useAuth();
   const installedKeys = new Set(org?.modules.map((m) => m.moduleKey) ?? []);
 
   function isActive(href: string, exact = false) {
@@ -137,22 +140,41 @@ export function AppSidebar({ mobileOpen = false, onMobileClose }: Props) {
             </div>
           )
         )}
+        {/* Dynamically render any installed module not in MODULE_NAV */}
+        {[...(org?.modules ?? [])].filter((m) => !KNOWN_MODULE_KEYS.has(m.moduleKey)).map((m) => {
+          const href = `/dashboard/${m.moduleKey}`;
+          return (
+            <Link key={m.moduleKey} href={href} className={linkClass(isActive(href))} onClick={onMobileClose}>
+              {isActive(href) && (
+                <span className="absolute left-0 inset-y-1.5 w-0.5 rounded-r-full bg-primary" />
+              )}
+              <Package className="w-4 h-4 shrink-0" />
+              <span className="capitalize">{m.moduleKey}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Bottom nav */}
       <div className="px-2 py-3 border-t border-sidebar-border space-y-0.5">
-        {NAV_BOTTOM.map(({ href, icon: Icon, label, ownerOnly }) => {
-          if (ownerOnly && role !== "owner") return null;
-          return (
-            <Link key={href} href={href} className={linkClass(isActive(href))} onClick={onMobileClose}>
-              {isActive(href) && (
-                <span className="absolute left-0 inset-y-1.5 w-0.5 rounded-r-full bg-primary" />
-              )}
-              <Icon className="w-4 h-4 shrink-0" />
-              {label}
-            </Link>
-          );
-        })}
+        {NAV_BOTTOM.map(({ href, icon: Icon, label }) => (
+          <Link key={href} href={href} className={linkClass(isActive(href))} onClick={onMobileClose}>
+            {isActive(href) && (
+              <span className="absolute left-0 inset-y-1.5 w-0.5 rounded-r-full bg-primary" />
+            )}
+            <Icon className="w-4 h-4 shrink-0" />
+            {label}
+          </Link>
+        ))}
+        {isAdmin && (
+          <Link href="/sadmin" className={linkClass(isActive("/sadmin"))} onClick={onMobileClose}>
+            {isActive("/sadmin") && (
+              <span className="absolute left-0 inset-y-1.5 w-0.5 rounded-r-full bg-primary" />
+            )}
+            <Shield className="w-4 h-4 shrink-0" />
+            Admin Panel
+          </Link>
+        )}
       </div>
     </aside>
   );

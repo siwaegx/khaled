@@ -22,13 +22,25 @@ export interface ModuleRoute {
   label: string;
 }
 
+export type StoreCategory = "core" | "integration" | "industry" | "community" | "premium";
+
 export interface ModuleManifest {
-  key: string;           // unique identifier, e.g. "crm"
-  name: string;          // display name
+  key: string;
+  name: string;
   description: string;
   version: string;
   requiredPlan: Plan;
-  icon: string;          // lucide icon name
+  icon: string;
   routes: ModuleRoute[];
   permissions: ModulePermission[];
+  // Store metadata — populated from manifest.json, used by the App Store
+  category?: StoreCategory;
+  longDescription?: string;
+  author?: string;
+  tags?: string[];
+  features?: string[];
+  price?: number | null;
+  rating?: number;
+  reviewCount?: number;
+  isComingSoon?: boolean;
 }

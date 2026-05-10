@@ -1,0 +1,56 @@
+# ── Stage 1: Install dependencies ─────────────────────────────────────────────
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+# Copy all workspace manifests so npm ci can resolve the workspace graph
+COPY package*.json ./
+COPY packages/shared/package*.json ./packages/shared/
+COPY packages/db/package*.json ./packages/db/
+COPY packages/module-sdk/package*.json ./packages/module-sdk/
+COPY engine/package*.json ./engine/
+COPY apps/api/package*.json ./apps/api/
+
+RUN npm ci
+
+# ── Stage 2: Build ────────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+
+COPY tsconfig.base.json ./
+COPY packages/ ./packages/
+COPY engine/ ./engine/
+COPY apps/api ./apps/api
+
+# Generate Prisma clients
+RUN cd apps/api && npx prisma generate
+
+# Compile TypeScript → dist/
+RUN npm run build --workspace=@business360/api
+
+# ── Stage 3: Production image ─────────────────────────────────────────────────
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Runtime workspace packages (shared, db, engine) required by the compiled output
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/engine ./engine
+
+# API compiled output + Prisma schema
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+
+EXPOSE 4000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:4000/health || exit 1
+
+CMD ["node", "apps/api/dist/index.js"]

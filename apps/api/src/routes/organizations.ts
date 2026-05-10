@@ -16,6 +16,87 @@ const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 export const orgRouter = Router();
 orgRouter.use(requireAuth);
 
+/**
+ * @openapi
+ * /api/organizations:
+ *   post:
+ *     tags: [Organizations]
+ *     summary: Create a new organization
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, plan, userCount]
+ *             properties:
+ *               name: { type: string }
+ *               plan: { type: string, enum: [starter, growth, pro, enterprise] }
+ *               userCount: { type: integer, minimum: 1, maximum: 1000 }
+ *     responses:
+ *       201:
+ *         description: Organization created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 org: { $ref: '#/components/schemas/Organization' }
+ *   get:
+ *     tags: [Organizations]
+ *     summary: List organizations the current user belongs to
+ *     responses:
+ *       200:
+ *         description: List of organizations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 organizations:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/Organization' }
+ */
+
+/**
+ * @openapi
+ * /api/organizations/{id}:
+ *   get:
+ *     tags: [Organizations]
+ *     summary: Get organization details
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Organization details
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Organization' }
+ *       403:
+ *         description: Not a member of this organization
+ *   patch:
+ *     tags: [Organizations]
+ *     summary: Update organization settings
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *     responses:
+ *       200:
+ *         description: Updated organization
+ */
+
 const createOrgSchema = z.object({
   name: z.string().min(1),
   plan: z.enum(["starter", "growth", "pro", "enterprise"]),
@@ -48,7 +129,7 @@ orgRouter.post("/", async (req, res, next) => {
     const orgWithDb = await prisma.organization.findUnique({ where: { id: org.id } });
 
     // Re-issue JWT with the new orgId so the frontend reflects membership immediately
-    const newPayload: JwtPayload = { userId, orgId: org.id, role: "owner" };
+    const newPayload: JwtPayload = { userId, orgId: org.id, role: "owner", isAdmin: false };
     const newToken = jwt.sign(newPayload, process.env.JWT_SECRET ?? "secret", { expiresIn: "7d" });
     res
       .cookie("access_token", newToken, {
@@ -76,6 +157,32 @@ orgRouter.get("/", async (req, res, next) => {
   }
 });
 
+const ALLOWED_CURRENCIES = [
+  "USD","EUR","GBP","JPY","CNY","INR","CAD","AUD","CHF","MXN",
+  "BRL","KRW","SGD","HKD","NOK","SEK","DKK","NZD","ZAR","AED",
+  "SAR","THB","IDR","MYR","PHP","TRY","PLN","CZK","HUF","RON",
+  "QAR","KWD","EGP","NGN","PKR","BDT","VND","UAH","ILS","CLP",
+];
+
+const updateOrgSettingsSchema = z.object({
+  currency: z.string().refine((v) => ALLOWED_CURRENCIES.includes(v), "Unsupported currency"),
+});
+
+orgRouter.patch("/settings", async (req, res, next) => {
+  try {
+    const user = req.user!;
+    if (!user.orgId) throw new AppError(400, "No organization");
+    if (user.role !== "owner") throw new AppError(403, "Requires owner role");
+
+    const data = updateOrgSettingsSchema.parse(req.body);
+    await prisma.organization.update({ where: { id: user.orgId }, data: { currency: data.currency } });
+    res.json({ ok: true });
+  } catch (err) {
+    if (err instanceof z.ZodError) next(new AppError(400, err.message));
+    else next(err);
+  }
+});
+
 orgRouter.get("/current", async (req, res, next) => {
   try {
     const orgId = req.user!.orgId;
@@ -91,7 +198,13 @@ orgRouter.get("/current", async (req, res, next) => {
         modules: { where: { isActive: true } },
       },
     });
-    res.json({ organization: org });
+    if (!org) return res.json({ organization: null });
+
+    const currencyRows = await prisma.$queryRaw<{ currency: string }[]>`
+      SELECT currency FROM organizations WHERE id = ${orgId}
+    `;
+    const currency = currencyRows[0]?.currency ?? "USD";
+    res.json({ organization: { ...org, currency } });
   } catch (err) {
     next(err);
   }

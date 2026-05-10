@@ -2,9 +2,5 @@
   "name": "@business360/module-reports",
   "version": "1.0.0",
   "private": true,
-  "main": "manifest.ts",
-  "types": "manifest.ts",
-  "dependencies": {
-    "@business360/engine": "*"
-  }
+  "main": "manifest.json"
 }

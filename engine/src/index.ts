@@ -1,7 +1,8 @@
-export type { ModuleManifest, ModulePermission, ModuleRoute, Plan } from "./types";
+export type { ModuleManifest, ModulePermission, ModuleRoute, Plan, StoreCategory } from "./types";
 export { planIncludes } from "./types";
 export {
   register,
+  clearRegistry,
   getManifest,
   getAllManifests,
   isAvailableForPlan,

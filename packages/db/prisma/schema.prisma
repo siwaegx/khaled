@@ -20,7 +20,12 @@ enum Plan {
 
 enum OrgRole {
   owner
-  admin
+  manager
+  sales_leader
+  inventory_manager
+  accountant
+  engineer
+  service_agent
   member
 }
 
@@ -31,18 +36,28 @@ enum OrgStatus {
   cancelled
 }
 
+enum SubmissionStatus {
+  pending
+  approved
+  rejected
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
-  id           String      @id @default(cuid())
-  email        String      @unique
+  id           String   @id @default(cuid())
+  email        String   @unique
   name         String
   passwordHash String
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  isAdmin  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  memberships  OrgMember[]
-  resetTokens  PasswordResetToken[]
+  memberships      OrgMember[]
+  resetTokens      PasswordResetToken[]
+  developerProfile DeveloperProfile?
+  sentInvites      OrgInvite[]         @relation("SentInvites")
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -55,7 +70,7 @@ model PasswordResetToken {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("password_reset_tokens")
 }
@@ -68,39 +83,251 @@ model Organization {
   status    OrgStatus @default(trial)
   userCount Int       @default(1)
   trialEnds DateTime  @default(dbgenerated("NOW() + INTERVAL '14 days'"))
-  dbUrl     String?
+  dbUrl             String?
+  stripeCustomerId  String?
+  currency          String    @default("USD")
+  moduleAccess      Json?
+  dashboardConfig   Json?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  members   OrgMember[]
-  modules   InstalledModule[]
+  members     OrgMember[]
+  modules     InstalledModule[]
+  apiKeys     ApiKey[]
+  invites     OrgInvite[]
+  teams       OrgTeam[]
+  webhooks    OrgWebhook[]
+  configLists ConfigList[]
 
   @@map("organizations")
 }
 
-model OrgMember {
-  id             String       @id @default(cuid())
-  userId         String
+model OrgInvite {
+  id             String    @id @default(cuid())
   organizationId String
-  role           OrgRole      @default(member)
-  joinedAt       DateTime     @default(now())
+  email          String
+  role           OrgRole   @default(member)
+  token          String    @unique
+  invitedBy      String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime  @default(now())
 
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inviter      User         @relation("SentInvites", fields: [invitedBy], references: [id])
+
+  @@map("org_invites")
+}
+
+model ApiKey {
+  id             String    @id @default(cuid())
+  organizationId String
+  name           String
+  keyHash        String    @unique
+  prefix         String
+  createdAt      DateTime  @default(now())
+  lastUsedAt     DateTime?
+  isActive       Boolean   @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+model OrgMember {
+  id                String    @id @default(cuid())
+  userId            String
+  organizationId    String
+  role              OrgRole   @default(member)
+  joinedAt          DateTime  @default(now())
+  tokenIssuedBefore DateTime?
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ledTeams        OrgTeam[]       @relation("TeamLeader")
+  teamMemberships OrgTeamMember[]
 
   @@unique([userId, organizationId])
   @@map("org_members")
 }
 
-model InstalledModule {
-  id             String       @id @default(cuid())
+model OrgTeam {
+  id             String   @id @default(cuid())
   organizationId String
   moduleKey      String
-  installedAt    DateTime     @default(now())
-  isActive       Boolean      @default(true)
+  name           String
+  leaderId       String?
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leader       OrgMember?      @relation("TeamLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  members      OrgTeamMember[]
+
+  @@map("org_teams")
+}
+
+model OrgTeamMember {
+  id       String @id @default(cuid())
+  teamId   String
+  memberId String
+
+  team   OrgTeam   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  member OrgMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, memberId])
+  @@map("org_team_members")
+}
+
+model InstalledModule {
+  id             String   @id @default(cuid())
+  organizationId String
+  moduleKey      String
+  installedAt    DateTime @default(now())
+  isActive       Boolean  @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, moduleKey])
   @@map("installed_modules")
+}
+
+model DeveloperProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  displayName String
+  website     String?
+  bio         String?
+  createdAt   DateTime @default(now())
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissions ModuleSubmission[]
+
+  @@map("developer_profiles")
+}
+
+model ModuleSubmission {
+  id           String           @id @default(cuid())
+  developerId  String
+  name         String
+  key          String
+  version      String
+  category     String
+  description  String
+  repoUrl      String
+  contactEmail String
+  status       SubmissionStatus @default(pending)
+  reviewNote   String?
+  submittedAt  DateTime         @default(now())
+  reviewedAt   DateTime?
+
+  developer DeveloperProfile  @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  module    MarketplaceModule?
+
+  @@map("module_submissions")
+}
+
+model MarketplaceModule {
+  id           String   @id @default(cuid())
+  submissionId String   @unique
+  key          String   @unique
+  name         String
+  version      String
+  category     String
+  description  String
+  author       String
+  repoUrl      String
+  price        Float    @default(0)
+  billing      String   @default("free")
+  rating       Float    @default(0)
+  installCount Int      @default(0)
+  publishedAt  DateTime @default(now())
+  isActive     Boolean  @default(true)
+
+  submission ModuleSubmission @relation(fields: [submissionId], references: [id])
+
+  @@map("marketplace_modules")
+}
+
+model Notification {
+  id         String    @id @default(cuid())
+  userId     String
+  orgId      String?
+  type       String
+  title      String
+  body       String?
+  entityType String?
+  entityId   String?
+  href       String?
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model OrgWebhook {
+  id             String   @id @default(cuid())
+  organizationId String
+  url            String
+  events         Json
+  secret         String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deliveries   WebhookDelivery[]
+
+  @@map("org_webhooks")
+}
+
+model WebhookDelivery {
+  id         String   @id @default(cuid())
+  webhookId  String
+  event      String
+  payload    Json
+  statusCode Int?
+  error      String?
+  sentAt     DateTime @default(now())
+
+  webhook OrgWebhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId, sentAt])
+  @@map("webhook_deliveries")
+}
+
+// ─── Configuration Lists ──────────────────────────────────────────────────────
+
+model ConfigList {
+  id             String           @id @default(cuid())
+  organizationId String
+  key            String
+  label          String
+  description    String?
+  isSystem       Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        ConfigListItem[]
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
+  @@map("config_lists")
+}
+
+model ConfigListItem {
+  id        String   @id @default(cuid())
+  listId    String
+  value     String
+  color     String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  list ConfigList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@index([listId])
+  @@map("config_list_items")
 }

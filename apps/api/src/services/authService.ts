@@ -38,6 +38,7 @@ export async function loginUser(email: string, password: string) {
     userId: user.id,
     orgId: orgMember?.organizationId ?? "",
     role: orgMember?.role ?? "member",
+    isAdmin: user.isAdmin,
   };
 
   const token = jwt.sign(payload, process.env.JWT_SECRET ?? "secret", { expiresIn: "7d" });

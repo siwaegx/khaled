@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, DollarSign } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
+import { useCurrency, formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 import { ConfirmDialog, useConfirm } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
@@ -44,8 +45,8 @@ const COLUMNS = [
 
 const DEAL_STATUSES = COLUMNS.map((c) => c.key);
 
-const EMPTY: Record<string, string> = {
-  title: "", value: "", currency: "USD", status: "prospect",
+const EMPTY_BASE: Record<string, string> = {
+  title: "", value: "", status: "prospect",
   customerId: "", assignedTo: "", closeDate: "", notes: "",
 };
 
@@ -59,12 +60,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export default function DealsPage() {
+  const currency = useCurrency();
   const [deals, setDeals]       = useState<Deal[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading]   = useState(true);
   const [open, setOpen]         = useState(false);
   const [editing, setEditing]   = useState<Deal | null>(null);
-  const [form, setForm]         = useState(EMPTY);
+  const [form, setForm]         = useState<Record<string, string>>({ ...EMPTY_BASE, currency });
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
@@ -101,7 +103,7 @@ export default function DealsPage() {
 
   function openCreate(status = "prospect") {
     setEditing(null);
-    setForm({ ...EMPTY, status });
+    setForm({ ...EMPTY_BASE, currency, status });
     setError(null);
     setOpen(true);
   }
@@ -196,7 +198,6 @@ export default function DealsPage() {
                 onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null); }}
                 onDrop={(e) => handleDrop(e, col.key)}
               >
-                {/* column header */}
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
                     <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", col.badge)}>
@@ -206,12 +207,11 @@ export default function DealsPage() {
                   </div>
                   {total > 0 && (
                     <span className="text-xs font-medium text-muted-foreground">
-                      ${total.toLocaleString()}
+                      {formatCurrency(total, currency)}
                     </span>
                   )}
                 </div>
 
-                {/* cards */}
                 {colDeals.map((deal) => (
                   <button
                     key={deal.id}
@@ -235,8 +235,7 @@ export default function DealsPage() {
                     )}
                     {deal.value != null && (
                       <div className="flex items-center gap-1 text-xs font-medium text-emerald-600">
-                        <DollarSign className="w-3 h-3" />
-                        {deal.value.toLocaleString()} {deal.currency}
+                        {formatCurrency(deal.value, currency)}
                       </div>
                     )}
                     {deal.closeDate && (

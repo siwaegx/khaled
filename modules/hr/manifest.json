@@ -1,0 +1,14 @@
+{
+  "key": "hr",
+  "name": "HR",
+  "description": "Manage employees, leave requests, and HR workflows.",
+  "category": "core",
+  "requiredPlan": "growth",
+  "version": "1.0.0",
+  "isComingSoon": false,
+  "rating": 4.6,
+  "permissions": [
+    { "key": "view",   "label": "View HR data",      "roles": ["member", "manager", "owner"] },
+    { "key": "manage", "label": "Manage HR records",  "roles": ["manager", "owner"] }
+  ]
+}

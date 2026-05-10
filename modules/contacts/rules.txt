@@ -1,0 +1,127 @@
+================================================================
+MODULE RULES — CONTACTS
+================================================================
+Key:          contacts
+Plan:         starter (minimum)
+Icon:         BookUser  (lucide-react)
+================================================================
+
+
+WHAT THIS MODULE IS
+-------------------
+Dedicated address book for B2B relationships. Manages company
+records and multiple contacts per company (with position/role).
+Separate from CRM — this is a pure directory, not a pipeline.
+
+
+ACTUAL FOLDER STRUCTURE
+-----------------------
+modules/contacts/
+  manifest.json          ← JSON metadata (NOT manifest.ts)
+  package.json           ← own dependencies
+  rules.txt              ← this file
+  backend/
+    router.ts            ← named export: { router }  (Express Router)
+  frontend/
+    layout.tsx           ← "use client" — tab nav for contacts/* pages
+    page.tsx             ← /dashboard/contacts  (overview KPIs)
+    companies/
+      page.tsx           ← /dashboard/contacts/companies
+    contacts/
+      page.tsx           ← /dashboard/contacts/contacts
+
+Thin re-exports (do not edit):
+  apps/web/src/app/dashboard/contacts/page.tsx
+  apps/web/src/app/dashboard/contacts/layout.tsx
+  apps/web/src/app/dashboard/contacts/companies/page.tsx
+  apps/web/src/app/dashboard/contacts/contacts/page.tsx
+
+
+HOW THE ENGINE LOADS THIS MODULE
+---------------------------------
+1. At startup:  registerModules.ts reads manifest.json → registers manifest
+2. On request:  /api/:moduleKey wildcard fires
+3.              requireAuth → resolveTenant → attachHookService → requireModule("contacts") → router
+4. Frontend routes appear in sidebar from manifest.json routes array
+
+No migrations folder — tenant schema provisioned by orgProvisionService at org creation.
+
+
+MANIFEST RULES (manifest.json)
+--------------------------------
+- key must be exactly: "contacts"
+- requiredPlan: "starter"
+- Permission key format: contacts:{resource}:{action}
+- roles values: "owner" | "manager" | "member"  (never "admin")
+- routes array must match every frontend page file
+
+
+BACKEND RULES (backend/router.ts)
+-----------------------------------
+Export pattern:
+  import { Router } from "express";
+  export const router = Router();
+
+Available on req (set upstream — never re-apply in module):
+  req.user        → authenticated user
+  req.tenantDb    → org-scoped Prisma client
+  req.hookService → fire webhooks + notifications
+
+RBAC:
+  GET  → open to all roles (owner, manager, member)
+  POST / PATCH / DELETE → guard with requireRole("manager") from "@business360/module-sdk"
+
+Return shape:  { data } on success  |  { error: "message" } on failure
+Status codes:  200 OK, 201 Created, 400 Bad Request, 403 Forbidden, 404 Not Found, 500
+
+API endpoints:
+  GET    /api/contacts/companies            — list companies (paginated, search)
+  POST   /api/contacts/companies            — create company  [manager+]
+  GET    /api/contacts/companies/:id        — get company + its contacts
+  PATCH  /api/contacts/companies/:id        — update company  [manager+]
+  DELETE /api/contacts/companies/:id        — delete company (cascades contacts)  [manager+]
+
+  GET    /api/contacts/contacts             — list all contacts across companies (paginated, search)
+  POST   /api/contacts/contacts             — create contact (requires companyId)  [manager+]
+  PATCH  /api/contacts/contacts/:id         — update contact  [manager+]
+  DELETE /api/contacts/contacts/:id         — delete contact  [manager+]
+
+  GET    /api/contacts/stats                — KPIs: total companies, total contacts
+
+Zod validation: use err.message (NOT err.errors[0]) — root zod is v4 in this monorepo.
+
+
+FRONTEND RULES (frontend/)
+----------------------------
+- layout.tsx: "use client" — uses usePathname() for active tab highlighting
+- @/ resolves to apps/web/src/ — never import from apps/api/
+
+Platform quirks (MUST follow):
+- shadcn/ui uses @base-ui — NO asChild prop on <Button>
+    RIGHT: <Link href="..." className={buttonVariants({ variant: "default" })}>...</Link>
+- useSearchParams() requires <Suspense> — extract reading component as child
+- Pages using useAuth() must be "use client"
+- Tailwind only — no inline styles
+
+Page content:
+  /dashboard/contacts           — KPI cards: company count, contact count; recent additions
+  /dashboard/contacts/companies — Table of companies; click row → side drawer with nested contacts list
+                                   Inline add/edit/delete company; add contact from within drawer
+  /dashboard/contacts/contacts  — Flat table of all contacts with company column; search; edit/delete
+
+
+CODE QUALITY CHECKLIST
+-----------------------
+  ✔ manifest.json key = "contacts"
+  ✔ backend/router.ts exports named `router`
+  ✔ No requireAuth/resolveTenant inside router.ts (handled upstream)
+  ✔ GET open to members, mutations gated at manager+
+  ✔ Zod: use err.message not err.errors[0]
+  ✔ layout.tsx has "use client"
+  ✔ No asChild on Button — use buttonVariants() + <Link>
+  ✔ useSearchParams() wrapped in <Suspense>
+  ✔ No TypeScript errors
+
+================================================================
+END
+================================================================

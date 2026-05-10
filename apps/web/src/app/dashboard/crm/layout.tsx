@@ -6,10 +6,10 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { href: "/dashboard/crm",           label: "Overview" },
-  { href: "/dashboard/crm/leads",     label: "Leads" },
-  { href: "/dashboard/crm/deals",     label: "Deals" },
-  { href: "/dashboard/crm/customers", label: "Customers" },
+  { href: "/dashboard/crm",           label: "Overview"   },
+  { href: "/dashboard/crm/leads",     label: "Leads"      },
+  { href: "/dashboard/crm/deals",     label: "Deals"      },
+  { href: "/dashboard/crm/customers", label: "Customers"  },
 ];
 
 export default function CrmLayout({ children }: { children: ReactNode }) {

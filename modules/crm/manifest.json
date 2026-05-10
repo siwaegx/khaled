@@ -1,0 +1,37 @@
+{
+  "key": "crm",
+  "name": "CRM",
+  "version": "1.2.0",
+  "description": "Manage leads, deals, and customers in one pipeline.",
+  "longDescription": "A full-featured customer relationship management system. Track leads through your pipeline, manage deals with kanban views, and maintain a complete customer database with activity logs and conversion analytics.",
+  "icon": "Users",
+  "requiredPlan": "starter",
+  "category": "core",
+  "author": "Business360",
+  "rating": 4.8,
+  "reviewCount": 124,
+  "tags": ["sales", "leads", "pipeline", "customers"],
+  "features": [
+    "Lead management",
+    "Deal pipeline (Kanban)",
+    "Customer database",
+    "Activity logs",
+    "Conversion analytics"
+  ],
+  "price": null,
+  "routes": [
+    { "path": "/dashboard/crm",           "label": "CRM" },
+    { "path": "/dashboard/crm/leads",     "label": "Leads" },
+    { "path": "/dashboard/crm/deals",     "label": "Deals" },
+    { "path": "/dashboard/crm/customers", "label": "Customers" }
+  ],
+  "permissions": [
+    { "key": "crm:leads:read",      "label": "View leads",      "roles": ["owner", "manager", "member"] },
+    { "key": "crm:leads:write",     "label": "Edit leads",      "roles": ["owner", "manager"] },
+    { "key": "crm:leads:delete",    "label": "Delete leads",    "roles": ["owner", "manager"] },
+    { "key": "crm:deals:read",      "label": "View deals",      "roles": ["owner", "manager", "member"] },
+    { "key": "crm:deals:write",     "label": "Edit deals",      "roles": ["owner", "manager"] },
+    { "key": "crm:customers:read",  "label": "View customers",  "roles": ["owner", "manager", "member"] },
+    { "key": "crm:customers:write", "label": "Edit customers",  "roles": ["owner", "manager"] }
+  ]
+}

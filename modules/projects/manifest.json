@@ -1,0 +1,31 @@
+{
+  "key": "projects",
+  "name": "Projects",
+  "version": "1.0.0",
+  "description": "Tasks, milestones, and team collaboration for any project.",
+  "longDescription": "Project management built for agile teams. Create projects with statuses, break them into tasks with priorities and assignees, and track progress from planning to completion.",
+  "icon": "Boxes",
+  "requiredPlan": "enterprise",
+  "category": "core",
+  "author": "Business360",
+  "rating": 4.6,
+  "reviewCount": 63,
+  "tags": ["projects", "tasks", "collaboration", "kanban", "agile"],
+  "features": [
+    "Project lifecycle management",
+    "Task tracking with priorities",
+    "Assignee management",
+    "Due date tracking",
+    "Cross-project task view"
+  ],
+  "price": null,
+  "routes": [
+    { "path": "/dashboard/projects",       "label": "Projects" },
+    { "path": "/dashboard/projects/tasks", "label": "Tasks" }
+  ],
+  "permissions": [
+    { "key": "projects:read",        "label": "View projects and tasks", "roles": ["owner", "manager", "member"] },
+    { "key": "projects:write",       "label": "Edit projects",           "roles": ["owner", "manager"] },
+    { "key": "projects:tasks:write", "label": "Edit tasks",              "roles": ["owner", "manager", "member"] }
+  ]
+}

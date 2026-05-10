@@ -1,0 +1,19 @@
+# Cloudflare Tunnel — Business360 API
+# Setup steps:
+#   1. cloudflared tunnel login
+#   2. cloudflared tunnel create business360-api
+#   3. Replace YOUR_TUNNEL_ID and YOUR_DOMAIN below
+#   4. cloudflared tunnel route dns business360-api api.YOUR_DOMAIN.com
+#   5. Copy the generated credentials JSON to this folder
+
+tunnel: YOUR_TUNNEL_ID
+credentials-file: /root/.cloudflared/YOUR_TUNNEL_ID.json
+
+ingress:
+  - hostname: api.YOUR_DOMAIN.com
+    service: http://localhost:4000
+    originRequest:
+      httpHostHeader: api.YOUR_DOMAIN.com
+      connectTimeout: 30s
+      noTLSVerify: false
+  - service: http_status:404

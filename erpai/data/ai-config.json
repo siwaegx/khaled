@@ -1,0 +1,12 @@
+{
+  "model": "claude-opus-4-7",
+  "features": {
+    "chat": true,
+    "analyze": true,
+    "taskSuggest": true
+  },
+  "maxLogEntries": 500,
+  "chatMaxTokens": 64000,
+  "analyzeMaxTokens": 16000,
+  "analyzeMaxIterations": 12
+}

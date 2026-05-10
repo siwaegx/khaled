@@ -19,6 +19,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
+import { useCurrency, formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 import { ConfirmDialog, useConfirm } from "@/components/ui/confirm-dialog";
 import { exportCSV } from "@/lib/csv";
@@ -59,6 +60,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export default function ProductsPage() {
+  const currency = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading]   = useState(true);
   const [open, setOpen]         = useState(false);
@@ -207,7 +209,7 @@ export default function ProductsPage() {
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="text-muted-foreground font-mono text-xs">{p.sku}</TableCell>
                   <TableCell className="text-muted-foreground">{p.category ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{p.unitPrice != null ? `$${p.unitPrice.toLocaleString()}` : "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{p.unitPrice != null ? formatCurrency(p.unitPrice, currency) : "—"}</TableCell>
                   <TableCell>
                     {(p.stockLevels ?? []).length === 0 ? (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -275,7 +277,6 @@ export default function ProductsPage() {
       </Sheet>
       <ConfirmDialog open={confirmOpen} description="This action cannot be undone." onConfirm={handleConfirm} onCancel={handleCancel} />
 
-      {/* Stock levels dialog */}
       <Dialog open={!!stockProduct} onOpenChange={(o) => { if (!o) setStockProduct(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

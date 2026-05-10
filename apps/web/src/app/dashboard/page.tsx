@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   Users, Boxes, Calculator, UserCheck,
   Package, BarChart3, CheckCircle2, Lock, Clock,
   TrendingUp, TrendingDown, FileText, Briefcase, UserCog,
-  CreditCard, Layers, Activity, ArrowRight,
+  CreditCard, Layers, Activity, ArrowRight, SlidersHorizontal, X, GripVertical,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPut } from "@/lib/api";
+import { useCurrency, formatCurrency } from "@/lib/currency";
 
 /* ─── Module registry ──────────────────────────────────── */
 
@@ -141,11 +143,49 @@ function SkeletonCard() {
 
 /* ─── Page ──────────────────────────────────────────────── */
 
+type WidgetConfig = { key: string; visible: boolean; order: number };
+
+const DEFAULT_WIDGETS: WidgetConfig[] = [
+  { key: "kpi-cards",   visible: true, order: 0 },
+  { key: "live-stats",  visible: true, order: 1 },
+  { key: "modules",     visible: true, order: 2 },
+];
+
+const WIDGET_LABELS: Record<string, string> = {
+  "kpi-cards":  "KPI Cards (Plan, Modules, Status)",
+  "live-stats": "Live Overview",
+  "modules":    "Module Grid",
+};
+
+function useDashboardConfig() {
+  const [widgets, setWidgets] = useState<WidgetConfig[]>(DEFAULT_WIDGETS);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    apiGet<{ config: { widgets: WidgetConfig[] } | null }>("/api/dashboard/config")
+      .then((r) => {
+        if (r.config?.widgets?.length) setWidgets(r.config.widgets);
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
+
+  const save = useCallback(async (next: WidgetConfig[]) => {
+    setWidgets(next);
+    await apiPut("/api/dashboard/config", { widgets: next }).catch(() => {});
+  }, []);
+
+  return { widgets: loaded ? widgets : DEFAULT_WIDGETS, save };
+}
+
 export default function DashboardPage() {
   const { user, org } = useAuth();
+  const currency = useCurrency();
   const [now] = useState(() => Date.now());
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [showCustomize, setShowCustomize] = useState(false);
+  const { widgets, save: saveWidgets } = useDashboardConfig();
 
   const installedKeys = new Set(org?.modules.map((m) => m.moduleKey) ?? []);
   const activeCount = installedKeys.size;
@@ -170,7 +210,7 @@ export default function DashboardPage() {
     liveStats.push({ label: "Customers",   value: summary.crm.customers,   icon: Users,      sub: `${summary.crm.leads} leads` });
   }
   if (summary?.accounting && installedKeys.has("accounting")) {
-    liveStats.push({ label: "Revenue",     value: `$${(summary.accounting.paidRevenue ?? 0).toLocaleString()}`,    icon: Calculator, sub: `$${(summary.accounting.pendingRevenue ?? 0).toLocaleString()} pending`, trend: "up" });
+    liveStats.push({ label: "Revenue",     value: formatCurrency(summary.accounting.paidRevenue ?? 0, currency),    icon: Calculator, sub: `${formatCurrency(summary.accounting.pendingRevenue ?? 0, currency)} pending`, trend: "up" });
   }
   if (summary?.hr && installedKeys.has("hr")) {
     liveStats.push({ label: "Employees",   value: summary.hr.activeEmployees, icon: UserCog,  sub: `${summary.hr.pendingLeave} pending leave` });
@@ -207,14 +247,55 @@ export default function DashboardPage() {
             )}
           </p>
         </div>
-        {/* Skill: primary CTA visible in top area */}
-        <Link
-          href="/dashboard/store"
-          className="hidden sm:inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-cta text-white text-xs font-semibold hover:opacity-90 transition-opacity shadow-cta-sm shrink-0 cursor-pointer"
-        >
-          <Layers className="w-3.5 h-3.5" /> Add Modules
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline" size="sm"
+            onClick={() => setShowCustomize(true)}
+            className="hidden sm:flex items-center gap-1.5 text-xs"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" /> Customize
+          </Button>
+          <Link
+            href="/dashboard/store"
+            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-cta text-white text-xs font-semibold hover:opacity-90 transition-opacity shadow-cta-sm cursor-pointer"
+          >
+            <Layers className="w-3.5 h-3.5" /> Add Modules
+          </Link>
+        </div>
       </div>
+
+      {/* ── Customize modal ──────────────────────────────── */}
+      {showCustomize && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowCustomize(false)}>
+          <div className="bg-card rounded-2xl border shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold">Customize Dashboard</h2>
+              <button onClick={() => setShowCustomize(false)} className="p-1 rounded hover:bg-muted">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">Toggle which sections appear on your dashboard.</p>
+            <div className="space-y-2">
+              {[...widgets].sort((a, b) => a.order - b.order).map((w) => (
+                <div key={w.key} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20">
+                  <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                  <span className="flex-1 text-sm font-medium">{WIDGET_LABELS[w.key] ?? w.key}</span>
+                  <button
+                    onClick={() => {
+                      const next = widgets.map((x) => x.key === w.key ? { ...x, visible: !x.visible } : x);
+                      void saveWidgets(next);
+                    }}
+                    className={cn("w-10 h-5 rounded-full border-2 relative transition-all", w.visible ? "bg-primary border-primary" : "bg-muted border-border")}
+                  >
+                    <span className={cn("absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all", w.visible ? "left-5" : "left-0.5")} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <Button className="w-full mt-4" size="sm" onClick={() => setShowCustomize(false)}>Done</Button>
+          </div>
+        </div>
+      )}
 
       {/* ── Trial banner ─────────────────────────────────── */}
       {trialDaysLeft !== null && (
@@ -226,13 +307,14 @@ export default function DashboardPage() {
             </span>
             {" "}Upgrade to keep full access.
           </div>
-          <Link href="/dashboard/settings" className="text-xs font-semibold text-amber-700 underline underline-offset-4 shrink-0 cursor-pointer">
+          <Link href="/dashboard/billing" className="text-xs font-semibold text-amber-700 underline underline-offset-4 shrink-0 cursor-pointer">
             Upgrade
           </Link>
         </div>
       )}
 
       {/* ── KPI Cards — Skill: Executive Dashboard, large numbers ── */}
+      {widgets.find((w) => w.key === "kpi-cards")?.visible !== false && (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
           label="Current Plan"
@@ -288,9 +370,10 @@ export default function DashboardPage() {
           }
         />
       </div>
+      )}
 
       {/* ── Live Overview — Skill: Data-Dense, compact KPI cards ── */}
-      {(loadingSummary || liveStats.length > 0) && (
+      {widgets.find((w) => w.key === "live-stats")?.visible !== false && (loadingSummary || liveStats.length > 0) && (
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[10px] font-bold text-muted-foreground/55 uppercase tracking-widest">Live Overview</h2>
@@ -308,7 +391,7 @@ export default function DashboardPage() {
       )}
 
       {/* ── Module Grid — Skill: hover states, cursor-pointer, status colors ── */}
-      <div>
+      {widgets.find((w) => w.key === "modules")?.visible !== false && (<div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[10px] font-bold text-muted-foreground/55 uppercase tracking-widest">Your Modules</h2>
           <Link href="/dashboard/modules" className="text-xs text-primary font-medium hover:underline flex items-center gap-1 cursor-pointer">
@@ -360,7 +443,7 @@ export default function DashboardPage() {
             );
           })}
         </div>
-      </div>
+      </div>)}
     </div>
   );
 }

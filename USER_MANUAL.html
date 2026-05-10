@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Business360 — User Manual</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal:    #0D9488;
+    --teal-lt: #CCFBF1;
+    --orange:  #EA580C;
+    --gray-50: #F9FAFB;
+    --gray-100:#F3F4F6;
+    --gray-200:#E5E7EB;
+    --gray-400:#9CA3AF;
+    --gray-600:#4B5563;
+    --gray-800:#1F2937;
+    --gray-900:#111827;
+    --body-font: 'Segoe UI', Arial, sans-serif;
+  }
+
+  html { font-size: 14px; color: var(--gray-900); font-family: var(--body-font); }
+  body { background: #fff; line-height: 1.65; }
+
+  /* ── Typography ── */
+  h1 { font-size: 2.4rem; font-weight: 800; line-height: 1.2; color: var(--teal); }
+  h2 { font-size: 1.55rem; font-weight: 700; color: var(--gray-900); margin-bottom: .6rem; }
+  h3 { font-size: 1.15rem; font-weight: 700; color: var(--teal); margin-bottom: .4rem; }
+  h4 { font-size: 1rem; font-weight: 700; color: var(--gray-800); margin-bottom: .25rem; }
+  p  { margin-bottom: .75rem; color: var(--gray-600); }
+  a  { color: var(--teal); }
+  strong { color: var(--gray-900); }
+  ul, ol { padding-left: 1.4rem; margin-bottom: .75rem; color: var(--gray-600); }
+  li { margin-bottom: .25rem; }
+
+  /* ── Layout ── */
+  .page-wrap { max-width: 860px; margin: 0 auto; padding: 3rem 2.5rem; }
+
+  /* ── Cover page ── */
+  .cover {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; min-height: 90vh; padding: 4rem 2rem;
+    background: linear-gradient(135deg, #0D9488 0%, #0F766E 60%, #EA580C 100%);
+    border-radius: 1rem; margin-bottom: 3rem; color: #fff;
+  }
+  .cover .logo { font-size: 3rem; font-weight: 900; letter-spacing: -1px; color: #fff; }
+  .cover .logo span { color: #FDE68A; }
+  .cover .tagline { font-size: 1.1rem; opacity: .85; margin-top: .5rem; }
+  .cover .subtitle { font-size: 1.3rem; font-weight: 600; margin-top: 2rem; background: rgba(255,255,255,.15); border-radius: .5rem; padding: .6rem 1.5rem; }
+  .cover .version { margin-top: 2.5rem; opacity: .65; font-size: .85rem; }
+  .cover h1 { color: #fff; margin-top: 1.5rem; }
+
+  /* ── Table of contents ── */
+  .toc { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: .75rem; padding: 2rem 2.5rem; margin-bottom: 3rem; }
+  .toc h2 { color: var(--teal); border-bottom: 2px solid var(--teal-lt); padding-bottom: .5rem; margin-bottom: 1.25rem; }
+  .toc ol { list-style: none; padding: 0; }
+  .toc > ol > li { margin-bottom: .6rem; font-weight: 700; color: var(--gray-800); font-size: .95rem; }
+  .toc > ol > li > ol { margin-top: .3rem; list-style: none; padding-left: 1.2rem; }
+  .toc > ol > li > ol > li { font-weight: 400; color: var(--gray-600); font-size: .88rem; margin-bottom: .15rem; }
+  .toc-num { display: inline-block; width: 1.8rem; color: var(--teal); font-weight: 700; }
+
+  /* ── Section dividers ── */
+  .section { margin-bottom: 3.5rem; }
+  .section-header {
+    display: flex; align-items: center; gap: .75rem;
+    border-bottom: 3px solid var(--teal); padding-bottom: .6rem; margin-bottom: 1.5rem;
+  }
+  .section-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2.2rem; height: 2.2rem; border-radius: 50%;
+    background: var(--teal); color: #fff; font-weight: 800; font-size: 1rem; flex-shrink: 0;
+  }
+  .subsection { margin-bottom: 2rem; }
+  .subsection-header { display: flex; align-items: center; gap: .5rem; margin-bottom: .75rem; }
+  .subsection-icon { font-size: 1.1rem; }
+
+  /* ── Step lists ── */
+  .steps { list-style: none; padding: 0; }
+  .steps li {
+    display: flex; gap: 1rem; margin-bottom: .9rem; align-items: flex-start;
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.8rem; height: 1.8rem; border-radius: 50%;
+    background: var(--teal-lt); color: var(--teal); font-weight: 800; font-size: .85rem;
+    margin-top: .1rem;
+  }
+  .step-body { flex: 1; color: var(--gray-600); }
+  .step-body strong { color: var(--gray-900); }
+
+  /* ── Callouts ── */
+  .callout {
+    border-radius: .6rem; padding: .9rem 1.2rem; margin-bottom: 1rem; font-size: .9rem;
+    display: flex; gap: .75rem; align-items: flex-start;
+  }
+  .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+  .callout-body { flex: 1; }
+  .callout-body p { margin: 0; }
+  .callout.tip    { background: #F0FDF4; border-left: 4px solid #22C55E; }
+  .callout.info   { background: #EFF6FF; border-left: 4px solid #3B82F6; }
+  .callout.warn   { background: #FFFBEB; border-left: 4px solid #F59E0B; }
+  .callout.orange { background: #FFF7ED; border-left: 4px solid var(--orange); }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; font-size: .88rem; }
+  th { background: var(--teal); color: #fff; text-align: left; padding: .6rem .85rem; font-weight: 700; }
+  td { padding: .55rem .85rem; border-bottom: 1px solid var(--gray-200); vertical-align: top; color: var(--gray-600); }
+  tr:nth-child(even) td { background: var(--gray-50); }
+  td strong { color: var(--gray-900); }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block; padding: .15rem .55rem; border-radius: 9999px;
+    font-size: .75rem; font-weight: 700; line-height: 1.4;
+  }
+  .badge-teal   { background: var(--teal-lt); color: #0F766E; }
+  .badge-orange { background: #FEF3C7; color: #92400E; }
+  .badge-green  { background: #DCFCE7; color: #15803D; }
+  .badge-red    { background: #FEE2E2; color: #991B1B; }
+  .badge-blue   { background: #DBEAFE; color: #1D4ED8; }
+  .badge-purple { background: #EDE9FE; color: #6D28D9; }
+  .badge-gray   { background: var(--gray-100); color: var(--gray-600); }
+
+  /* ── Field reference ── */
+  .field-table td:first-child { font-weight: 700; color: var(--gray-800); white-space: nowrap; width: 30%; }
+
+  /* ── Keyboard shortcuts ── */
+  kbd {
+    display: inline-block; padding: .1rem .4rem; border: 1px solid var(--gray-300, #D1D5DB);
+    border-radius: .3rem; background: var(--gray-100); font-size: .8rem;
+    font-family: monospace; color: var(--gray-800);
+  }
+
+  /* ── Role comparison ── */
+  .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+  .role-card { border-radius: .6rem; padding: 1rem; border: 2px solid var(--gray-200); }
+  .role-card.owner   { border-color: var(--teal); }
+  .role-card.manager { border-color: #3B82F6; }
+  .role-card h4 { font-size: 1rem; }
+  .role-card ul { font-size: .85rem; margin: .5rem 0 0; }
+
+  /* ── Module cards ── */
+  .module-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .module-card {
+    border: 1px solid var(--gray-200); border-radius: .7rem; padding: 1rem 1.2rem;
+    display: flex; gap: .75rem; align-items: flex-start;
+  }
+  .module-card .m-icon { font-size: 1.6rem; }
+  .module-card .m-body h4 { margin-bottom: .15rem; }
+  .module-card .m-body p { font-size: .85rem; margin: 0; }
+
+  /* ── Print ── */
+  @media print {
+    body { font-size: 12px; }
+    .cover { min-height: auto; padding: 3rem 2rem; page-break-after: always; }
+    .toc { page-break-after: always; }
+    .section { page-break-before: auto; }
+    h2 { page-break-after: avoid; }
+    h3, h4 { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+    .module-grid { grid-template-columns: repeat(2, 1fr); }
+    .role-grid   { grid-template-columns: repeat(3, 1fr); }
+    a { color: var(--teal); text-decoration: none; }
+    @page { margin: 1.8cm 1.5cm; }
+    @page :first { margin: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══════════════════════════════════════════════════ COVER -->
+  <div class="cover">
+    <div class="logo">Business<span>360</span></div>
+    <div class="tagline">All-in-one business management platform</div>
+    <h1>User Manual</h1>
+    <div class="subtitle">Complete Guide for Business Users</div>
+    <div class="version">Version 1.0 &nbsp;·&nbsp; May 2026 &nbsp;·&nbsp; Covers all modules</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ TOC -->
+  <div class="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+      <li><span class="toc-num">1.</span> Introduction &amp; Overview
+        <ol>
+          <li>What is Business360?</li>
+          <li>Who this manual is for</li>
+          <li>How to read this manual</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">2.</span> Getting Started
+        <ol>
+          <li>Creating your account</li>
+          <li>Logging in</li>
+          <li>Forgot your password?</li>
+          <li>Setting up your organization (Onboarding)</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">3.</span> Understanding the Dashboard
+        <ol>
+          <li>The main dashboard screen</li>
+          <li>Sidebar navigation</li>
+          <li>Header bar: alerts, dark mode, profile</li>
+          <li>Command palette (Ctrl+K)</li>
+          <li>Trial banner</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">4.</span> Your Account &amp; Organization Settings
+        <ol>
+          <li>Account information</li>
+          <li>Changing your password</li>
+          <li>Organization information</li>
+          <li>Managing team members</li>
+          <li>Roles &amp; permissions</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">5.</span> App Store &amp; Modules
+        <ol>
+          <li>Browsing the App Store</li>
+          <li>Installing a module</li>
+          <li>Uninstalling a module</li>
+          <li>Community Marketplace</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">6.</span> CRM Module
+        <ol>
+          <li>Leads</li>
+          <li>Deals (Kanban board)</li>
+          <li>Customers</li>
+          <li>Converting a lead to a customer</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">7.</span> Inventory Module
+        <ol>
+          <li>Products</li>
+          <li>Stock levels</li>
+          <li>Warehouses</li>
+          <li>Purchase Orders</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">8.</span> Accounting Module
+        <ol>
+          <li>Invoices &amp; line items</li>
+          <li>Expenses</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">9.</span> HR Module
+        <ol>
+          <li>Employees</li>
+          <li>Leave Requests</li>
+          <li>Approving or rejecting leave</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">10.</span> Projects Module
+        <ol>
+          <li>Projects</li>
+          <li>Tasks</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">11.</span> Reports Module
+        <ol>
+          <li>KPI overview</li>
+          <li>Monthly P&amp;L table</li>
+          <li>Alerts bell</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">12.</span> Developer Portal
+        <ol>
+          <li>Registering as a developer</li>
+          <li>Submitting a module</li>
+          <li>Tracking your submissions</li>
+        </ol>
+      </li>
+      <li><span class="toc-num">13.</span> Exporting Data (CSV)</li>
+      <li><span class="toc-num">14.</span> Tips, Shortcuts &amp; Best Practices</li>
+      <li><span class="toc-num">15.</span> Glossary</li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 1. INTRO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">1</span>
+      <h2>Introduction &amp; Overview</h2>
+    </div>
+
+    <div class="subsection">
+      <h3>1.1 What is Business360?</h3>
+      <p>Business360 is an all-in-one business management platform (SaaS) that brings CRM, Inventory, Accounting, HR, Projects, and Analytics together in a single place. Instead of juggling spreadsheets and disconnected apps, your entire team works in one shared system.</p>
+      <p>The platform is <strong>modular</strong> — you only activate the features your company actually needs. Start with CRM, add Accounting later, keep it lean.</p>
+
+      <div class="module-grid">
+        <div class="module-card"><div class="m-icon">🤝</div><div class="m-body"><h4>CRM</h4><p>Track leads, manage deals on a kanban board, and maintain your customer database.</p></div></div>
+        <div class="module-card"><div class="m-icon">📦</div><div class="m-body"><h4>Inventory</h4><p>Manage your product catalog, warehouse stock levels, and purchase orders.</p></div></div>
+        <div class="module-card"><div class="m-icon">💰</div><div class="m-body"><h4>Accounting</h4><p>Create customer invoices with line items, track expenses by category.</p></div></div>
+        <div class="module-card"><div class="m-icon">👥</div><div class="m-body"><h4>HR</h4><p>Manage employees, track leave requests, and approve time-off.</p></div></div>
+        <div class="module-card"><div class="m-icon">📋</div><div class="m-body"><h4>Projects</h4><p>Create projects, break them into tasks, assign priorities and due dates.</p></div></div>
+        <div class="module-card"><div class="m-icon">📊</div><div class="m-body"><h4>Reports</h4><p>Cross-module KPIs, monthly revenue vs. expenses, and real-time alerts.</p></div></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>1.2 Who this manual is for</h3>
+      <p>This manual is for <strong>business users</strong> — anyone who signs up for Business360, creates or joins an organization, and uses the platform day-to-day. It covers every page, every field, and every action a regular user or organization owner can take.</p>
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div class="callout-body"><p>This manual does <strong>not</strong> cover the platform administration panel (sadmin). If you are a platform administrator, refer to the separate Admin Guide.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>1.3 How to read this manual</h3>
+      <p>Each section follows the same structure: what the feature does, a step-by-step guide, and a reference table of all fields. Callout boxes are used throughout:</p>
+      <div class="callout tip"><span class="callout-icon">✅</span><div class="callout-body"><p><strong>Tip</strong> — a helpful shortcut or best practice.</p></div></div>
+      <div class="callout warn"><span class="callout-icon">⚠️</span><div class="callout-body"><p><strong>Warning</strong> — something to watch out for to avoid mistakes.</p></div></div>
+      <div class="callout info"><span class="callout-icon">ℹ️</span><div class="callout-body"><p><strong>Note</strong> — extra context or clarification.</p></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 2. GETTING STARTED -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">2</span>
+      <h2>Getting Started</h2>
+    </div>
+
+    <div class="subsection">
+      <h3>2.1 Creating your account</h3>
+      <p>Visit <strong>/register</strong> to create your personal Business360 account.</p>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Open the Business360 website and click <strong>Get Started</strong> or navigate directly to <strong>/register</strong>.</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Enter your <strong>Full Name</strong>, <strong>Email Address</strong>, and choose a <strong>Password</strong>.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Click <strong>Create Account</strong>. You will be redirected to the login page.</div></li>
+      </ol>
+      <table class="field-table">
+        <tr><th>Field</th><th>Notes</th></tr>
+        <tr><td>Full Name</td><td>Your display name shown to teammates.</td></tr>
+        <tr><td>Email</td><td>Used to log in. Must be unique on the platform.</td></tr>
+        <tr><td>Password</td><td>Choose a strong password. You can change it later in Settings.</td></tr>
+      </table>
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-body"><p>If registration fails with "email already in use," that email already has an account. Use <strong>Forgot Password</strong> to regain access instead.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>2.2 Logging in</h3>
+      <p>Visit <strong>/login</strong> to sign in to an existing account.</p>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Enter your <strong>Email</strong> and <strong>Password</strong>.</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Click <strong>Sign In</strong>.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">If this is your first login, you will be redirected to the <strong>Onboarding</strong> flow to set up your organization. Otherwise, you go directly to your <strong>Dashboard</strong>.</div></li>
+      </ol>
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div class="callout-body"><p>For security, there is a rate limit of <strong>20 login attempts per 15 minutes</strong> per device. If you are locked out, wait 15 minutes and try again.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>2.3 Forgot your password?</h3>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">On the login page, click <strong>Forgot password?</strong> to go to <strong>/forgot-password</strong>.</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Enter the email address linked to your account and click <strong>Send Reset Link</strong>.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Check your inbox for a password-reset email. The link is valid for <strong>1 hour</strong>.</div></li>
+        <li><span class="step-num">4</span><div class="step-body">Click the link in the email. You will land on <strong>/reset-password</strong>.</div></li>
+        <li><span class="step-num">5</span><div class="step-body">Enter and confirm your new password, then click <strong>Reset Password</strong>.</div></li>
+        <li><span class="step-num">6</span><div class="step-body">You will be redirected to the login page. Log in with your new password.</div></li>
+      </ol>
+      <div class="callout tip">
+        <span class="callout-icon">✅</span>
+        <div class="callout-body"><p>The reset form always shows a success message regardless of whether the email exists — this is intentional, to protect account privacy.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>2.4 Setting up your organization (Onboarding)</h3>
+      <p>After your first login you will be taken through a <strong>3-step onboarding wizard</strong> at <strong>/onboarding</strong>. This creates your organization — the private workspace your whole team will share.</p>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body"><strong>Name your organization.</strong> Enter the company or team name that will be shown in your workspace.</div></li>
+        <li><span class="step-num">2</span><div class="step-body"><strong>Choose a subscription plan.</strong> Compare the available plans (Starter, Growth, Pro, Enterprise). You can upgrade at any time later.</div></li>
+        <li><span class="step-num">3</span><div class="step-body"><strong>Confirm &amp; create.</strong> Review your choices and click <strong>Create Organization</strong>. Your private workspace is provisioned immediately.</div></li>
+      </ol>
+      <div class="callout tip">
+        <span class="callout-icon">✅</span>
+        <div class="callout-body"><p>Most plans include a <strong>free trial period</strong>. You can explore the full platform during this time without entering payment details.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 3. DASHBOARD -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">3</span>
+      <h2>Understanding the Dashboard</h2>
+    </div>
+
+    <div class="subsection">
+      <h3>3.1 The main dashboard screen</h3>
+      <p>After logging in, your home screen is the <strong>Dashboard</strong> (<strong>/dashboard</strong>). It gives you an instant health-check of your entire business:</p>
+      <ul>
+        <li><strong>KPI cards</strong> — animated counters showing total revenue, open deals, active employees, and more. Each card shows a trend arrow (↑↓) comparing to last month.</li>
+        <li><strong>Live stats strip</strong> — compact row of real-time numbers pulled from every installed module.</li>
+        <li><strong>Module grid</strong> — tiles for each installed module. Click any tile to jump directly to that module.</li>
+        <li><strong>Trial banner</strong> — shown when your organization is in trial mode, with the days remaining and an upgrade link.</li>
+      </ul>
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div class="callout-body"><p>The KPI cards only appear when at least one module is installed. Before installing any modules, the dashboard shows an empty state with a prompt to visit the App Store.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>3.2 Sidebar navigation</h3>
+      <p>The <strong>left sidebar</strong> is your main navigation. It shows:</p>
+      <table>
+        <tr><th>Item</th><th>Goes to</th></tr>
+        <tr><td><strong>Dashboard</strong></td><td>Your home screen overview</td></tr>
+        <tr><td><strong>App Store</strong></td><td>Browse and install modules</td></tr>
+        <tr><td><strong>My Modules</strong></td><td>Manage your installed modules</td></tr>
+        <tr><td><em>Installed module links</em></td><td>CRM, Inventory, Accounting, HR, Projects, Reports — only shown if installed</td></tr>
+        <tr><td><strong>Settings</strong></td><td>Account, password, org, and team management</td></tr>
+      </table>
+      <p>On mobile, the sidebar is hidden by default. Tap the <strong>menu icon</strong> in the header to reveal it.</p>
+    </div>
+
+    <div class="subsection">
+      <h3>3.3 Header bar: alerts, dark mode, profile</h3>
+      <p>The top bar on every dashboard page contains:</p>
+      <table>
+        <tr><th>Element</th><th>What it does</th></tr>
+        <tr><td><strong>Breadcrumb</strong></td><td>Shows your current location (e.g. Dashboard › CRM › Leads)</td></tr>
+        <tr><td><strong>🌙 / ☀️ Dark mode toggle</strong></td><td>Switches between light and dark theme. Your preference is saved and remembered across sessions.</td></tr>
+        <tr><td><strong>🔔 Alerts bell</strong></td><td>Shows a red badge if there are overdue invoices or low-stock items. Click to see a grouped list.</td></tr>
+        <tr><td><strong>User avatar</strong></td><td>Shows your initials. Clicking it allows you to log out.</td></tr>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>3.4 Command palette (<kbd>Ctrl</kbd>+<kbd>K</kbd>)</h3>
+      <p>Press <kbd>Ctrl</kbd>+<kbd>K</kbd> (or <kbd>⌘</kbd>+<kbd>K</kbd> on Mac) anywhere in the dashboard to open the <strong>Command Palette</strong> — a quick-search overlay that lets you jump to any page instantly.</p>
+      <ul>
+        <li>Start typing to filter pages by name (e.g. type "lead" to find CRM Leads).</li>
+        <li>Use <kbd>↑</kbd> / <kbd>↓</kbd> arrow keys to highlight a result.</li>
+        <li>Press <kbd>Enter</kbd> to navigate, or <kbd>Esc</kbd> to close.</li>
+        <li>Pages are grouped by section: Navigation, CRM, Inventory, Accounting, HR, Projects.</li>
+      </ul>
+    </div>
+
+    <div class="subsection">
+      <h3>3.5 Trial banner</h3>
+      <p>If your organization is in a trial period, a green banner appears at the top of the dashboard showing the number of trial days remaining and a direct link to upgrade your plan. Once the trial ends, contact your platform administrator to activate a paid plan.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 4. SETTINGS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">4</span>
+      <h2>Your Account &amp; Organization Settings</h2>
+    </div>
+
+    <p>Navigate to <strong>Settings</strong> from the sidebar (<strong>/dashboard/settings</strong>) to manage your personal account, your password, your organization's details, and team members.</p>
+
+    <div class="subsection">
+      <h3>4.1 Account information</h3>
+      <p>The <strong>Account</strong> section shows your current name, email address, and your role within the organization. This is read-only — to change your name or email, contact your organization owner.</p>
+    </div>
+
+    <div class="subsection">
+      <h3>4.2 Changing your password</h3>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Scroll to the <strong>Change Password</strong> section.</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Enter your <strong>Current Password</strong> to verify your identity.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Enter and confirm your <strong>New Password</strong>.</div></li>
+        <li><span class="step-num">4</span><div class="step-body">Click <strong>Update Password</strong>. A success toast will confirm the change.</div></li>
+      </ol>
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-body"><p>If you enter the wrong current password, the update will be rejected. Use <strong>Forgot Password</strong> from the login page if you have forgotten it.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>4.3 Organization information</h3>
+      <p>The <strong>Organization</strong> section shows your organization's name, current subscription plan, and account status. Only <strong>owners</strong> can edit organization details.</p>
+    </div>
+
+    <div class="subsection">
+      <h3>4.4 Managing team members</h3>
+      <p>The <strong>Members</strong> section lists everyone in your organization with their name, email, and role. Owners can invite new members and change member roles.</p>
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div class="callout-body"><p>The number of members you can add depends on your subscription plan. Check your plan's member limit under Organization details.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>4.5 Roles &amp; permissions</h3>
+      <p>Business360 has three roles within an organization:</p>
+      <div class="role-grid">
+        <div class="role-card owner">
+          <h4>👑 Owner</h4>
+          <p style="font-size:.8rem;color:#4B5563;margin:.25rem 0 0">Full control</p>
+          <ul>
+            <li>All manager permissions</li>
+            <li>Delete the organization</li>
+            <li>Billing authority</li>
+            <li>Promote/demote members</li>
+          </ul>
+        </div>
+        <div class="role-card manager">
+          <h4>🛠 Manager</h4>
+          <p style="font-size:.8rem;color:#4B5563;margin:.25rem 0 0">Team management</p>
+          <ul>
+            <li>All member permissions</li>
+            <li>Install/uninstall modules</li>
+            <li>Manage settings</li>
+            <li>Invite team members</li>
+          </ul>
+        </div>
+        <div class="role-card">
+          <h4>👤 Member</h4>
+          <p style="font-size:.8rem;color:#4B5563;margin:.25rem 0 0">Standard access</p>
+          <ul>
+            <li>Use installed modules</li>
+            <li>Create/edit/delete records</li>
+            <li>View reports</li>
+            <li>Export CSV data</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 5. APP STORE -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">5</span>
+      <h2>App Store &amp; Modules</h2>
+    </div>
+
+    <div class="subsection">
+      <h3>5.1 Browsing the App Store</h3>
+      <p>Click <strong>App Store</strong> in the sidebar to reach <strong>/dashboard/store</strong>. All available modules are shown as cards. Each card displays:</p>
+      <ul>
+        <li>Module name and icon</li>
+        <li>Category (e.g. Sales, Finance, Operations)</li>
+        <li>Star rating</li>
+        <li>Short description</li>
+        <li>Whether the module is already installed</li>
+      </ul>
+      <p>Click any card to see the full module detail page, including a longer description, version history, and screenshots.</p>
+      <p>Below the main grid, a <strong>Community Marketplace</strong> section shows third-party modules submitted by independent developers. Each marketplace card shows the author name, a link to the source repository, and the price (if paid).</p>
+    </div>
+
+    <div class="subsection">
+      <h3>5.2 Installing a module</h3>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">In the sidebar, click <strong>My Modules</strong> (<strong>/dashboard/modules</strong>).</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Find the module you want and click <strong>Install</strong>.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">The module is activated instantly. A new link appears in the sidebar.</div></li>
+      </ol>
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-body"><p>You must be an <strong>Owner</strong> or <strong>Manager</strong> to install modules. Members cannot install or uninstall modules.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>5.3 Uninstalling a module</h3>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Go to <strong>My Modules</strong>.</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Find the installed module and click <strong>Uninstall</strong>.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Confirm the action in the dialog box.</div></li>
+      </ol>
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-body"><p>Uninstalling a module hides its pages from the sidebar, but your existing data (leads, invoices, etc.) is <strong>not deleted</strong>. If you reinstall the module, your data will be there.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>5.4 Community Marketplace</h3>
+      <p>The Community Marketplace section of the App Store shows modules built by third-party developers and approved by the Business360 platform team. These modules extend the platform with specialized features. Contact the developer via the listed repository link for support on community modules.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 6. CRM -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">6</span>
+      <h2>CRM Module</h2>
+    </div>
+
+    <p>The <strong>CRM (Customer Relationship Management)</strong> module helps you track your sales pipeline from the first contact all the way to a paying customer. Access it via the sidebar at <strong>/dashboard/crm</strong>.</p>
+    <p>The CRM overview page shows summary KPIs: total leads, open deals, pipeline value, and customer count.</p>
+
+    <div class="subsection">
+      <h3>6.1 Leads</h3>
+      <p>Leads are potential customers who have shown interest but haven't yet committed. Manage them at <strong>/dashboard/crm/leads</strong>.</p>
+
+      <h4>Adding a lead</h4>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Click <strong>Add Lead</strong> (top-right of the leads page).</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Fill in the lead details in the slide-in panel.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Click <strong>Save</strong>. The lead appears in the table.</div></li>
+      </ol>
+
+      <h4>Lead fields</h4>
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Name</td><td>Contact's full name. Required.</td></tr>
+        <tr><td>Email</td><td>Contact email address.</td></tr>
+        <tr><td>Phone</td><td>Contact phone number.</td></tr>
+        <tr><td>Company</td><td>The company they work for.</td></tr>
+        <tr><td>Status</td><td><span class="badge badge-blue">new</span> <span class="badge badge-orange">contacted</span> <span class="badge badge-purple">qualified</span> <span class="badge badge-green">converted</span> <span class="badge badge-gray">lost</span></td></tr>
+        <tr><td>Source</td><td>Where the lead came from (website, referral, event, etc.).</td></tr>
+        <tr><td>Notes</td><td>Any additional context about this lead.</td></tr>
+      </table>
+
+      <h4>Filtering and pagination</h4>
+      <p>Use the <strong>Status filter</strong> dropdown at the top of the table to show only leads in a specific status. Results are paginated (20 per page) — use the <strong>Previous / Next</strong> buttons at the bottom.</p>
+
+      <h4>Editing and deleting</h4>
+      <p>Click the <strong>edit icon</strong> (pencil) on any lead row to open the edit panel. Click the <strong>delete icon</strong> (trash) and confirm the dialog to delete a lead permanently.</p>
+    </div>
+
+    <div class="subsection">
+      <h3>6.2 Deals (Kanban board)</h3>
+      <p>Deals represent sales opportunities with a monetary value. They are managed on a <strong>drag-and-drop kanban board</strong> at <strong>/dashboard/crm/deals</strong>.</p>
+
+      <h4>Kanban columns</h4>
+      <table>
+        <tr><th>Column</th><th>Meaning</th></tr>
+        <tr><td><span class="badge badge-blue">Prospect</span></td><td>Early stage — exploring the opportunity</td></tr>
+        <tr><td><span class="badge badge-orange">Proposal</span></td><td>Proposal sent or in discussion</td></tr>
+        <tr><td><span class="badge badge-purple">Negotiation</span></td><td>Actively negotiating terms</td></tr>
+        <tr><td><span class="badge badge-green">Closed Won</span></td><td>Deal successfully closed</td></tr>
+        <tr><td><span class="badge badge-red">Closed Lost</span></td><td>Deal did not go through</td></tr>
+      </table>
+
+      <h4>Moving deals</h4>
+      <p>Drag any deal card and drop it into a different column. The status updates automatically and is saved immediately. If the save fails, the card returns to its original column.</p>
+
+      <h4>Deal fields</h4>
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Title</td><td>Name of the deal. Required.</td></tr>
+        <tr><td>Value</td><td>Expected monetary value of the deal.</td></tr>
+        <tr><td>Company</td><td>Company associated with this deal.</td></tr>
+        <tr><td>Contact</td><td>Person you are dealing with.</td></tr>
+        <tr><td>Status</td><td>Current pipeline stage (set by dragging, or from the form).</td></tr>
+        <tr><td>Close Date</td><td>Expected date the deal will close.</td></tr>
+        <tr><td>Notes</td><td>Free-text notes.</td></tr>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>6.3 Customers</h3>
+      <p>Customers are people or companies you have already done business with. Manage them at <strong>/dashboard/crm/customers</strong>.</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Name</td><td>Customer's full name. Required.</td></tr>
+        <tr><td>Email</td><td>Primary email address.</td></tr>
+        <tr><td>Phone</td><td>Contact phone number.</td></tr>
+        <tr><td>Company</td><td>Company name.</td></tr>
+        <tr><td>Notes</td><td>Additional background or preferences.</td></tr>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>6.4 Converting a lead to a customer</h3>
+      <p>When a lead is ready to become a customer, use the one-click <strong>Convert</strong> action — no need to re-enter details manually.</p>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Go to <strong>/dashboard/crm/leads</strong>.</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Find the lead and click the <strong>green convert icon</strong> (person with a plus sign) on that row.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Confirm the action. A new Customer record is created automatically from the lead's name, email, phone, and company.</div></li>
+        <li><span class="step-num">4</span><div class="step-body">The lead's status changes to <span class="badge badge-green">converted</span> and the convert button is hidden for that row.</div></li>
+      </ol>
+      <div class="callout tip">
+        <span class="callout-icon">✅</span>
+        <div class="callout-body"><p>Converted leads remain visible in the Leads table for reference. You can filter by status to hide them from your active pipeline view.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 7. INVENTORY -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">7</span>
+      <h2>Inventory Module</h2>
+    </div>
+
+    <p>The <strong>Inventory</strong> module tracks your product catalog, warehouse locations, stock quantities, and purchase orders. Access it at <strong>/dashboard/inventory</strong>.</p>
+    <p>The overview page shows KPI cards: product count, warehouse count, purchase order count, and products-by-status breakdown.</p>
+
+    <div class="subsection">
+      <h3>7.1 Products</h3>
+      <p>Products are the items your business buys, sells, or stores. Manage them at <strong>/dashboard/inventory/products</strong>.</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Name</td><td>Product display name. Required.</td></tr>
+        <tr><td>SKU</td><td>Stock-keeping unit — your internal product code.</td></tr>
+        <tr><td>Category</td><td>Product category for grouping and filtering.</td></tr>
+        <tr><td>Unit Price</td><td>Price you sell this product for.</td></tr>
+        <tr><td>Cost Price</td><td>Price you paid to acquire or produce this product.</td></tr>
+        <tr><td>Unit</td><td>Unit of measurement (e.g. pcs, kg, litre).</td></tr>
+        <tr><td>Status</td><td><span class="badge badge-green">active</span> <span class="badge badge-gray">inactive</span> <span class="badge badge-orange">discontinued</span></td></tr>
+      </table>
+
+      <p>Use the <strong>search bar</strong> at the top to filter by name, SKU, or category. Results are paginated (20 per page).</p>
+    </div>
+
+    <div class="subsection">
+      <h3>7.2 Stock levels</h3>
+      <p>Each product can have stock levels tracked across multiple warehouses. Click the <strong>stock icon</strong> on any product row to open the <strong>Stock Levels</strong> dialog.</p>
+
+      <ul>
+        <li>The dialog lists every warehouse and shows the current <strong>Quantity</strong> and <strong>Minimum Quantity</strong> (the level that triggers a low-stock alert).</li>
+        <li>Edit the quantity and minimum quantity fields and click <strong>Save</strong>.</li>
+        <li>Rows with quantity at or below the minimum are highlighted in <strong>amber</strong> to signal low stock.</li>
+      </ul>
+
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div class="callout-body"><p>Low-stock items also appear in the <strong>Alerts bell</strong> in the header bar so you never miss a restock.</p></div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>7.3 Warehouses</h3>
+      <p>Warehouses are physical storage locations. Manage them at <strong>/dashboard/inventory/warehouses</strong>. They are shown as cards, each displaying the warehouse name, location, and how many products are stocked there.</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Name</td><td>Warehouse name or identifier. Required.</td></tr>
+        <tr><td>Location</td><td>Physical address or description of where it is.</td></tr>
+        <tr><td>Description</td><td>Optional notes about this warehouse.</td></tr>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>7.4 Purchase Orders</h3>
+      <p>Purchase Orders (POs) track items you are buying from suppliers. Manage them at <strong>/dashboard/inventory/orders</strong>.</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Supplier</td><td>Name of the supplier or vendor. Required.</td></tr>
+        <tr><td>Status</td><td><span class="badge badge-blue">draft</span> <span class="badge badge-orange">ordered</span> <span class="badge badge-purple">received</span> <span class="badge badge-gray">cancelled</span></td></tr>
+        <tr><td>Order Date</td><td>Date the order was placed.</td></tr>
+        <tr><td>Expected Date</td><td>Date you expect delivery.</td></tr>
+        <tr><td>Total Amount</td><td>Auto-calculated from line items.</td></tr>
+        <tr><td>Line Items</td><td>Individual products ordered: product name, quantity, unit cost, and line total.</td></tr>
+      </table>
+
+      <h4>Adding line items to a purchase order</h4>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Create or edit a purchase order to open the edit panel.</div></li>
+        <li><span class="step-num">2</span><div class="step-body">In the <strong>Line Items</strong> table, click <strong>Add Item</strong>.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Enter the product name, quantity, and unit cost. The line total is calculated automatically.</div></li>
+        <li><span class="step-num">4</span><div class="step-body">Add as many items as needed. Click the <strong>×</strong> on a row to remove it.</div></li>
+        <li><span class="step-num">5</span><div class="step-body">Click <strong>Save</strong>. The order total updates automatically.</div></li>
+      </ol>
+
+      <p>Use the <strong>search bar</strong> to filter orders by supplier name. You can also <strong>export</strong> the orders list to CSV.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 8. ACCOUNTING -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">8</span>
+      <h2>Accounting Module</h2>
+    </div>
+
+    <p>The <strong>Accounting</strong> module manages your invoices and business expenses. Access it at <strong>/dashboard/accounting</strong>.</p>
+    <p>The overview page shows KPI cards: total paid revenue, outstanding (unpaid) amount, total expenses, and invoice count by status.</p>
+
+    <div class="subsection">
+      <h3>8.1 Invoices &amp; line items</h3>
+      <p>Invoices are bills you send to customers. Manage them at <strong>/dashboard/accounting/invoices</strong>.</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Invoice Number</td><td>Your unique invoice reference (e.g. INV-001). Required.</td></tr>
+        <tr><td>Customer</td><td>Name of the customer being billed. Required.</td></tr>
+        <tr><td>Status</td><td><span class="badge badge-gray">draft</span> <span class="badge badge-orange">sent</span> <span class="badge badge-green">paid</span> <span class="badge badge-red">overdue</span> <span class="badge badge-gray">cancelled</span></td></tr>
+        <tr><td>Issue Date</td><td>Date the invoice was created (defaults to today).</td></tr>
+        <tr><td>Due Date</td><td>Payment deadline date.</td></tr>
+        <tr><td>Subtotal</td><td>Auto-calculated from line items.</td></tr>
+        <tr><td>Tax</td><td>Tax amount entered manually.</td></tr>
+        <tr><td>Total</td><td>Subtotal + Tax (calculated automatically).</td></tr>
+        <tr><td>Line Items</td><td>Individual charges: description, quantity, unit price, and line total.</td></tr>
+      </table>
+
+      <h4>Adding line items to an invoice</h4>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Create or edit an invoice to open the edit panel.</div></li>
+        <li><span class="step-num">2</span><div class="step-body">In the <strong>Line Items</strong> table, click <strong>Add Item</strong>.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Enter the description, quantity, and unit price. The line total and subtotal recalculate automatically.</div></li>
+        <li><span class="step-num">4</span><div class="step-body">Enter the <strong>Tax</strong> amount (this is a separate manual field).</div></li>
+        <li><span class="step-num">5</span><div class="step-body">Click <strong>Save</strong>.</div></li>
+      </ol>
+
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div class="callout-body"><p>Invoices with status <strong>overdue</strong> (due date in the past and not paid or cancelled) appear in the <strong>Alerts bell</strong> in the header.</p></div>
+      </div>
+
+      <p>Use the <strong>search bar</strong> to filter by invoice number or customer name. Results are paginated (20 per page). Export to CSV using the <strong>Export CSV</strong> button.</p>
+    </div>
+
+    <div class="subsection">
+      <h3>8.2 Expenses</h3>
+      <p>Expenses track money your business has spent. Manage them at <strong>/dashboard/accounting/expenses</strong>.</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Category</td><td>Type of expense (e.g. Travel, Marketing, Utilities). Autocomplete suggestions appear as you type.</td></tr>
+        <tr><td>Description</td><td>Brief description of what the expense was for.</td></tr>
+        <tr><td>Amount</td><td>The cost of the expense. Required.</td></tr>
+        <tr><td>Currency</td><td>Currency the expense was in (default: USD).</td></tr>
+        <tr><td>Date</td><td>Date the expense occurred.</td></tr>
+        <tr><td>Reference</td><td>Receipt number, invoice reference, or any tracking code.</td></tr>
+      </table>
+
+      <p>Results are paginated (20 per page). Export to CSV using the <strong>Export CSV</strong> button.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 9. HR -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">9</span>
+      <h2>HR Module</h2>
+    </div>
+
+    <p>The <strong>HR (Human Resources)</strong> module helps you manage your workforce — employee records, leave tracking, and approvals. Access it at <strong>/dashboard/hr</strong>.</p>
+    <p>The overview shows KPI cards: total employees, active employees, and leave request counts.</p>
+
+    <div class="subsection">
+      <h3>9.1 Employees</h3>
+      <p>Manage your employee directory at <strong>/dashboard/hr/employees</strong>.</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Name</td><td>Employee's full name. Required.</td></tr>
+        <tr><td>Position</td><td>Job title or role (e.g. Sales Manager).</td></tr>
+        <tr><td>Department</td><td>Department or team (e.g. Engineering, Sales).</td></tr>
+        <tr><td>Email</td><td>Work email address.</td></tr>
+        <tr><td>Phone</td><td>Contact phone number.</td></tr>
+        <tr><td>Status</td><td><span class="badge badge-green">active</span> <span class="badge badge-orange">on-leave</span> <span class="badge badge-gray">terminated</span></td></tr>
+        <tr><td>Hire Date</td><td>Date the employee joined the company.</td></tr>
+        <tr><td>Salary</td><td>Monthly or annual salary (for your reference only).</td></tr>
+      </table>
+
+      <p>Use the <strong>search bar</strong> to filter by name, department, or position. Results are paginated (20 per page). Export to CSV with the <strong>Export CSV</strong> button.</p>
+    </div>
+
+    <div class="subsection">
+      <h3>9.2 Leave Requests</h3>
+      <p>Track and manage employee time-off requests at <strong>/dashboard/hr/leave</strong>.</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Employee</td><td>Select from a dropdown of employees in the system. Required.</td></tr>
+        <tr><td>Leave Type</td><td>Annual, sick, personal, maternity/paternity, unpaid, other.</td></tr>
+        <tr><td>Status</td><td><span class="badge badge-orange">pending</span> <span class="badge badge-green">approved</span> <span class="badge badge-red">rejected</span></td></tr>
+        <tr><td>Start Date</td><td>First day of leave.</td></tr>
+        <tr><td>End Date</td><td>Last day of leave.</td></tr>
+        <tr><td>Days</td><td>Number of leave days (calculated or entered manually).</td></tr>
+        <tr><td>Reason</td><td>Optional reason for the leave request.</td></tr>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>9.3 Approving or rejecting leave</h3>
+      <p><strong>Owners</strong> and <strong>Managers</strong> can approve or reject pending leave requests directly from the leave table.</p>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Go to <strong>/dashboard/hr/leave</strong>.</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Find a leave request with status <span class="badge badge-orange">pending</span>.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Click the <strong>green check ✓</strong> button to approve, or the <strong>red × button</strong> to reject.</div></li>
+        <li><span class="step-num">4</span><div class="step-body">The status updates immediately in the table.</div></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 10. PROJECTS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2>Projects Module</h2>
+    </div>
+
+    <p>The <strong>Projects</strong> module lets you organize work into projects and break them into individual tasks. Access it at <strong>/dashboard/projects</strong>.</p>
+    <p>The overview page shows KPI cards: total projects, total tasks, active projects, and completed tasks.</p>
+
+    <div class="subsection">
+      <h3>10.1 Projects</h3>
+      <p>Projects are containers for related work. They are listed and managed directly on the overview page (<strong>/dashboard/projects</strong>).</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Name</td><td>Project name. Required.</td></tr>
+        <tr><td>Status</td><td><span class="badge badge-blue">planning</span> <span class="badge badge-orange">active</span> <span class="badge badge-green">completed</span> <span class="badge badge-gray">on-hold</span></td></tr>
+        <tr><td>Start Date</td><td>Project start date.</td></tr>
+        <tr><td>End Date</td><td>Planned completion date.</td></tr>
+        <tr><td>Description</td><td>Summary of what the project involves.</td></tr>
+      </table>
+
+      <p>Click the <strong>edit icon</strong> to modify a project, or the <strong>delete icon</strong> to remove it (and all its tasks).</p>
+    </div>
+
+    <div class="subsection">
+      <h3>10.2 Tasks</h3>
+      <p>Tasks are individual units of work that belong to a project. Manage them at <strong>/dashboard/projects/tasks</strong>.</p>
+
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Title</td><td>Short task name. Required.</td></tr>
+        <tr><td>Project</td><td>Select a project from the dropdown. Required.</td></tr>
+        <tr><td>Status</td><td><span class="badge badge-gray">todo</span> <span class="badge badge-orange">in-progress</span> <span class="badge badge-purple">review</span> <span class="badge badge-green">done</span></td></tr>
+        <tr><td>Priority</td><td><span class="badge badge-red">high</span> <span class="badge badge-orange">medium</span> <span class="badge badge-gray">low</span></td></tr>
+        <tr><td>Assigned To</td><td>Name of the team member responsible.</td></tr>
+        <tr><td>Due Date</td><td>When the task must be completed.</td></tr>
+        <tr><td>Description</td><td>Additional details about the task.</td></tr>
+      </table>
+
+      <p>Use the <strong>search bar</strong> to filter tasks by title or project name. Results are paginated. Export to CSV with <strong>Export CSV</strong>.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 11. REPORTS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <h2>Reports Module</h2>
+    </div>
+
+    <p>The <strong>Reports</strong> module brings together data from every other installed module in one place, giving you a complete picture of your business at a glance. Access it at <strong>/dashboard/reports</strong>.</p>
+
+    <div class="subsection">
+      <h3>11.1 KPI overview</h3>
+      <p>The top of the Reports page shows <strong>four headline KPI cards</strong>:</p>
+      <table>
+        <tr><th>Card</th><th>What it shows</th></tr>
+        <tr><td>Paid Revenue</td><td>Total from all paid invoices</td></tr>
+        <tr><td>Total Expenses</td><td>Sum of all recorded expenses</td></tr>
+        <tr><td>Net Profit</td><td>Paid Revenue − Total Expenses</td></tr>
+        <tr><td>Pipeline Value</td><td>Total value of all open deals in CRM</td></tr>
+      </table>
+
+      <p>Below the headline cards, a <strong>Module Summary grid</strong> shows compact numbers from each module:</p>
+      <ul>
+        <li>CRM: leads count, customers count</li>
+        <li>HR: total employees</li>
+        <li>Inventory: product count</li>
+        <li>Accounting: invoice count</li>
+        <li>Projects: task count</li>
+      </ul>
+    </div>
+
+    <div class="subsection">
+      <h3>11.2 Monthly P&amp;L table</h3>
+      <p>Below the KPIs, a <strong>Monthly Profit &amp; Loss table</strong> shows the last 12 months with columns for:</p>
+      <ul>
+        <li><strong>Revenue</strong> — total from paid invoices in that month</li>
+        <li><strong>Expenses</strong> — total expenses recorded in that month</li>
+        <li><strong>Profit</strong> — Revenue − Expenses (green if positive, red if negative)</li>
+      </ul>
+      <p>A <strong>bar chart</strong> visually compares revenue (green) and expenses (red) side-by-side for each month, with hover tooltips showing the exact figures.</p>
+    </div>
+
+    <div class="subsection">
+      <h3>11.3 Alerts bell</h3>
+      <p>The <strong>Alerts bell 🔔</strong> in the top header bar shows a badge count when there are items needing attention. Clicking it opens a grouped dropdown:</p>
+      <ul>
+        <li><strong>Overdue Invoices</strong> — invoices whose due date has passed and are not yet paid or cancelled.</li>
+        <li><strong>Low Stock Items</strong> — products in any warehouse where the quantity is at or below the minimum quantity threshold.</li>
+      </ul>
+      <p>Click any alert item to navigate directly to the relevant page (Invoices or Products) to take action.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 12. DEVELOPER PORTAL -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <h2>Developer Portal</h2>
+    </div>
+
+    <p>The <strong>Developer Portal</strong> at <strong>/dashboard/store/developer</strong> lets you build and submit your own modules to the Business360 marketplace. Anyone with a Business360 account can become a developer.</p>
+
+    <div class="subsection">
+      <h3>12.1 Registering as a developer</h3>
+      <p>If you have not registered yet, the page shows a <strong>Join as Developer</strong> form:</p>
+      <ol class="steps">
+        <li><span class="step-num">1</span><div class="step-body">Enter your <strong>Display Name</strong> (shown publicly on your module listings).</div></li>
+        <li><span class="step-num">2</span><div class="step-body">Optionally enter your <strong>Website URL</strong> and a short <strong>Bio</strong>.</div></li>
+        <li><span class="step-num">3</span><div class="step-body">Click <strong>Join</strong>. Your developer profile is created and the page switches to the submission form.</div></li>
+      </ol>
+    </div>
+
+    <div class="subsection">
+      <h3>12.2 Submitting a module</h3>
+      <p>Once registered, you can submit modules for review:</p>
+      <table class="field-table">
+        <tr><th>Field</th><th>Description</th></tr>
+        <tr><td>Module Name</td><td>Human-readable name (e.g. "Advanced Reporting"). Required.</td></tr>
+        <tr><td>Module Key</td><td>Unique identifier in lowercase with hyphens (e.g. <code>advanced-reporting</code>). Required.</td></tr>
+        <tr><td>Version</td><td>Version number (e.g. <code>1.0.0</code>). Required.</td></tr>
+        <tr><td>Category</td><td>Category your module belongs to.</td></tr>
+        <tr><td>Description</td><td>What the module does — shown to users in the marketplace.</td></tr>
+        <tr><td>Repository URL</td><td>Link to your public source code (GitHub, GitLab, etc.). Required.</td></tr>
+        <tr><td>Contact Email</td><td>Email for the platform team to reach you during review.</td></tr>
+      </table>
+      <p>Click <strong>Submit for Review</strong>. Your module enters the review queue.</p>
+    </div>
+
+    <div class="subsection">
+      <h3>12.3 Tracking your submissions</h3>
+      <p>Below the submission form, a <strong>My Submissions</strong> table lists all your submissions with:</p>
+      <table>
+        <tr><th>Column</th><th>Meaning</th></tr>
+        <tr><td>Module Name</td><td>The module you submitted</td></tr>
+        <tr><td>Status</td><td><span class="badge badge-orange">pending</span> — awaiting review &nbsp; <span class="badge badge-green">approved</span> — live in marketplace &nbsp; <span class="badge badge-red">rejected</span> — not approved</td></tr>
+        <tr><td>Review Note</td><td>Feedback from the reviewer (shown when rejected)</td></tr>
+        <tr><td>Repo Link</td><td>Quick link to your repository</td></tr>
+      </table>
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div class="callout-body"><p>Approved modules are published to the <strong>Community Marketplace</strong> section of the App Store, where all Business360 users can install them.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 13. CSV EXPORT -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">13</span>
+      <h2>Exporting Data (CSV)</h2>
+    </div>
+
+    <p>You can export your data as a <strong>CSV file</strong> (spreadsheet) from most table pages. This is useful for backup, offline analysis, or sharing data with external tools.</p>
+
+    <table>
+      <tr><th>Page</th><th>What is exported</th></tr>
+      <tr><td>CRM — Leads</td><td>All lead records (filtered view)</td></tr>
+      <tr><td>CRM — Customers</td><td>All customer records</td></tr>
+      <tr><td>Inventory — Products</td><td>Full product catalog</td></tr>
+      <tr><td>Inventory — Purchase Orders</td><td>All purchase orders</td></tr>
+      <tr><td>Accounting — Invoices</td><td>All invoice headers (without line items)</td></tr>
+      <tr><td>Accounting — Expenses</td><td>All expense records</td></tr>
+      <tr><td>HR — Employees</td><td>All employee records</td></tr>
+      <tr><td>HR — Leave Requests</td><td>All leave request records</td></tr>
+      <tr><td>Projects — Tasks</td><td>All task records</td></tr>
+    </table>
+
+    <h4>How to export</h4>
+    <ol class="steps">
+      <li><span class="step-num">1</span><div class="step-body">Navigate to the table page you want to export.</div></li>
+      <li><span class="step-num">2</span><div class="step-body">Click the <strong>Export CSV</strong> button (usually top-right of the table).</div></li>
+      <li><span class="step-num">3</span><div class="step-body">Your browser downloads a <code>.csv</code> file automatically. Open it in Excel, Google Sheets, or any spreadsheet app.</div></li>
+    </ol>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body"><p>CSV exports use the <strong>current page's data</strong>. If you have filtered the table, only filtered results are exported. To export everything, clear all filters first.</p></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 14. TIPS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">14</span>
+      <h2>Tips, Shortcuts &amp; Best Practices</h2>
+    </div>
+
+    <div class="subsection">
+      <h3>Keyboard shortcuts</h3>
+      <table>
+        <tr><th>Shortcut</th><th>Action</th></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>K</kbd> &nbsp;/&nbsp; <kbd>⌘</kbd>+<kbd>K</kbd></td><td>Open Command Palette — jump to any page instantly</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Close Command Palette, close any open dialog or slide panel</td></tr>
+        <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Navigate Command Palette results</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>Select highlighted Command Palette result</td></tr>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>General tips</h3>
+      <ul>
+        <li><strong>Dark mode</strong> — click the Sun/Moon icon in the header. Your preference is remembered permanently.</li>
+        <li><strong>Alerts bell</strong> — check it regularly. Overdue invoices and low-stock alerts appear there before they become bigger problems.</li>
+        <li><strong>Pagination</strong> — tables load 20 records per page by default. Use the page controls at the bottom to navigate, or use the search bar to narrow down results.</li>
+        <li><strong>Confirm dialogs</strong> — all delete actions require a confirmation click. This prevents accidental data loss.</li>
+        <li><strong>Toast notifications</strong> — a small notification appears in the corner of the screen to confirm every successful save or delete action. If you see an error toast, read the message — it usually explains what went wrong.</li>
+        <li><strong>Kanban drag-and-drop</strong> — on the Deals page, you can drag cards to new columns using a mouse or touch. The highlighted ring on a column shows where the card will land.</li>
+      </ul>
+    </div>
+
+    <div class="subsection">
+      <h3>Best practices by module</h3>
+      <table>
+        <tr><th>Module</th><th>Recommendation</th></tr>
+        <tr><td>CRM</td><td>Convert leads to customers as soon as a deal closes, to keep your lead list focused on active prospects.</td></tr>
+        <tr><td>Inventory</td><td>Set minimum quantities for all products so the alerts bell warns you before you run out of stock.</td></tr>
+        <tr><td>Accounting</td><td>Update invoice statuses promptly — "overdue" invoices show in alerts so you know who to follow up with.</td></tr>
+        <tr><td>HR</td><td>Process leave requests promptly. Pending requests are easy to miss if you have a long list.</td></tr>
+        <tr><td>Projects</td><td>Assign every task to a specific person and set a due date — this makes the Reports module more meaningful.</td></tr>
+        <tr><td>Reports</td><td>Check the monthly P&amp;L table at the end of each month to spot expense trends early.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ 15. GLOSSARY -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">15</span>
+      <h2>Glossary</h2>
+    </div>
+
+    <table>
+      <tr><th>Term</th><th>Definition</th></tr>
+      <tr><td><strong>Organization</strong></td><td>Your company's private workspace within Business360. All your data, team members, and installed modules belong to one organization.</td></tr>
+      <tr><td><strong>Module</strong></td><td>An optional feature pack (CRM, Inventory, etc.) that you install or uninstall as needed.</td></tr>
+      <tr><td><strong>Tenant</strong></td><td>Technical term for an organization in a multi-tenant system — each organization is isolated from all others.</td></tr>
+      <tr><td><strong>Owner</strong></td><td>The highest role in an organization. Has full control including billing and member management.</td></tr>
+      <tr><td><strong>Manager</strong></td><td>A team lead role. Can manage modules, settings, and team members, but cannot delete the organization.</td></tr>
+      <tr><td><strong>Member</strong></td><td>Standard user role. Can use all installed modules but cannot change settings or install modules.</td></tr>
+      <tr><td><strong>KPI</strong></td><td>Key Performance Indicator — a headline metric (e.g. total revenue, employee count) shown on overview pages.</td></tr>
+      <tr><td><strong>SaaS</strong></td><td>Software as a Service — software you access through a web browser, hosted centrally, without installing anything.</td></tr>
+      <tr><td><strong>CSV</strong></td><td>Comma-Separated Values — a plain-text file format for tabular data, readable by Excel and Google Sheets.</td></tr>
+      <tr><td><strong>Kanban</strong></td><td>A visual board where items (deals) are represented as cards that move across status columns.</td></tr>
+      <tr><td><strong>SKU</strong></td><td>Stock Keeping Unit — a unique internal code that identifies a product.</td></tr>
+      <tr><td><strong>P&amp;L</strong></td><td>Profit &amp; Loss — a financial summary comparing revenue to expenses.</td></tr>
+      <tr><td><strong>JWT</strong></td><td>JSON Web Token — the encrypted login ticket your browser receives after signing in. It is stored securely and sent automatically with every request.</td></tr>
+      <tr><td><strong>Trial period</strong></td><td>A limited-time free access window during which you can use all features without paying.</td></tr>
+      <tr><td><strong>Command Palette</strong></td><td>A keyboard-driven search overlay (Ctrl+K) for jumping to any page in the dashboard instantly.</td></tr>
+      <tr><td><strong>Marketplace</strong></td><td>The section of the App Store that lists third-party modules built by independent developers.</td></tr>
+    </table>
+
+    <br /><br />
+    <div style="text-align:center; color:var(--gray-400); font-size:.85rem; border-top: 1px solid var(--gray-200); padding-top: 1.5rem;">
+      <strong>Business360 User Manual</strong> &nbsp;·&nbsp; Version 1.0 &nbsp;·&nbsp; May 2026<br />
+      For support, contact your organization owner or the platform help desk.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

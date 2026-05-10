@@ -116,6 +116,38 @@ export async function provisionTenantDb(orgId: string, orgSlug: string): Promise
     `CREATE INDEX IF NOT EXISTS "crm_deals_status_idx" ON "crm_deals"("status")`
   );
 
+  await tenantClient.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "crm_companies" (
+      "id"        TEXT PRIMARY KEY,
+      "name"      TEXT NOT NULL,
+      "industry"  TEXT,
+      "website"   TEXT,
+      "phone"     TEXT,
+      "email"     TEXT,
+      "address"   TEXT,
+      "notes"     TEXT,
+      "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await tenantClient.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "crm_contacts" (
+      "id"        TEXT PRIMARY KEY,
+      "companyId" TEXT NOT NULL REFERENCES "crm_companies"("id") ON DELETE CASCADE,
+      "name"      TEXT NOT NULL,
+      "position"  TEXT,
+      "email"     TEXT,
+      "phone"     TEXT,
+      "notes"     TEXT,
+      "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await tenantClient.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "crm_contacts_companyId_idx" ON "crm_contacts"("companyId")`
+  );
+
   // ── Inventory ──────────────────────────────────────────────────────────────
   await tenantClient.$executeRawUnsafe(`
     DO $$ BEGIN
@@ -341,6 +373,52 @@ export async function provisionTenantDb(orgId: string, orgSlug: string): Promise
       "updatedAt"   TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+
+  // ── Calendar ───────────────────────────────────────────────────────────────
+  await tenantClient.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE TYPE "CalendarEventType" AS ENUM ('meeting','deadline','reminder','task','other');
+    EXCEPTION WHEN duplicate_object THEN NULL; END $$
+  `);
+  await tenantClient.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "cal_events" (
+      "id"          TEXT PRIMARY KEY,
+      "title"       TEXT NOT NULL,
+      "description" TEXT,
+      "startAt"     TIMESTAMPTZ NOT NULL,
+      "endAt"       TIMESTAMPTZ NOT NULL,
+      "allDay"      BOOLEAN NOT NULL DEFAULT FALSE,
+      "type"        "CalendarEventType" NOT NULL DEFAULT 'meeting',
+      "entityType"  TEXT,
+      "entityId"    TEXT,
+      "color"       TEXT,
+      "createdBy"   TEXT NOT NULL,
+      "createdAt"   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      "updatedAt"   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await tenantClient.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "cal_events_startAt_endAt_idx" ON "cal_events"("startAt","endAt")`
+  );
+
+  // ── Documents ──────────────────────────────────────────────────────────────
+  await tenantClient.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "documents" (
+      "id"           TEXT PRIMARY KEY,
+      "entityType"   TEXT NOT NULL,
+      "entityId"     TEXT NOT NULL,
+      "name"         TEXT NOT NULL,
+      "originalName" TEXT NOT NULL,
+      "mimeType"     TEXT NOT NULL,
+      "size"         INTEGER NOT NULL,
+      "storagePath"  TEXT NOT NULL,
+      "uploadedBy"   TEXT NOT NULL,
+      "createdAt"    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await tenantClient.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "documents_entity_idx" ON "documents"("entityType","entityId")`
+  );
 
   // Write tenant meta record
   await tenantClient.tenantMeta.upsert({

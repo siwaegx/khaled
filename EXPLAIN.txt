@@ -28,13 +28,34 @@ Core idea:
   A company signs up → creates an organization → installs the modules they
   need (like CRM, Inventory, HR) → and starts using them.
 
-Current modules available:
-  - CRM         — track leads, deals, customers
-  - Inventory   — products, warehouses, stock levels, purchase orders
-  - Accounting  — invoices, invoice line items, expenses
-  - HR          — employees, leave requests
-  - Projects    — projects, tasks
-  - Reports     — cross-module analytics, monthly revenue vs expenses
+Current modules available (in /modules/):
+  - CRM         (starter+) — track leads, deals, customers; syncs with Contacts on lead conversion
+  - Contacts    (starter+) — dedicated address book: company directory + all contacts with positions
+  - Inventory   (growth+)  — products, warehouses, stock levels, purchase orders
+  - Accounting  (pro+)     — invoices (with line items), expenses, revenue tracking
+  - Projects    (enterprise+) — project management with tasks, assignees, priorities
+  - Reports     (enterprise+) — cross-module KPI dashboard, monthly P&L, alerts
+  - Calendar    (starter+) — team calendar with events, date-range filtering, hook integration
+
+  Adding a new module = drop a folder in /modules/ with a manifest.json +
+  backend/router.ts. The system auto-detects it at startup and it appears in
+  the App Store. Each module is fully standalone.
+
+  ARCHITECTURE NOTE — Dynamic & Fail-Safe:
+  - Module frontend pages live DIRECTLY in apps/web/src/app/dashboard/<key>/
+    as standalone Next.js pages. They do NOT import from /modules/.
+  - The /modules/ folder only needs manifest.json + backend/router.ts for
+    API auto-discovery. Deleting a module folder only removes it from the
+    App Store catalog and API — it does NOT break the web app.
+  - The sidebar (AppSidebar.tsx) renders modules dynamically based on the
+    org's installed module list. Known modules use labeled icons; any unknown
+    installed module key automatically appears with a generic icon at
+    /dashboard/<key>. Removing a key from MODULE_NAV just stops the locked
+    padlock icon from showing for that module.
+
+  Each module has its own rules.txt that documents: its exact folder structure,
+  manifest rules, API endpoints, RBAC, frontend layout, and code quality checklist.
+  Read modules/<key>/rules.txt before modifying or adding a module.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -117,16 +138,30 @@ so they can share code easily.
   /reset-password                       Reset Password     Set new password via token from reset email
   /onboarding                           Onboarding         3-step setup: name your org, pick plan
   /dashboard                            Dashboard          Home screen: module grid, stats, trial
-  /dashboard/settings                   Settings           Account info, org info, members, password
+  /dashboard/settings                   Settings           Account, org, members, teams, configuration,
+                                                           module access, API keys, webhooks
   /dashboard/modules                    Modules            Install or uninstall available modules
   /dashboard/store                      App Store          Browse all available modules
   /dashboard/store/[key]                Module Detail      See details about one specific module
   /dashboard/store/developer            Developer Portal   Submit a new module for review
-  /dashboard/admin                      Admin Panel        (Owner only) Manage all orgs and users
+  /dashboard/admin                      Redirect           Redirects isAdmin users to /sadmin, others to /dashboard
+  /sadmin/login                         Admin Login        Standalone login page — only allows isAdmin accounts through
+  /sadmin                               Platform Overview  (isAdmin only) KPIs, plan distribution, org status, quick links
+  /sadmin/subscriptions                 Subscriptions      Manage all org plans and statuses with inline dropdowns
+  /sadmin/plans                         Plans & MRR        MRR breakdown by plan tier with bar chart and ARPU
+  /sadmin/users                         Users              All platform users with org memberships and admin flags
+  /sadmin/orgs                          Organizations      Searchable list of all orgs linking to per-org detail
+  /sadmin/orgs/[id]                     Org Detail         Full org view: plan/status editor, members list, modules
+  /sadmin/submissions                   Submissions        Module submission queue — approve or reject with notes
+  /sadmin/marketplace                   Marketplace        Manage published marketplace modules (toggle, price, delete)
+  /sadmin/settings                      Platform Settings  Plan prices, trial days, maintenance mode, announcement
+  /sadmin/plans/config                  Plan Config Editor Full plan editor: name, description, price, yearly price,
+                                                           member limit, CTA text, features list (add/remove/reorder),
+                                                           popular flag. Changes live-reflect on /pricing page.
   /dashboard/crm                        CRM Overview       See CRM stats at a glance
   /dashboard/crm/leads                  CRM Leads          Add/edit/delete sales leads
   /dashboard/crm/deals                  CRM Deals          Drag-and-drop kanban board for deals
-  /dashboard/crm/customers              CRM Customers      Add/edit/delete customer records
+  /dashboard/crm/customers              CRM Customers      Customers table with contacts sync (from Contacts module), deal creation, activity logs
   /dashboard/inventory                  Inventory Overview Stats: product count, warehouse count
   /dashboard/inventory/products         Products           Add/edit/delete product catalog
   /dashboard/inventory/warehouses       Warehouses         Add/edit/delete storage locations
@@ -134,12 +169,27 @@ so they can share code easily.
   /dashboard/accounting                 Accounting Overview Stats: revenue, expenses, outstanding
   /dashboard/accounting/invoices        Invoices           Create and manage customer invoices
   /dashboard/accounting/expenses        Expenses           Track business expenses by category
-  /dashboard/hr                         HR Overview        Staff headcount, leave summary
-  /dashboard/hr/employees               Employees          Add/edit/delete employee records
-  /dashboard/hr/leave                   Leave Requests     Submit and approve leave requests
   /dashboard/projects                   Projects Overview  Create projects, view task breakdown
   /dashboard/projects/tasks             Tasks              Add/edit/delete tasks, assign to projects
   /dashboard/reports                    Reports            Cross-module KPIs + monthly P&L table
+  /dashboard/billing                    Billing            Interactive plan selector: monthly/annual toggle,
+                                                           click-to-select cards with module-unlock preview,
+                                                           collapsible feature comparison table, sticky checkout
+                                                           CTA bar. Payment method strip + paginated invoice
+                                                           history with PDF download links.
+                                                           API: GET /api/billing/invoices (invoices + PM from
+                                                           Stripe). Dashboard "Upgrade" → /dashboard/billing.
+  /dashboard/activity                   Activity Log       Paginated audit trail of actions in this org,
+                                                           filterable by entity type (lead, deal, invoice…)
+  /invite                               Accept Invite      Public page (no login required to view); verifies
+                                                           token from /api/org/invites/verify; shows org name,
+                                                           role, inviter; logged-in users see Accept button;
+                                                           guests see Sign In / Create Account links with
+                                                           ?next= so they return here after authenticating.
+  /dashboard/calendar                   Calendar           Monthly grid calendar — create/edit/delete events,
+                                                           type chips (meeting/deadline/reminder/task/other),
+                                                           datetime-local inputs, all-day checkbox,
+                                                           colored event pills per day. Calls /api/calendar/events.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -195,20 +245,56 @@ Key file:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 The "module system" lets organizations turn features on/off, like installing apps
-on a phone.
+on a phone. Every module is fully self-contained inside its own folder.
 
-How it works:
-  - A MODULE has a manifest (a description file with its name, key, version, etc.)
-  - The ENGINE (packages/engine/) reads all available module manifests
-  - The MAIN DB tracks which modules each org has installed
-  - When an org installs a module, its pages and features become available
+MODULE STRUCTURE (each module is standalone — backend + frontend together):
 
-Key file:
+  /modules/<name>/
+  ├── manifest.json          ← name, key, version, plan, routes, permissions,
+  │                             store info (category, tags, features, rating)
+  ├── package.json           ← declares @business360/module-sdk dependency
+  ├── backend/
+  │   └── router.ts          ← Express API routes for this module
+  └── frontend/
+      ├── layout.tsx          ← tab navigation bar
+      ├── page.tsx            ← overview/dashboard page
+      └── <tab>/page.tsx      ← one file per sub-page (leads, invoices, …)
+
+  The frontend/ files use @/ imports (resolved by Next.js to apps/web/src/).
+  apps/web/src/app/dashboard/<name>/ files are THIN RE-EXPORTS only — one line:
+    export { default } from "../../../../../../modules/<name>/frontend/page";
+
+HOW DYNAMIC DETECTION WORKS (no server restart needed):
+
+  ADDING a module:
+    1. Drop the folder in /modules/<newkey>/ with manifest.json + backend/router.ts
+    2. Open the App Store → GET /api/store/catalog calls bootstrapModules() which
+       re-scans /modules/ from disk → new module appears immediately in the store
+    3. Install it → first API call to /api/<newkey>/... loads the router on demand
+
+  DELETING a module:
+    1. Remove the folder from /modules/
+    2. Open the App Store → next catalog fetch re-scans → module disappears
+
+  KEY FILES:
+    apps/api/src/bootstrap/registerModules.ts
+      → Scans /modules/*/manifest.json and registers each in the engine registry
+      → Called at startup AND inside every GET /api/store/catalog request
+
+    apps/api/src/engine/route_registry.ts
+      → A SINGLE dynamic wildcard:  app.use('/api/:moduleKey', ...)
+      → Runs requireAuth → resolveTenant → requireModule → dynamic router dispatch
+      → Each module router is loaded from disk on first request, then cached in memory
+      → Previously separate static registrations for each module — now one handler for all
+
+    apps/api/src/routes/store.ts (GET /api/store/catalog)
+      → Calls bootstrapModules() on every request so added/removed modules are live
+
+Key installation routes:
   apps/api/src/routes/modules.ts
-    → Uses getAllManifests() from @business360/engine
     → GET  /api/modules         → list all available modules
     → POST /api/modules/install → install a module for the current org
-    → POST /api/modules/uninstall → remove a module
+    → DELETE /api/modules/:key  → remove a module
 
 NOTE: The function is called getAllManifests() — NOT loadAllManifests().
 
@@ -217,22 +303,64 @@ NOTE: The function is called getAllManifests() — NOT loadAllManifests().
 9. ROLES AND PERMISSIONS — WHO CAN DO WHAT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-There are roles inside an organization:
+Business360 has TWO completely separate permission systems:
 
-  ROLE     RANK   WHAT THEY CAN DO
-  ───────  ─────  ──────────────────────────────────────────────────────────
-  owner      3    Everything — including the Admin panel and deleting the org
-  admin      2    Manage members, settings, modules
-  member     1    Use installed modules (CRM, etc.)
+A) PLATFORM LEVEL — SaaS Admin
 
-How it's enforced:
+  isAdmin = true on the User record grants access to /sadmin only.
+  This is a boolean field on User, NOT a company role.
+  Platform admins manage all orgs, billing, marketplace globally.
+  They are NOT members of any tenant organization.
+  Enforced by: apps/api/src/middleware/requireSaasAdmin.ts
+               → Checks req.user.isAdmin === true → 403 if false
+  Route: /sadmin — completely isolated layout, sidebar, UI
+
+B) TENANT LEVEL — Company Roles
+
+  ROLE               RANK   WHAT THEY CAN DO
+  ─────────────────  ─────  ───────────────────────────────────────────────
+  owner                3    Full control: add/remove members, all modules,
+                            API keys, webhooks, teams.
+  manager              2    Org-wide: invite members, create teams, access
+                            all installed modules.
+  sales_leader         1    Leads sales team — module access via team only.
+  inventory_manager    1    Leads inventory team — module access via team.
+  accountant           1    Leads accounting team — module access via team.
+  engineer             1    Leads engineering team — module access via team.
+  service_agent        1    Leads service team — module access via team.
+  member               0    Standard: access only modules assigned via team.
+
+Module access model (team-based):
+  • Owners (rank 3) and managers (rank 2) always have access to every module.
+  • All other roles access a module only if they are a member of a team
+    whose moduleKey matches that module.
+  • Enforced by: apps/api/src/middleware/requireModule.ts
+  • Configured by: Settings → Teams (create a team, link it to a module,
+    then add members to that team)
+  • Settings → Module Access tab now shows a read-only view of which teams
+    are linked to each module.
+
+How tenant roles are enforced:
   apps/api/src/middleware/requireRole.ts
-    → Called like: requireRole("owner") or requireRole("admin")
-    → Checks the user's role rank against the required rank
-    → If too low, returns 403 Forbidden
+    → Called like: requireRole("owner") or requireRole("manager")
+    → Uses ROLE_RANK (owner=3, manager=2, specialized=1, member=0) to compare.
+    → If user's rank is too low → returns 403 Forbidden
 
-The Admin Panel (/dashboard/admin) is only visible to "owner" role users.
-The sidebar link only appears if user.role === "owner".
+Adding members — two methods available:
+  1. Direct add (owner only): POST /api/org/members
+       → Creates user account with email + hashed password, assigns role, adds to org.
+       → If email already exists on platform, existing account is added to the org.
+       → UI: Settings > Members > "Add Member" card (visible to owners only)
+  2. Email invitation (manager+): POST /api/org/invites
+       → Sends invite link via email; expires in 7 days.
+       → Recipient must click link and accept to join.
+       → UI: Settings > Members > "Invite via Email" card
+
+CRITICAL RULES:
+  - Platform auth (isAdmin) and tenant auth (role) NEVER mix
+  - Tenant JWTs cannot access /api/sadmin routes
+  - Platform admins do not appear in any tenant member list
+  - The /sadmin layout is 100% isolated from the /dashboard layout
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -246,9 +374,14 @@ Main database tables (shared across all orgs):
   TABLE              STORES
   ─────────────────  ─────────────────────────────────────────────────────
   User               email, hashed password, name, role
-  Organization       name, plan, database connection info
-  OrgMember          links a User to an Organization with a role
+  Organization       name, plan, database connection info, dashboardConfig JSON
+  OrgMember          links a User to an Organization with a role (8 roles now)
   InstalledModule    which modules are installed for each org
+  Notification       per-user notifications (type, title, body, href, readAt)
+  OrgWebhook         webhook endpoints per org (url, events JSON, HMAC secret)
+  ConfigList         named lookup lists per org (job_titles, industries, etc.)
+  ConfigListItem     individual items within a config list (value, color, order)
+  WebhookDelivery    delivery log per webhook fire (statusCode, error, sentAt)
 
 Per-org database tables (in each org's own database):
 
@@ -257,6 +390,9 @@ Per-org database tables (in each org's own database):
   Lead                    name, email, phone, status (new/contacted/qualified…)
   Deal                    title, value, stage (prospect/proposal/closed…)
   Customer                name, email, phone, company, notes
+  CrmCompany              name, industry, website, phone, email, address, notes
+  CrmContact              name, position, email, phone, notes; linked to CrmCompany (cascade delete)
+  CrmCompanyLog           type (call/visit/email/note/other), subject, body, loggedAt; linked to CrmCompany
   Product                 name, SKU, category, unit price, cost price, status
   Warehouse               name, location, description
   StockLevel              quantity + min quantity per product per warehouse
@@ -269,6 +405,8 @@ Per-org database tables (in each org's own database):
   LeaveRequest            employee, type, status, start/end dates, days count
   Project                 name, status, start/end dates
   Task                    title, project, status, priority, assignee, due date
+  CalendarEvent           title, description, startAt, endAt, allDay, type, entityType, entityId, color
+  Document                entityType, entityId, name, originalName, mimeType, size, storagePath
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -401,6 +539,193 @@ These are gotchas — things that look wrong but are correct on purpose:
   14      Command Palette +        COMPLETE
           Lead Conversion +
           Leave Approval
+  15      Developer Ecosystem +    COMPLETE
+          Marketplace Submissions
+  16      Admin Impersonation +    COMPLETE
+          Company Backup
+  17      Sadmin Marketplace +    COMPLETE
+          Settings + Full Tests
+  18      Live Plan Config +     COMPLETE
+          Dynamic Pricing Page
+  19      Full Backend Test      COMPLETE
+          Coverage (7 modules)
+  20      Real Email + Stripe    COMPLETE
+          Billing + Audit Log +
+          Playwright E2E
+  21      Module RBAC + Notif.  COMPLETE
+          Emails + Global Search
+          + API Keys
+  22      Member Invites        COMPLETE
+  23      Contacts Module       COMPLETE
+  24      Settings Overhaul     COMPLETE
+          (Tabbed UI + Teams +
+          Module Access)
+  25      Full Audit & Fix      COMPLETE
+  26      Platform Features     COMPLETE
+          (Notifications,
+          Calendar, Dashboard
+          Widgets, Document
+          Attachments,
+          Webhooks/Automation)
+  27      Security + Prod +    COMPLETE
+          Docs + Reports +
+          Customer Portal
+
+  Phase 26 delivered:
+    - Notification Center:
+        Notification model added to main schema (userId, orgId, type, title, body, href, readAt).
+        notificationService.ts — createNotification(), getNotifications(), markNotificationsRead(),
+        markAllNotificationsRead(), deleteNotification(). All use `prisma as any` guard.
+        GET  /api/notifications         → list (unread count + limit up to 100)
+        PATCH /api/notifications/read-all → mark all read for user
+        PATCH /api/notifications/read     → mark specific ids read (Zod validated)
+        DELETE /api/notifications/:id    → delete single notification
+        Frontend NotificationPanel.tsx in AppHeader: fetches both /api/notifications and
+        /api/reports/alerts; shows unread blue-border items with timeAgo, dismiss button,
+        mark-all-read; useTotalBadgeCount() hook.
+
+    - Calendar Module:
+        CalendarEvent added to tenant schema (enum CalendarEventType: meeting/deadline/reminder/task/other).
+        modules/calendar/backend/router.ts — standalone module router (module-sdk only, no app imports):
+          GET    /api/calendar/events          → list with optional from/to date filter
+          POST   /api/calendar/events          → create (manager+, validates startAt < endAt)
+          PATCH  /api/calendar/events/:id      → update (manager+)
+          DELETE /api/calendar/events/:id      → delete (manager+)
+        Frontend /dashboard/calendar — monthly grid calendar, colored event pills per day,
+        create/edit modal with type selector chips and datetime-local inputs.
+
+    - Custom Dashboard Widgets:
+        dashboardConfig Json? column added to Organization model in main schema.
+        GET /api/dashboard/config  → return saved widget config (or null)
+        PUT /api/dashboard/config  → save widget config (Zod validated: key, visible, order per widget)
+        Frontend dashboard/page.tsx: useDashboardConfig() hook, DEFAULT_WIDGETS array
+        (kpi-cards, live-stats, modules), "Customize" button opening modal with toggle switches.
+
+    - Document Attachments:
+        Document model added to tenant schema (entityType, entityId, name, mimeType, size, storagePath).
+        GET  /api/documents?entityType=&entityId=  → list documents for entity
+        POST /api/documents                        → upload (raw octet-stream + X-File-Name header,
+                                                     pipeline stream to UPLOAD_DIR)
+        GET  /api/documents/:id/download           → serve file via res.sendFile
+        DELETE /api/documents/:id                  → unlink file + delete DB record
+        Frontend DocumentAttachments.tsx — drag-and-drop + click upload, file type icons
+        (PDF/image/sheet), size formatting, hover-revealed download/delete. Props: entityType, entityId, canUpload.
+
+    - Webhooks/Automation:
+        OrgWebhook + WebhookDelivery models added to main schema.
+        webhookService.ts — fireWebhook(orgId, event, payload): fetches active webhooks for org,
+        fires POST requests with HMAC-SHA256 X-Business360-Signature header (when secret set),
+        AbortSignal.timeout(8000), logs WebhookDelivery records best-effort.
+        GET    /api/webhooks                → list org webhooks
+        POST   /api/webhooks               → create (owner+, validates URL + events against WEBHOOK_EVENTS)
+        PATCH  /api/webhooks/:id           → update url/events/secret/isActive (owner+)
+        DELETE /api/webhooks/:id           → delete (owner+)
+        GET    /api/webhooks/:id/deliveries → delivery history (last 50)
+        Frontend WebhooksTab in settings/page.tsx: full CRUD UI, event chip selector,
+        delivery history with CheckCircle2/AlertCircle per status code.
+
+    - Hook Injection Pattern (module independence):
+        HookService interface in packages/module-sdk/src/index.ts: { fire(event, payload) }.
+        HookEvent union type exported from module-sdk.
+        fireHook(req, event, payload) exported from module-sdk — modules call this without
+        knowing about app-level services (webhooks/notifications stay in the main app).
+        hookMiddleware.ts (attachHookService): creates a HookService implementation on each request
+        that fires webhooks via webhookService + creates notifications via notificationService.
+        Wired into route_registry.ts between resolveTenant and requireModule.
+        CRM and HR routers updated to call fireHook() on lead.created, lead.updated, task.updated.
+
+    - Tests (39 new tests across 5 files, all passing):
+        notificationsRoutes.test.ts — 8 tests (list+unreadCount, limit cap, read-all, read, delete)
+        webhooksRoutes.test.ts      — 8 tests (list, create/invalid URL/unknown event, update/404, delete/404, deliveries)
+        dashboardConfigRoutes.test.ts — 6 tests (GET stored/null/missing, PUT valid/invalid/missing-key)
+        calendarRoutes.test.ts      — 10 tests (events list, date filter, invalid date, create/missing-title/bad-dates, update/404, delete/404)
+        documentsRoutes.test.ts     — 7 tests (list, missing params, empty result, delete, 404)
+    - Total test count: 326 API tests pass (21 files). Zero regressions.
+
+  Phase 25 delivered (comprehensive test + function audit):
+    - Recreated 5 missing module backends in new /modules/ root location:
+        modules/inventory/backend/router.ts  — products, warehouses, stock, purchase orders
+        modules/accounting/backend/router.ts — invoices (+line items), expenses, stats
+        modules/hr/backend/router.ts         — employees, leave requests, stats
+        modules/projects/backend/router.ts   — projects, tasks, stats
+        modules/reports/backend/router.ts    — summary, revenue, alerts (pure router, no auth middleware)
+    - Fixed StoreCategory not exported from @business360/engine (engine/src/index.ts).
+    - Fixed MODULE_REGISTRY usage: modules/page.tsx and store/[key]/page.tsx now fetch from
+      /api/store/catalog (dynamic API) instead of a deleted static registry.
+    - Fixed shared.test.ts: removed stale MODULE_REGISTRY tests; updated PLANS assertions
+      to match current 4-tier module distribution (starter/growth/pro/enterprise).
+    - Fixed PLANS in packages/shared/src/index.ts: all 7 modules distributed across tiers.
+    - Fixed StoreModuleCard.tsx: guarded optional fields (rating, reviewCount, tags, category).
+    - Fixed Select.onValueChange null: guarded with `v && setState(...)` in companies + customers pages.
+    - Fixed manifest.json roles: "admin" → "manager" in crm + contacts manifests.
+    - Fixed apps/api/src/test/helpers.ts: added `import { vi } from "vitest"` (was missing,
+      caused `vi is not defined` when makeTenantDb() was called from any test).
+    - Fixed test import paths: all 5 module test files updated from
+      "../modules/<key>/backend/router" → "../../../../modules/<key>/backend/router".
+    - Fixed Zod v4 compatibility in HR, Inventory, Accounting, Projects routers:
+      Zod v4 (root node_modules) uses `err.issues` not `err.errors`; accessing
+      `err.errors[0]` threw TypeError inside the catch block causing requests to hang
+      (timeout in tests). Fixed by using `err.message` which exists in both v3 and v4.
+    - Fixed errorHandler: `instanceof AppError` now also checks `err.name === "AppError"`
+      so module-sdk's AppError (different class instance) is correctly handled.
+    - Fixed apps/web/src/lib/api.ts: parseResponse now uses res.json() (not res.text())
+      matching the test mock; fallback error message changed from `HTTP ${status}` to
+      "Request failed" matching the test expectations.
+    - Final test counts: 287 API tests pass (16 files), 24 web tests pass (3 files).
+      Zero TypeScript errors in both apps.
+
+  Phase 23 delivered:
+    - Contacts module backend (apps/api/src/modules/contacts/backend/router.ts):
+      GET  /api/contacts/stats                          → totalCompanies + totalContacts
+      GET  /api/contacts/companies                      → paginated + search (name/industry/email)
+      GET  /api/contacts/companies/:id                 → single company with contacts + logs
+      POST /api/contacts/companies                      → create company (manager+)
+      PATCH /api/contacts/companies/:id                → edit company (manager+)
+      DELETE /api/contacts/companies/:id               → delete company + cascade contacts/logs (manager+)
+      GET  /api/contacts/companies/:id/logs            → activity logs for company (newest first)
+      POST /api/contacts/companies/:id/logs            → add log entry (type/subject/body) (manager+)
+      DELETE /api/contacts/companies/:id/logs/:logId   → delete log entry (manager+)
+      POST /api/contacts/companies/:cId/contacts       → add contact to company (manager+)
+      PATCH /api/contacts/companies/:cId/contacts/:id  → edit nested contact (manager+)
+      DELETE /api/contacts/companies/:cId/contacts/:id → remove contact (manager+)
+      GET  /api/contacts/contacts                      → flat paginated contact list with company join
+      POST /api/contacts/contacts                      → create contact (manager+, requires companyId)
+      PATCH /api/contacts/contacts/:id                 → edit contact (manager+)
+      DELETE /api/contacts/contacts/:id                → delete contact (manager+)
+    - Contacts module reuses CrmCompany / CrmContact tenant tables (no new migration needed).
+      TypeScript fix: TenantWithCrm type + tdb() cast helper (Prisma client not regenerated —
+      DLL in use on Windows); same pattern applied to CRM router.
+    - Manifest permission fix: all 4 permission roles updated from "admin" → "manager" to match
+      the renamed OrgRole enum (owner | manager | member).
+    - Frontend pages (all already implemented):
+      /dashboard/contacts            — Overview: 2 KPI cards (companies, contacts) + quick links
+      /dashboard/contacts/companies  — Company list (table + card views) with inline contact management
+                                       in a detail sheet (add/edit/delete contacts per company)
+      /dashboard/contacts/contacts   — Flat all-contacts table (list + card views) with company column;
+                                       create/edit via sheet with company selector dropdown
+    - All 287 API tests pass; both apps TypeScript-clean.
+
+  Phase 22 delivered:
+    - OrgInvite model added to main schema (email, role, token, invitedBy, expiresAt, acceptedAt);
+      migration at 20260510000000_org_invites; token is 64 hex chars (crypto.randomBytes(32)),
+      expires in 7 days.
+    - Invite management API at /api/org/invites:
+      POST /         — send invite (manager+), generates token, sends Resend email with accept link
+      GET  /         — list pending (not expired, not accepted) invites for the org (manager+)
+      DELETE /:id    — cancel a pending invite (manager+)
+      GET  /verify   — public (no auth), verify token → returns {email, role, orgName, inviterName}
+      POST /accept   — requireAuth (any role), creates OrgMember + marks invite accepted
+    - POST /api/auth/switch-org — re-issues JWT for a different org the user is a member of;
+      called after accepting an invite so the dashboard immediately shows the new org.
+    - sendOrgInviteEmail updated: now includes role + token-based acceptUrl instead of a generic loginUrl.
+    - Settings page: "Invite Member" card (manager+ visible) with email input, role selector
+      (member/manager), Send Invite button, pending invites list with Cancel button.
+    - /invite page: public Suspense-wrapped page; verifies token via GET /verify; shows org name,
+      role, inviter; if logged in → Accept Invitation button (POST /accept → switch-org → refresh → /dashboard);
+      if not logged in → Sign In / Create Account buttons with ?next= redirect back to invite URL.
+    - LoginForm: ?next= param support — after login, redirects to next URL if present (enables the
+      "sign in then accept invite" flow without losing the invite token).
+    - All 297 API tests still pass; both apps TypeScript-clean.
 
   Phase 7 delivered:
     - Full backend routers: Inventory, Accounting, HR, Projects, Reports
@@ -460,14 +785,16 @@ These are gotchas — things that look wrong but are correct on purpose:
   Phase 14 delivered:
     - Full design system applied via ui-ux-pro-max skill (cloned to C:\Users\KR007\ui-ux-pro-max-skill)
     - Design tokens: teal primary (oklch(0.56 0.115 174) = #0D9488), orange CTA (oklch(0.62 0.195 38) = #EA580C)
-    - Fonts replaced: Geist Sans → Poppins (headings, via CSS base layer) + Open Sans (body --font-sans)
+    - Fonts replaced: Geist Sans → Plus Jakarta Sans (headings) + Inter (body --font-sans)
     - globals.css rewritten: oklch color space, bg-cta/.shadow-cta/.shadow-cta-sm utilities,
       bg-gradient-brand (teal), bg-grid (subtle dot-grid), glass, card-hover, shadow-glow utilities
     - cursor:pointer enforced on all a/button/[role=button] via base layer
-    - layout.tsx updated: imports Poppins + Open_Sans from next/font/google, keeps Geist_Mono
-    - Landing page (marketing/page.tsx) rewritten: hero with bg-grid + glow, Sparkles badge,
+    - layout.tsx updated: imports Inter + Plus_Jakarta_Sans from next/font/google, keeps Geist_Mono
+    - Landing page (marketing/page.tsx) rewritten: hero with bg-grid + glow, animated pulse badge,
       feature cards with colored top-strip, numbered gradient step circles, module cards,
       gradient CTA section — all CTA buttons use bg-cta + shadow-cta
+    - Typography polish (style v3): H1 at text-[5.5rem] tracking-[-0.03em], section H2s at text-5xl,
+      card h3 font-bold, stat numbers use font-heading (Plus Jakarta Sans), stat labels uppercase tracking-widest
     - MarketingNav.tsx: CTA changed to bg-cta + shadow-cta-sm
     - Pricing page: color-tinted plan cards (blue/violet/amber), orange bg-cta for Growth CTA
     - AppSidebar: active items use bg-primary/10 + left accent bar; plan badge + org avatar
@@ -492,6 +819,122 @@ These are gotchas — things that look wrong but are correct on purpose:
     - Search + CSV export + pagination on Purchase Orders page
     - Bar chart on Reports page (pure CSS, no extra dependency): green/red paired bars
       for revenue vs expenses per month, with legend and hover tooltips
+
+  Phase 16 delivered:
+    - Admin impersonation: POST /api/sadmin/organizations/:id/impersonate saves the admin's
+      access_token to an admin_session cookie, issues a new impersonation JWT (isAdmin=false,
+      impersonated=true) as access_token, then navigates to /dashboard where the org owner's
+      tenant data is visible. Dashboard shows a fixed amber "Admin Mode" banner with org name
+      and "Exit to Admin Panel" button.
+    - Exit impersonation: POST /api/auth/exit-impersonation reads admin_session cookie, verifies
+      it's a valid isAdmin JWT, restores it as access_token, clears admin_session, redirects to /sadmin.
+    - auth.tsx: impersonated state added — reads from /api/auth/me response (JWT payload flag).
+    - Individual org backup: GET /api/sadmin/organizations/:id/backup returns full JSON export
+      of org metadata + members + modules + tenant DB tables (if dbUrl set). Frontend: "Backup"
+      button on org detail page uses fetch→blob→createObjectURL to download the file.
+    - Bulk backup: GET /api/sadmin/backup exports all orgs' platform data (no tenant DB).
+      "Bulk Backup" button on orgs list page. Both backups omit the dbUrl field for security.
+    - JwtPayload type extended with impersonated?: boolean field.
+
+  Phase 18 delivered:
+    - Full plan configuration editor at /sadmin/plans/config: tab per plan, per-feature
+      text/included toggle/reorder/delete, live preview card, isPopular "one at a time" logic,
+      unsaved-changes banner, Reset button, Save & Publish → PATCH /api/sadmin/plans/config
+    - GET/PATCH /api/sadmin/plans/config endpoints added to sadmin.ts:
+      GET returns platformSettings.planConfigs; PATCH validates with Zod, replaces planConfigs,
+      and syncs planPrices so GET /sadmin/plans MRR stays accurate
+    - GET /api/platform/plans public endpoint (no auth) in platform.ts:
+      returns platformSettings.planConfigs; used by the pricing page
+    - /pricing page converted from static → async Server Component:
+      fetches /api/platform/plans with cache: "no-store" on every render;
+      falls back to hardcoded DEFAULT_PLANS if API is unavailable;
+      per-key style map (colors) stays in frontend — plan keys never change
+    - "Configure" button added to /sadmin/plans page linking to /sadmin/plans/config
+    - 17 new tests added to sadminRoutes.test.ts (total: 76 across 20 describe blocks)
+      covering GET /plans/config structure/defaults/live-mutation and
+      PATCH /plans/config updates/price-sync/MRR-propagation/all validation errors
+
+  Phase 20 delivered:
+    - Real email via Resend: emailService.ts with sendWelcomeEmail, sendPasswordResetEmail,
+      sendOrgInviteEmail; falls back to console.log when RESEND_API_KEY is unset so dev works
+      without credentials; wired into /register (welcome) and /forgot-password (reset link)
+    - Stripe billing: stripeService.ts with getOrCreateStripeCustomer, createCheckoutSession,
+      createPortalSession, handleWebhook (updates org.plan on checkout.session.completed, reverts
+      on subscription.deleted); billingRouter at GET/POST /api/billing/status|checkout|portal|webhook
+      (webhook uses express.raw() for signature verification, registered before express.json())
+    - stripeCustomerId added to Organization schema + migration 20260509300000_stripe_billing
+    - Billing page at /dashboard/billing: current plan card, trial countdown, plan grid with Upgrade
+      buttons → Stripe Checkout, Manage Billing → Stripe Portal; gracefully shows note when Stripe
+      is not configured; handles ?success=1 / ?cancelled=1 redirect params
+    - Activity log: logActivity() helper in middleware/logActivity.ts writes to tenant activityLog
+      table (already in tenant schema); wired into CRM lead create/update/delete as demonstration;
+      GET /api/activity endpoint with pagination + entity/userId filters
+    - Activity page at /dashboard/activity: filterable table by entity type, paginated, timeAgo
+      display, entity color badges; shows empty state when no activity yet
+    - Billing and Activity added to AppSidebar bottom nav
+    - Playwright E2E setup: playwright.config.ts + e2e/ directory with auth.spec.ts (register,
+      wrong-password error, login→dashboard, protected redirect, forgot-password),
+      onboarding.spec.ts (render, full org creation flow), dashboard.spec.ts (sidebar nav,
+      billing/activity/settings page navigation)
+    - Pre-existing TS error fixed: organizations.ts missing isAdmin in JwtPayload literal;
+      sadmin orgs page Shield icon title attribute wrapped in span
+    - All 297 existing API tests still pass
+
+  Phase 21 delivered:
+    - Module RBAC: single requireRole("manager") gate via router.use() at the top of CRM,
+      Inventory, Accounting, and Projects routers — members are read-only (GET only);
+      mutations (POST/PATCH/DELETE) require manager or above.
+      HR exception: POST /hr/leave is allowed for members (own submissions); all other
+      HR mutations still require manager.
+    - Leave decision notification emails: sendLeaveDecisionEmail() added to emailService.ts;
+      HR PATCH /leave/:id queries employee.email via include and fires the email when status
+      becomes "approved" or "rejected"; errors are swallowed (non-blocking).
+    - Global search: GET /api/search?q=<query> — Promise.allSettled across 8 tenant tables
+      (lead, customer, deal, product, employee, invoice, project, task); returns up to 5
+      results per entity with id/label/sublabel/entity/href; requires query length >= 2.
+    - Command palette enhanced: debounced API search (250ms) appended to nav item results as
+      a "Records" group; spinner during search; entity icons; sublabel shown for record results.
+    - API keys: ApiKey model added to main DB schema (migration 20260509300001_api_keys);
+      keys use b360_ prefix + 64 hex chars, stored as SHA-256 hash (fast — random strings
+      don't need bcrypt), prefix field stores first 12 chars for safe display.
+      GET/POST/DELETE /api/org/api-keys (owner-only via requireRole("owner")).
+      requireApiKey.ts middleware for programmatic API access (Authorization: Bearer b360_...).
+    - Settings page updated: API Keys section (owner-only) shows key list, create form with
+      one-time secret reveal in amber box with copy button, revoke button per key.
+    - TypeScript: all Prisma "DLL in use" cast errors resolved via as-unknown-as patterns;
+      crmCompany/crmContact now used natively by Contacts module after Prisma regen.
+    - All 297 API tests still pass after RBAC changes (module tests use manager-level auth).
+
+  Phase 19 delivered:
+    - 7 new test files written for all previously-untested module backend routes
+    - inventoryRoutes.test.ts: ~40 tests — stats, products, warehouses, stock adjust, orders + items
+    - accountingRoutes.test.ts: ~30 tests — stats, invoices + items, expenses (incl. outstandingTotal)
+    - hrRoutes.test.ts: ~25 tests — stats, employees, leave requests (full validation + approval flow)
+    - projectsRoutes.test.ts: ~20 tests — stats, projects, tasks (status/priority filters + validation)
+    - reportsRoutes.test.ts: ~15 tests — /summary (all 5 domains), /alerts (low-stock filter), /revenue
+    - developerRoutes.test.ts: ~20 tests — profile CRUD + submissions (key/version/URL/email/category)
+    - storeRoutes.test.ts: ~11 tests — catalog (plan-tier availability), catalog/:key, submit, marketplace
+    - All 7 files use local makeDb() factory + cast to MockTenantDb; 141 total tests, all passing
+    - Developer + store tests additionally mock requireAuth and prisma via vi.mock() hoisting
+
+  Phase 15 delivered:
+    - Developer ecosystem: schema added DeveloperProfile, ModuleSubmission, MarketplaceModule,
+      SubmissionStatus enum; migration SQL at packages/db/prisma/migrations/20260509000001_developer_marketplace/
+    - New backend router: GET/POST /api/developer/profile (register, view), POST/GET /api/developer/submissions
+    - Admin review endpoints: GET /api/admin/submissions (all submissions with developer info),
+      PATCH /api/admin/submissions/:id (approve → creates MarketplaceModule, reject with note)
+    - Marketplace store endpoint: GET /api/store/marketplace (approved modules with install state)
+    - Developer portal page fully rewritten: two states — no profile (join form with displayName/website/bio)
+      vs has profile (submit form + submissions table with status/reviewNote, repo link)
+    - Admin panel: new "Module Submissions" card above orgs table; filter tabs (all/pending/approved/rejected);
+      Approve button + Reject button with inline note textarea before confirming
+    - App Store page: fetches marketplace modules on mount; shows "Community Marketplace" section
+      below main grid with third-party module cards (name, author, rating, price, repo link)
+    - Schema also updated: OrgRole renamed admin→manager, isAdmin field added to User,
+      requireSaasAdmin middleware (checks user.isAdmin) guards all /api/sadmin/* routes
+    - Platform admin section extracted to fully isolated /sadmin multi-page system:
+      subscriptions (inline plan/status editing), plans & MRR, users, orgs list,
+      org detail (members + modules + cancel), and submissions review queue
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -551,10 +994,17 @@ BACKEND API (apps/api/)
              If the token is missing or invalid → returns 401 Unauthorized.
 
   apps\api\src\middleware\requireRole.ts
-    What:    A role-check gate used AFTER requireAuth.
-             Called as: requireRole("owner") or requireRole("admin")
-             Uses ROLE_RANK (owner=3, admin=2, member=1) to compare.
+    What:    A TENANT role-check gate used AFTER requireAuth.
+             Called as: requireRole("owner") or requireRole("manager")
+             Uses ROLE_RANK (owner=2, manager=1, member=0) to compare.
              If user's rank is too low → returns 403 Forbidden.
+             Does NOT handle platform (SaaS) admin — see requireSaasAdmin.ts.
+
+  apps\api\src\middleware\requireSaasAdmin.ts
+    What:    Platform admin guard — completely separate from requireRole.
+             Checks req.user.isAdmin === true.
+             If false → returns 403 immediately.
+             Used only on /api/sadmin/* routes.
 
   apps\api\src\middleware\tenantResolver.ts
     What:    Connects the request to the correct org's private database.
@@ -571,6 +1021,18 @@ BACKEND API (apps/api/)
     What:    A global error catcher placed at the very end of the middleware chain.
              When any route throws an error, this catches it and returns a clean
              JSON error response instead of crashing the server.
+
+  apps\api\src\middleware\requireApiKey.ts
+    What:    Programmatic API access gate (alternative to cookie JWT auth).
+             Reads Authorization: Bearer b360_... header. SHA-256 hashes the key,
+             looks it up in the api_keys table (isActive=true), updates lastUsedAt
+             non-blocking, then sets req.user with owner-level access for that org.
+
+  apps\api\src\middleware\logActivity.ts
+    What:    Fire-and-forget audit log helper.
+             logActivity(req, action, entity, entityId?, meta?) writes a record
+             to the tenant's activityLog table. Called inside route handlers after
+             mutations (e.g., lead.create). Errors are swallowed — never blocks the response.
 
   ── ROUTES ──────────────────────────────────────────────────────────────────
 
@@ -596,19 +1058,133 @@ BACKEND API (apps/api/)
              POST /api/modules/install → Install a module for the current org
              POST /api/modules/uninstall → Remove a module from the current org
 
+  apps\api\src\routes\platform.ts
+    What:    Public API routes — no auth required. Currently one endpoint:
+             GET /api/platform/plans → Returns full planConfigs array from platformSettings.
+             Used by the /pricing page (Next.js Server Component) to fetch live plan data.
+
   apps\api\src\routes\admin.ts
-    What:    Owner-only admin endpoints (protected by requireRole("owner")):
-             GET  /api/admin/stats          → Platform-wide stats (MRR, user count)
-             GET  /api/admin/organizations  → List all organizations
-             PUT  /api/admin/organizations/:id → Update an org (plan, status)
-             DELETE /api/admin/organizations/:id → Delete an org
-             GET  /api/admin/users          → List all users
-             GET  /api/admin/plans          → List available subscription plans
+    What:    DEPRECATED stub — returns 410 Gone on all paths.
+             Platform admin routes have moved to /api/sadmin (sadmin.ts).
+             Kept in place to catch stale API calls with a clear error message.
+
+  apps\api\src\routes\sadmin.ts
+    What:    Platform admin endpoints (protected by requireAuth + requireSaasAdmin):
+             GET  /api/sadmin/stats                         → Platform stats (org count, MRR)
+             GET  /api/sadmin/alerts                        → Needs-attention items (trials, cancellations)
+             GET  /api/sadmin/organizations                 → List all organizations
+             GET  /api/sadmin/organizations/:id             → Full org detail (members + modules)
+             PATCH /api/sadmin/organizations/:id            → Change org plan, status, or trial end date
+             DELETE /api/sadmin/organizations/:id           → Cancel an org (sets status=cancelled)
+             POST /api/sadmin/organizations/:id/impersonate → Save admin cookie to admin_session,
+                                                              issue impersonation JWT as access_token,
+                                                              redirect allows admin to act as org owner
+             GET  /api/sadmin/organizations/:id/backup      → Download full org backup as JSON (platform
+                                                              data + tenant DB tables if dbUrl is set)
+             GET  /api/sadmin/backup                        → Bulk platform backup — all orgs metadata
+             GET  /api/sadmin/users                         → List all platform users
+             PATCH /api/sadmin/users/:id                    → Toggle isAdmin on a user
+             GET  /api/sadmin/plans                         → Plan distribution + MRR breakdown + deltas
+                                                              (uses platformSettings.planPrices — live after settings change)
+             GET  /api/sadmin/submissions                   → All marketplace module submissions (filterable)
+             PATCH /api/sadmin/submissions/:id              → Approve or reject a submission
+             GET  /api/sadmin/marketplace                   → List all published MarketplaceModule records
+             PATCH /api/sadmin/marketplace/:id              → Update isActive, price, or billing for a marketplace module
+             DELETE /api/sadmin/marketplace/:id             → Remove a module from the marketplace permanently
+             GET  /api/sadmin/settings                      → Return current platformSettings object
+             PATCH /api/sadmin/settings                     → Update planPrices, trialDays, maintenanceMode, announcement
+                                                              (in-memory — resets on server restart)
+             GET  /api/sadmin/plans/config                  → Return full plan configuration (name, description, price,
+                                                              yearlyPrice, memberLimit, isPopular, ctaText, features[])
+             PATCH /api/sadmin/plans/config                 → Replace planConfigs array; also syncs planPrices so MRR
+                                                              calculations stay accurate. Zod-validated.
+
+  apps\api\src\routes\auth.ts (exit-impersonation added)
+             POST /api/auth/exit-impersonation → Reads admin_session cookie, verifies it's a valid
+                                                  admin JWT, restores it as access_token, clears
+                                                  admin_session. Used by the impersonation banner.
 
   apps\api\src\routes\store.ts
     What:    Handles the App Store browsing (no install — just viewing):
-             GET /api/store         → List all modules with enriched store info
-             GET /api/store/:key    → Get details for one specific module
+             GET /api/store/catalog        → List all modules with enriched store info
+             GET /api/store/catalog/:key   → Get details for one specific module
+             GET /api/store/marketplace    → List approved marketplace (third-party) modules
+
+  apps\api\src\routes\developer.ts
+    What:    Developer program API (requires auth):
+             POST /api/developer/profile   → Register as a developer (creates DeveloperProfile)
+             GET  /api/developer/profile   → Get my profile + all my submissions
+             PATCH /api/developer/profile  → Update display name / website / bio
+             POST /api/developer/submissions → Submit a module for review
+             GET  /api/developer/submissions → List my submissions
+
+  apps\api\src\routes\billing.ts
+    What:    Stripe billing integration endpoints (requires auth):
+             GET  /api/billing/status   → Current plan, status, trial end, whether Stripe configured
+             POST /api/billing/checkout → Create Stripe Checkout session (redirects to Stripe)
+             POST /api/billing/portal   → Create Stripe Customer Portal session for subscription mgmt
+             POST /api/billing/webhook  → Stripe webhook receiver (updates plan on checkout.session.completed,
+                                          reverts plan on subscription.deleted). Uses express.raw() body
+                                          for STRIPE_WEBHOOK_SECRET signature verification.
+
+  apps\api\src\routes\activity.ts
+    What:    Audit log endpoints (requires auth + tenant DB):
+             GET /api/activity → Paginated activity log for the org.
+                                 Supports ?entity=<type> filter + ?page= + ?limit= pagination.
+                                 Returns log entries with userId, action, entity, entityId, meta, timestamp.
+
+  apps\api\src\routes\search.ts
+    What:    Cross-module full-text search endpoint (requires auth + tenant DB):
+             GET /api/search?q=<query> → Searches 8 tenant tables in parallel (Promise.allSettled):
+             lead, customer, deal, product, employee, invoice, project, task.
+             Returns up to 5 results per entity with id/label/sublabel/entity/href.
+             Requires q.length >= 2. Used by the Command Palette live search.
+
+  apps\api\src\routes\apiKeys.ts
+    What:    API key management endpoints (requires auth + owner role):
+             GET    /api/org/api-keys      → List active keys (prefix + metadata, never full key)
+             POST   /api/org/api-keys      → Create a key (returns full secret ONCE, then hashed)
+             DELETE /api/org/api-keys/:id  → Revoke a key (sets isActive=false)
+             Key format: b360_ + 64 hex chars. Stored as SHA-256 hash. Prefix = first 12 chars.
+
+  apps\api\src\routes\invites.ts
+    What:    Member invite endpoints. Mix of public, auth-only, and manager-only routes
+             (uses registration-order trick — public/accept before router.use(requireAuth)):
+             GET  /api/org/invites/verify?token= → public; verify token, return invite details
+             POST /api/org/invites/accept        → requireAuth; add user to org + mark accepted;
+                                                  called before POST /auth/switch-org
+             GET  /api/org/invites               → manager+; list pending (non-expired, non-accepted)
+             POST /api/org/invites               → manager+; create + email invite (7-day token)
+             DELETE /api/org/invites/:id         → manager+; cancel invite
+             Also updates sendOrgInviteEmail to include role + token-based acceptUrl.
+
+  apps\api\src\routes\notifications.ts
+    What:    Notification inbox endpoints (requires auth):
+             GET    /api/notifications         → list notifications (unreadCount, limit up to 100)
+             PATCH  /api/notifications/read-all → mark all read for logged-in user
+             PATCH  /api/notifications/read     → mark specific notification ids read (Zod: ids[])
+             DELETE /api/notifications/:id      → delete a single notification
+
+  apps\api\src\routes\webhooks.ts
+    What:    Webhook management endpoints (requires auth):
+             GET    /api/webhooks               → list org webhooks (url, events, isActive, deliveryCount)
+             POST   /api/webhooks               → create webhook (owner+; validates URL + events list)
+             PATCH  /api/webhooks/:id           → update url/events/secret/isActive (owner+; 404 if not found)
+             DELETE /api/webhooks/:id           → delete webhook (owner+; 404 if not found)
+             GET    /api/webhooks/:id/deliveries → last 50 delivery logs for a webhook
+
+  apps\api\src\routes\documents.ts
+    What:    Document attachment endpoints (requires auth + tenant DB):
+             GET    /api/documents?entityType=&entityId= → list documents for entity (400 if missing params)
+             POST   /api/documents                        → upload file (raw application/octet-stream body,
+                                                            X-File-Name header, pipeline stream to UPLOAD_DIR)
+             GET    /api/documents/:id/download           → serve file via res.sendFile
+             DELETE /api/documents/:id                    → unlink file from disk + delete DB record
+
+  apps\api\src\routes\dashboardConfig.ts
+    What:    Dashboard widget config endpoints (requires auth):
+             GET /api/dashboard/config → return org's dashboardConfig JSON (or null if not set)
+             PUT /api/dashboard/config → save widget config (Zod validated: widgets[]{key,visible,order})
 
   ── SERVICES ────────────────────────────────────────────────────────────────
 
@@ -626,6 +1202,44 @@ BACKEND API (apps/api/)
              - Runs Prisma migrations on the new database
              - Returns the new org's connection details
 
+  apps\api\src\services\emailService.ts
+    What:    Transactional email via Resend SDK.
+             Falls back to console.log when RESEND_API_KEY is unset (dev-safe).
+             Functions: sendWelcomeEmail, sendPasswordResetEmail, sendOrgInviteEmail,
+             sendLeaveDecisionEmail (fires when a leave request is approved/rejected).
+
+  apps\api\src\services\stripeService.ts
+    What:    Stripe billing integration (Stripe v22, require() workaround for type issues).
+             Functions: getOrCreateStripeCustomer, createCheckoutSession,
+             createPortalSession, handleWebhook (parses events, updates org plan).
+             Requires STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET env vars.
+
+  apps\api\src\services\notificationService.ts
+    What:    Notification CRUD (uses `prisma as any` with migration-pending guard).
+             createNotification(input) — inserts notification for a user.
+             getNotifications(userId, limit) — fetches unread-first, marks with unreadCount.
+             markNotificationsRead(userId, ids) — bulk-mark specific IDs read.
+             markAllNotificationsRead(userId) — mark all notifications read.
+             deleteNotification(userId, id) — removes a notification.
+             All functions swallow errors silently (non-blocking).
+
+  apps\api\src\services\webhookService.ts
+    What:    Webhook firing logic. fireWebhook(orgId, event, payload) fetches all active
+             OrgWebhook records for the org, fires POST requests with:
+               - Content-Type: application/json
+               - X-Business360-Event header
+               - X-Business360-Signature: hmac-sha256 if webhook.secret is set
+               - AbortSignal.timeout(8000) to cap request duration
+             Logs a WebhookDelivery record per attempt (statusCode or error field).
+             Failure is best-effort — never throws.
+
+  apps\api\src\middleware\hookMiddleware.ts
+    What:    attachHookService middleware — creates a HookService implementation on req.hookService
+             for each request. The implementation calls webhookService.fireWebhook() and
+             notificationService.createNotification() for known hook events (lead.created,
+             calendar.created, task.updated, etc.). Wired into route_registry.ts between
+             resolveTenant and requireModule so all module routes get hook support.
+
   ── ENGINE ──────────────────────────────────────────────────────────────────
 
   apps\api\src\engine\module_loader.ts
@@ -641,81 +1255,48 @@ BACKEND API (apps/api/)
   apps\api\src\engine\route_registry.ts
     What:    Registers each installed module's API routes with the Express app.
              When a module is installed, its backend router gets added to the
-             API server dynamically.
+             API server dynamically. Uses explicit .ts/.js extension when
+             calling require() so tsx can transpile the module router correctly.
 
   apps\api\src\engine\types.ts
     What:    TypeScript type definitions for the module engine:
              ModuleManifest shape, RouteRegistration shape, etc.
 
   apps\api\src\bootstrap\registerModules.ts
-    What:    Called once at server startup to load all module manifests and
-             register any routes from already-installed modules.
+    What:    Called once at server startup. Auto-scans /modules/*/manifest.json,
+             registers each manifest with the engine, and logs each loaded module.
+             No static imports — drop a folder in /modules/ and it just works.
 
-  ── MODULE DEFINITIONS (inside apps/api) ────────────────────────────────────
+  ── MODULE DEFINITIONS (root /modules/) ─────────────────────────────────────
 
-  apps\api\src\modules\crm\manifest.ts / manifest.json
-    What:    Describes the CRM module: key="crm", name="CRM", version,
-             description, and what features it includes.
+  modules\crm\manifest.json
+    What:    Single source of truth for the CRM module — engine metadata AND store
+             display data in one file: key, name, version, icon, requiredPlan,
+             category, description, longDescription, tags, features, rating, routes,
+             permissions. The API reads this at startup and serves it to the store.
 
-  apps\api\src\modules\crm\backend\router.ts
-    What:    All CRM API endpoints:
-             GET/POST   /api/crm/leads        → List or create leads (paginated)
-             PUT/DELETE /api/crm/leads/:id    → Update or delete a lead
-             GET/POST   /api/crm/deals        → List or create deals
-             PUT/DELETE /api/crm/deals/:id    → Update or delete a deal
-             GET/POST   /api/crm/customers    → List or create customers
-             PUT/DELETE /api/crm/customers/:id → Update or delete a customer
+  modules\crm\backend\router.ts
+    What:    All CRM API endpoints (imports helpers from @business360/module-sdk):
+             GET/POST        /api/crm/leads           → List or create leads (paginated)
+             PATCH/DELETE    /api/crm/leads/:id        → Update or delete a lead
+             POST            /api/crm/leads/:id/convert → Convert lead → customer + contact
+             GET/POST        /api/crm/deals           → List or create deals
+             PATCH/DELETE    /api/crm/deals/:id        → Update or delete a deal
+             GET/POST        /api/crm/customers       → List or create customers
+             PATCH/DELETE    /api/crm/customers/:id   → Update or delete a customer
+             GET             /api/crm/stats           → totalLeads, customers, deals, companies
 
-  apps\api\src\modules\inventory\manifest.ts / manifest.json
-    What:    Describes the Inventory module: key="inventory", name, version, etc.
+  modules\contacts\manifest.json
+    What:    Single source of truth for the Contacts module. Same enriched format as CRM.
 
-  apps\api\src\modules\inventory\backend\router.ts
-    What:    All Inventory API endpoints:
-             GET  /api/inventory/stats          → KPI counts for overview page
-             GET/POST/PATCH/DELETE /api/inventory/products   → Product catalog CRUD
-             GET/POST/PATCH/DELETE /api/inventory/warehouses → Warehouse CRUD
-             POST /api/inventory/stock/adjust   → Upsert stock level for a product/warehouse
-             GET/POST/PATCH/DELETE /api/inventory/orders     → Purchase order CRUD
-
-  apps\api\src\modules\accounting\manifest.ts / manifest.json
-    What:    Describes the Accounting module.
-
-  apps\api\src\modules\accounting\backend\router.ts
-    What:    All Accounting API endpoints:
-             GET  /api/accounting/stats                      → Revenue/expense KPI summary
-             GET/POST/PATCH/DELETE /api/accounting/invoices  → Invoice CRUD
-             GET  /api/accounting/invoices/:id               → Single invoice with line items
-             POST /api/accounting/invoices/:id/items         → Add line item to invoice
-             DELETE /api/accounting/invoices/:id/items/:itemId → Remove line item
-             GET/POST/PATCH/DELETE /api/accounting/expenses  → Expense CRUD
-
-  apps\api\src\modules\hr\manifest.ts / manifest.json
-    What:    Describes the HR (Human Resources) module.
-
-  apps\api\src\modules\hr\backend\router.ts
-    What:    All HR API endpoints:
-             GET  /api/hr/stats                        → Employee and leave KPI summary
-             GET/POST/PATCH/DELETE /api/hr/employees   → Employee CRUD
-             GET/POST/PATCH/DELETE /api/hr/leave       → Leave request CRUD
-
-  apps\api\src\modules\projects\manifest.ts / manifest.json
-    What:    Describes the Projects module.
-
-  apps\api\src\modules\projects\backend\router.ts
-    What:    All Projects API endpoints:
-             GET  /api/projects/stats                          → Project/task KPI summary
-             GET/POST/PATCH/DELETE /api/projects/projects      → Project CRUD
-             GET/POST/PATCH/DELETE /api/projects/tasks         → Task CRUD
-
-  apps\api\src\modules\reports\manifest.ts / manifest.json
-    What:    Describes the Reports module.
-
-  apps\api\src\modules\reports\backend\router.ts
-    What:    Cross-module analytics endpoints:
-             GET /api/reports/summary  → Aggregated KPIs from all modules (CRM, Inventory,
-                                         Accounting, HR, Projects) in one response
-             GET /api/reports/revenue  → Monthly revenue vs expenses data (paid invoices
-                                         grouped by month vs expenses grouped by month)
+  modules\contacts\backend\router.ts
+    What:    All Contacts API endpoints (imports helpers from @business360/module-sdk):
+             GET             /api/contacts/stats                         → totalCompanies + contacts
+             GET/POST        /api/contacts/companies                     → Company CRUD (paginated + search)
+             PATCH/DELETE    /api/contacts/companies/:id                 → Update or delete a company
+             POST            /api/contacts/companies/:companyId/contacts → Add contact to company
+             PATCH/DELETE    /api/contacts/companies/:cId/contacts/:ctId → Update or delete a contact
+             GET/POST        /api/contacts/contacts                      → Flat contact list (paginated + search)
 
   ── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -764,6 +1345,90 @@ BACKEND API (apps/api/)
   apps\api\src\test\resolveTenant.test.ts
     What:    Tests that tenantResolver correctly connects to the org's database.
 
+  apps\api\src\test\sadminRoutes.test.ts
+    What:    Full test suite for all /api/sadmin/* routes (76 tests across 20 describe blocks).
+             Covers: requireSaasAdmin guard, stats, alerts, organizations CRUD,
+             users list + admin toggle, plans + MRR, submissions approve/reject,
+             impersonation (cookie swap + 404/400 edge cases), org backup (with + without dbUrl),
+             bulk backup, marketplace list/toggle/price/delete, settings GET/PATCH (all fields +
+             validation errors + live price propagation to /plans),
+             plans/config GET (structure, defaults, live mutations) and PATCH
+             (full update, price sync to planPrices, MRR propagation, all validation errors).
+
+  apps\api\src\test\inventoryRoutes.test.ts
+    What:    Tests for all Inventory module backend routes (~40 tests).
+             Covers: GET /stats KPIs, products CRUD (+ SKU validation, negative price rejection),
+             warehouses CRUD, POST /stock/adjust, purchase orders CRUD (+ 404 for missing order),
+             order line items add/remove (+ zero quantity rejection).
+
+  apps\api\src\test\accountingRoutes.test.ts
+    What:    Tests for all Accounting module backend routes (~30 tests).
+             Covers: GET /stats (outstandingTotal = sent + overdue sums), invoices CRUD (+ status
+             filter, 404 for missing invoice), invoice line items add/remove, expenses CRUD
+             (+ category filter, zero/negative amount rejection).
+
+  apps\api\src\test\hrRoutes.test.ts
+    What:    Tests for all HR module backend routes (~25 tests).
+             Covers: GET /stats (activeCount extraction from groupBy), employees CRUD
+             (+ email/status/salary validation, status/department filters), leave requests CRUD
+             (+ type/days/date validation, approval flow, invalid status rejection).
+
+  apps\api\src\test\projectsRoutes.test.ts
+    What:    Tests for all Projects module backend routes (~20 tests).
+             Covers: GET /stats KPIs, projects CRUD (+ status filter, datetime fields),
+             tasks CRUD (+ projectId/status/priority filters, invalid status/priority rejection).
+
+  apps\api\src\test\reportsRoutes.test.ts
+    What:    Tests for the cross-module Reports backend (~15 tests).
+             Covers: GET /summary (all 5 domain sections: crm/inventory/accounting/hr/projects,
+             null _sum → 0 handling), GET /alerts (overdue invoices + low-stock filter logic),
+             GET /revenue (monthly aggregation, null paidDate skip, multi-record same-month sum).
+
+  apps\api\src\test\developerRoutes.test.ts
+    What:    Tests for the Developer Portal API routes (~20 tests).
+             Covers: POST/GET/PATCH /profile (displayName length, URL validation, 404/409),
+             POST/GET /submissions (module key format, semver validation, description length,
+             repoUrl/email/category validation, 403 no-profile, 409 duplicate key).
+
+  apps\api\src\test\storeRoutes.test.ts
+    What:    Tests for the Module Store API routes (~11 tests).
+             Covers: GET /catalog (install state, plan-tier availability, stats object),
+             GET /catalog/:key (installed/not-installed, 404 unknown key),
+             POST /submit (301 redirect to developer portal),
+             GET /marketplace (install state, empty result).
+
+  apps\api\src\test\notificationsRoutes.test.ts
+    What:    8 tests for /api/notifications endpoints.
+             Covers: GET (list + unreadCount, respects limit, caps at 100),
+             PATCH /read-all, PATCH /read (valid IDs / empty array / missing IDs),
+             DELETE /:id. Mocks prisma as a Proxy returning mockNotification object.
+
+  apps\api\src\test\webhooksRoutes.test.ts
+    What:    8 tests for /api/webhooks endpoints.
+             Covers: GET (list), POST (create / invalid URL / unknown event),
+             PATCH (update / 404), DELETE (ok / 404), GET /:id/deliveries.
+             Uses prisma proxy mock pattern.
+
+  apps\api\src\test\dashboardConfigRoutes.test.ts
+    What:    6 tests for /api/dashboard/config endpoints.
+             Covers: GET (stored config / null config / missing dashboardConfig key),
+             PUT (saves widget config / invalid payload / missing key in widget).
+             Mocks prisma.organization via Proxy.
+
+  apps\api\src\test\calendarRoutes.test.ts
+    What:    10 tests for the Calendar module router (modules/calendar/backend/router.ts).
+             Covers: GET /events (list / date range filter / invalid date 400),
+             POST /events (create / missing title / startAt > endAt),
+             PATCH /events/:id (update / 404), DELETE /events/:id (ok / 404).
+             Uses static import with vi.mock hoisting for @business360/module-sdk.
+             Custom makeCalApp() injects tenantDb.calendarEvent mock.
+
+  apps\api\src\test\documentsRoutes.test.ts
+    What:    7 tests for /api/documents endpoints.
+             Covers: GET (returns docs / missing entityType 400 / missing entityId 400 / empty),
+             DELETE (ok / 404). Mocks fs, fs/promises, stream/promises.
+             Uses static import of documentsRouter; custom makeDocApp() injects tenantDb.document.
+
 
 ────────────────────────────────────────────────────────────────────────────────
 FRONTEND WEB APP (apps/web/)
@@ -800,8 +1465,11 @@ FRONTEND WEB APP (apps/web/)
              call-to-action buttons.
 
   apps\web\src\app\(marketing)\pricing\page.tsx
-    What:    The pricing page (/pricing). Shows 4 subscription plans with
-             features and prices.
+    What:    The pricing page (/pricing). Async Server Component — fetches live plan
+             data from GET /api/platform/plans on every request (cache: "no-store").
+             Falls back to DEFAULT_PLANS if the API is unavailable. Per-key color/style
+             map kept in frontend (keys: starter/growth/pro/enterprise never change).
+             Any plan change saved via /sadmin/plans/config is immediately reflected here.
 
   ── AUTH GROUP (login / register pages) ─────────────────────────────────────
 
@@ -854,6 +1522,9 @@ FRONTEND WEB APP (apps/web/)
     What:    Wraps all /dashboard/* pages. Checks if user is logged in
              (if not → redirect to /login). Renders AppSidebar + AppHeader
              around the page content. Manages mobile sidebar open/close state.
+             If auth.impersonated is true → shows a fixed amber banner at the top:
+             "Admin Mode — viewing as [OrgName]" with "Exit to Admin Panel" button
+             that calls POST /api/auth/exit-impersonation then redirects to /sadmin.
              This is "use client" because it uses the useAuth() hook.
 
   apps\web\src\app\dashboard\page.tsx
@@ -864,12 +1535,67 @@ FRONTEND WEB APP (apps/web/)
              loading, module grid with hover animations, trial banner with upgrade
              link, orange "Add Modules" CTA. Fetches /api/reports/summary for
              live cross-module KPIs when modules are installed.
+             useDashboardConfig() hook — fetches/saves widget config from
+             /api/dashboard/config. DEFAULT_WIDGETS: kpi-cards, live-stats, modules.
+             "Customize" button opens modal with toggle switches per widget.
+             Each section conditionally rendered based on widget.visible flag.
 
   apps\web\src\app\dashboard\settings\page.tsx
-    What:    The settings page (/dashboard/settings).
-             Sections: Account (name/email/role), Change Password (verifies current
-             password before updating), Organization (name/plan/status),
-             Members (list of org members with roles).
+    What:    The settings page (/dashboard/settings). Fully tabbed UI with 6 tabs:
+             • Account — profile (avatar, name, email, role badge) + Change Password form.
+             • Organization — org name, slug, plan, status, seat limit, member count;
+               System Currency selector (owner-only, 40 ISO currencies) that calls
+               PATCH /api/organizations/settings to save the chosen currency.
+             • Members (manager+) — full member list with role selector (owner-only, options
+               sourced from member_roles config list) and pencil edit button per member that
+               opens an inline panel for editing name, email, optional new password, and role;
+               remove member button; Add Member form (name/email/password/role — owner only,
+               creates user directly, no invite email); Invite via Email form (email + role +
+               Send). Calls GET /api/org/members, POST /api/org/members,
+               PATCH /api/org/members/:id (full edit), PATCH /api/org/members/:id/role,
+               DELETE /api/org/members/:id, GET /api/org/config/member_roles,
+               GET/POST/DELETE /api/org/invites.
+             • Module Access (owner only) — matrix of installed modules × roles; columns are
+               driven dynamically by the member_roles config list (not hardcoded). Owner column
+               always checked. Toggles stored as org.moduleAccess JSON. Calls
+               GET /api/org/module-access, PUT /api/org/module-access, GET /api/org/config/member_roles.
+             • Teams (manager+) — create teams linked to a module (CRM, HR, etc.), assign
+               a team leader via dropdown, add/remove individual members. Each team card
+               shows team name, module badge, leader selector, member list with Crown icon
+               on leader. Calls GET/POST/PATCH/DELETE /api/org/teams and
+               POST/DELETE /api/org/teams/:id/members.
+             • API Keys (owner only) — create API key (one-time amber secret reveal with
+               copy), list keys with prefix + dates, revoke. Calls GET/POST/DELETE
+               /api/org/api-keys.
+             • Webhooks (owner only) — create/edit/delete webhook endpoints; event chip
+               selector (13 event types); delivery history per webhook showing CheckCircle2
+               (2xx) or AlertCircle (error) with status code. Calls GET/POST/PATCH/DELETE
+               /api/webhooks and GET /api/webhooks/:id/deliveries.
+             Tabs are filtered by role: owner-only tabs hidden from manager/member.
+
+  apps\web\src\app\invite\page.tsx
+    What:    Invite acceptance page (/invite?token=).
+             Public — no login required to view. Uses Suspense because it uses useSearchParams.
+             On load: fetches GET /api/org/invites/verify?token= → shows org name, role, inviter.
+             If logged in: "Accept Invitation" button → POST /accept → POST /auth/switch-org →
+             refresh() → /dashboard. If not logged in: Sign In / Create Account buttons with
+             ?next= parameter so the user returns to the invite URL after authenticating.
+
+  apps\web\src\app\dashboard\billing\page.tsx
+    What:    Billing page (/dashboard/billing).
+             Shows current plan card with trial countdown (if on trial). Plan comparison grid
+             with Upgrade buttons → POST /api/billing/checkout → redirect to Stripe Checkout.
+             "Manage Billing" button → POST /api/billing/portal → redirect to Stripe Customer Portal.
+             Handles ?success=1 / ?cancelled=1 redirect params from Stripe. Shows a friendly
+             note when STRIPE_SECRET_KEY is not configured (dev mode).
+
+  apps\web\src\app\dashboard\activity\page.tsx
+    What:    Activity audit log page (/dashboard/activity).
+             Paginated table of actions performed in this org (create/update/delete per entity).
+             Entity filter chips (all / lead / deal / customer / invoice / project / task…).
+             timeAgo helper formats relative timestamps. Entity color badges by type.
+             Shows empty state when no activity has been logged yet.
+             Calls GET /api/activity with ?entity= and ?page= params.
 
   apps\web\src\app\dashboard\modules\page.tsx
     What:    The modules management page (/dashboard/modules).
@@ -886,12 +1612,108 @@ FRONTEND WEB APP (apps/web/)
 
   apps\web\src\app\dashboard\store\developer\page.tsx
     What:    The developer portal (/dashboard/store/developer).
-             Shows how to build a module + a submission form.
+             Two states: if no DeveloperProfile → join form (displayName, website, bio);
+             if has profile → submit form (name, key, version, category, description, repoUrl,
+             contactEmail) + submissions table (status badge, reviewNote, repo link).
+             Fetches GET /api/developer/profile on mount.
 
   apps\web\src\app\dashboard\admin\page.tsx
-    What:    The admin panel (/dashboard/admin). Owner-only.
-             Shows: total organizations, MRR (monthly recurring revenue),
-             user count. Tables for managing all orgs and changing their plans.
+    What:    Redirect page — no longer an admin panel.
+             If user.isAdmin is true → redirects to /SADMIN.
+             Otherwise → redirects to /dashboard.
+
+  apps\web\src\app\sadmin\login\page.tsx
+    What:    Standalone platform admin login (/sadmin/login).
+             Completely separate from the tenant /login page — no shared components.
+             On submit: calls /api/auth/login, then /api/auth/me to verify isAdmin.
+             If isAdmin is false → logs back out + shows "no admin access" error.
+             On load: if already authenticated as admin → immediately redirects to /sadmin.
+
+  apps\web\src\app\sadmin\layout.tsx
+    What:    Isolated SaaS admin layout — completely separate from the dashboard.
+             Does NOT use useAuth() or any tenant auth context.
+             Auth guard: calls /api/auth/me directly; if not logged in or not isAdmin
+             → redirects to /sadmin/login (NOT the tenant /login).
+             Has its own dark-themed collapsible sidebar, top bar, and branding.
+             Logout clears the cookie and redirects to /sadmin/login.
+             Sidebar nav: Overview, Subscriptions, Plans & MRR, Users, Organizations, Submissions.
+
+  apps\web\src\app\sadmin\page.tsx
+    What:    Platform overview (/sadmin).
+             KPI cards (org count, user count, active plans, est. MRR), plan distribution
+             card, org status breakdown, quick-access link grid to all sub-pages.
+             Calls /api/sadmin/stats and /api/sadmin/plans.
+
+  apps\web\src\app\sadmin\subscriptions\page.tsx
+    What:    Subscription management (/sadmin/subscriptions).
+             Table of all orgs with search + status filter pills. Inline Select
+             dropdowns to change plan or status per org. Paginated (25/page).
+             Calls GET /api/sadmin/organizations + PATCH /api/sadmin/organizations/:id.
+
+  apps\web\src\app\sadmin\plans\page.tsx
+    What:    Plans & MRR breakdown (/sadmin/plans).
+             KPI cards (MRR, active orgs, ARPU). Bar chart of MRR per plan tier.
+             Pricing reference table with % of total MRR per tier.
+             Has a "Configure" link button that opens /sadmin/plans/config.
+             Calls GET /api/sadmin/plans.
+
+  apps\web\src\app\sadmin\plans\config\page.tsx
+    What:    Full plan configuration editor (/sadmin/plans/config).
+             Tab navigation (one tab per plan, dirty indicator dot, Popular Zap badge).
+             Per-plan editor: Identity card (name, description), Pricing & Limits card
+             (monthly/yearly price, member limit with 0=unlimited), Display card (CTA text,
+             isPopular toggle with one-popular-at-a-time enforcement), Features card (add,
+             remove, reorder up/down, included/excluded toggle per feature).
+             Live preview card shows how the plan card will appear on /pricing.
+             "Save & Publish" → PATCH /api/sadmin/plans/config → changes immediately
+             appear on the public /pricing page. Unsaved-changes banner + Reset button.
+             Calls GET/PATCH /api/sadmin/plans/config.
+
+  apps\web\src\app\sadmin\users\page.tsx
+    What:    All platform users (/sadmin/users).
+             Searchable paginated table. Shows each user's name, email, isAdmin badge,
+             and all org memberships with role + plan badges per org.
+             Calls GET /api/sadmin/users.
+
+  apps\web\src\app\sadmin\orgs\page.tsx
+    What:    All organizations list (/sadmin/orgs).
+             Searchable + status-filtered paginated table. Read-only badges for plan/status.
+             Each row has a ChevronRight link to the org detail page.
+             "Export CSV" button exports current page as CSV.
+             "Bulk Backup" button fetches GET /api/sadmin/backup as blob, downloads JSON.
+             Calls GET /api/sadmin/organizations.
+
+  apps\web\src\app\sadmin\orgs\[id]\page.tsx
+    What:    Full org detail page (/sadmin/orgs/[id]).
+             Inline Select controls to change plan and status. Trial end date editor.
+             Members table (name, email, role, joined date). Installed modules table.
+             "Access Dashboard" button → calls POST /impersonate, then window.location.href=/dashboard
+             (opens the org's tenant dashboard as the org owner with impersonation banner visible).
+             "Backup" button → fetches GET /:id/backup as a blob, triggers JSON file download.
+             Cancel Org button (calls DELETE → sets status to "cancelled" → redirects).
+             Calls GET/PATCH/DELETE /api/sadmin/organizations/:id.
+
+  apps\web\src\app\sadmin\submissions\page.tsx
+    What:    Module submission review queue (/sadmin/submissions).
+             Filter pills (all/pending/approved/rejected). Each pending row shows the module
+             name, developer info, repo URL, optional review-note input, and Approve/Reject
+             buttons. Calls GET /api/sadmin/submissions + PATCH /api/sadmin/submissions/:id.
+
+  apps\web\src\app\sadmin\marketplace\page.tsx
+    What:    Published marketplace module management (/sadmin/marketplace).
+             Table of all approved MarketplaceModule records with: module name/key, author,
+             category badge, version, inline price+billing editor, install count, active status.
+             Toggle active/inactive per module (PATCH isActive). Delete button removes from
+             marketplace permanently. Calls GET/PATCH/DELETE /api/sadmin/marketplace.
+
+  apps\web\src\app\sadmin\settings\page.tsx
+    What:    Platform-wide settings page (/sadmin/settings).
+             Four cards: Plan Pricing (4 number inputs for starter/growth/pro/enterprise $/mo),
+             Trial Duration (number input in days), Maintenance Mode (toggle switch),
+             Announcement Banner (textarea with live preview).
+             Save button batches all changes via PATCH /api/sadmin/settings.
+             Unsaved-changes alert bar + Reset button to revert to last saved state.
+             Note: settings are in-memory — changes persist until server restarts.
 
   ── CRM PAGES ───────────────────────────────────────────────────────────────
 
@@ -902,7 +1724,9 @@ FRONTEND WEB APP (apps/web/)
 
   apps\web\src\app\dashboard\crm\page.tsx
     What:    CRM overview (/dashboard/crm). Shows summary stats:
-             total leads, open deals, deal value, customer count.
+             total leads, customers, active deals, won revenue. Leads-by-status
+             and pipeline-value breakdowns. Plus a Contacts summary card showing
+             company + contact counts (from Contacts module) with a link to /dashboard/contacts.
 
   apps\web\src\app\dashboard\crm\leads\page.tsx
     What:    Leads table (/dashboard/crm/leads).
@@ -1001,6 +1825,18 @@ FRONTEND WEB APP (apps/web/)
              Fields: title, project, status, priority, assigned to, due date.
              Search by title/project name.
 
+  ── CALENDAR PAGE ────────────────────────────────────────────────────────────
+
+  apps\web\src\app\dashboard\calendar\page.tsx
+    What:    Monthly team calendar (/dashboard/calendar).
+             State: viewDate (current month), events (from /api/calendar/events), form (create/edit).
+             Monthly grid computed from first day of month; each cell lists events as colored pills.
+             "New Event" button + click-on-day opens create modal.
+             Create/edit modal: title, type chips (meeting/deadline/reminder/task/other),
+             startAt/endAt datetime-local inputs, all-day checkbox, optional description + color.
+             Events fetched for the full month range (from/to) on viewDate change.
+             Calls GET/POST/PATCH/DELETE /api/calendar/events.
+
   ── REPORTS PAGE ─────────────────────────────────────────────────────────────
 
   apps\web\src\app\dashboard\reports\page.tsx
@@ -1013,17 +1849,42 @@ FRONTEND WEB APP (apps/web/)
   ── COMPONENTS — DASHBOARD ──────────────────────────────────────────────────
 
   apps\web\src\components\dashboard\AppSidebar.tsx
-    What:    The left navigation sidebar shown on all dashboard pages.
-             Shows links to: Dashboard, CRM, Inventory, Modules, Store, Settings.
-             The Admin link only appears if user.role === "owner".
+    What:    The left navigation sidebar shown on all tenant dashboard pages.
+             Shows links to: Dashboard, App Store, My Modules, installed modules, Settings.
+             If user.isAdmin is true → shows an "Admin Panel" link to /sadmin at the bottom.
              On mobile: hidden by default, toggled via the AppHeader menu button.
 
   apps\web\src\components\dashboard\AppHeader.tsx
     What:    The top bar shown on all dashboard pages.
              Shows: breadcrumb navigation, dark mode toggle (Sun/Moon + localStorage),
-             alerts bell (overdue invoices + low stock), user initials avatar,
-             logout button. Dark mode state persisted to localStorage and read by
-             the anti-flash inline script in layout.tsx.
+             NotificationPanel (bell with badge count combining /api/notifications +
+             /api/reports/alerts), user initials avatar, logout button.
+             Dark mode state persisted to localStorage and read by the anti-flash inline
+             script in layout.tsx.
+
+  apps\web\src\components\dashboard\NotificationPanel.tsx
+    What:    Notification inbox dropdown mounted in AppHeader.
+             useTotalBadgeCount() hook — fetches both /api/notifications (unreadCount)
+             and /api/reports/alerts (alert count); sums them for the bell badge.
+             Panel lists notifications: unread items have blue left border, timeAgo display,
+             dismiss (DELETE) button. "Mark all read" button at top.
+             Click-outside closes panel.
+
+  apps\web\src\components\dashboard\DocumentAttachments.tsx
+    What:    Reusable document attachment widget for any entity (leads, customers, etc.).
+             Props: entityType, entityId, canUpload.
+             Drag-and-drop zone + click-to-upload; sends file as application/octet-stream
+             with X-File-Name header (no multer). Fetches document list on mount.
+             Shows file type icons (PDF=red, image=blue, spreadsheet=green, generic=gray).
+             Size formatting (KB/MB). Hover-revealed download + delete buttons per file.
+
+  apps\web\src\components\dashboard\CommandPalette.tsx
+    What:    Global command palette (Ctrl/Cmd+K to open).
+             Combines nav item fuzzy search (16 pages across 6 groups) with live API search
+             (debounced 250ms) via GET /api/search?q=. Nav results come first; matching
+             database records appear in a "Records" group with entity icons and sublabels.
+             Spinner during API search. Arrow keys / Enter / Escape keyboard nav.
+             Mounted in the dashboard layout so it's available on all dashboard pages.
 
   ── COMPONENTS — MARKETING ──────────────────────────────────────────────────
 
@@ -1075,16 +1936,21 @@ FRONTEND WEB APP (apps/web/)
     What:    The authentication context — the heart of frontend identity.
              Exports:
                AuthProvider   → Wraps the whole app, fetches /me on load
-               useAuth()      → Hook to get: user, org, isLoading, login(), logout(), refresh()
+               useAuth()      → Hook to get: user, org, role, isAdmin, impersonated,
+                                isLoading, logout(), refresh()
                AuthUser type  → Shape of the logged-in user object
                AuthOrg type   → Shape of the current organization object
              The refresh() function re-fetches /me from the backend and updates
              state. Must be called after login and after org creation.
+             impersonated: true when admin is accessing a tenant dashboard via
+             POST /api/sadmin/organizations/:id/impersonate.
 
   apps\web\src\lib\api.ts
     What:    A thin wrapper around fetch() for calling the backend API.
              Automatically includes credentials (cookies) with every request.
              Handles JSON parsing and throws errors with readable messages.
+             Uses parseResponse() to safely handle non-JSON error responses
+             (e.g. HTML 404 pages) without crashing.
 
   apps\web\src\lib\utils.ts
     What:    Small utility functions used across the frontend.
@@ -1108,31 +1974,83 @@ ENGINE PACKAGE (engine/)
              modules folder. This is what apps/api/src/routes/modules.ts imports.
 
   engine\src\registry.ts
-    What:    The MODULE_REGISTRY — a map of module key → enriched module info
-             (store description, screenshots, rating, category).
-             Used to enrich raw manifests with store-display data.
+    What:    In-memory registry (Map<key, ModuleManifest>). Functions:
+             register(manifest) — called at startup for each discovered module
+             getAllManifests()  — returns all registered manifests (used by store + routing)
+             getManifest(key)   — look up a single module
+             hasPermission()    — check role-based permission for a module action
 
   engine\src\types.ts
-    What:    TypeScript types for the engine package:
-             ModuleManifest, InstalledModuleRecord, EngineConfig.
+    What:    TypeScript types: ModuleManifest (includes optional store fields:
+             category, longDescription, tags, features, rating, price, etc.),
+             ModuleRoute, ModulePermission, Plan, StoreCategory.
 
 
 ────────────────────────────────────────────────────────────────────────────────
-MODULE PACKAGES (modules/)
+MODULE PACKAGES (modules/)   ← plug-in folder: drop a folder here to add a module
 ────────────────────────────────────────────────────────────────────────────────
 
-Each module folder has the same structure:
+Each module folder is fully self-contained — backend AND frontend live together:
 
-  modules\crm\manifest.ts
-    What:    The CRM module's identity card. Defines:
-             key: "crm", name: "CRM", version: "1.0.0", description,
-             category: "Sales", icon, and what features it includes.
+  modules\<name>\manifest.json
+    What:    The module's single source of truth. Contains BOTH engine metadata
+             (key, name, version, requiredPlan, routes, permissions) AND App Store
+             display data (category, longDescription, tags, features, rating, price).
+             The API reads this at startup; the store serves it to the frontend.
 
-  modules\crm\package.json
-    What:    npm package descriptor for this module. Allows it to be
-             referenced as "@business360/module-crm" in other packages.
+  modules\<name>\package.json
+    What:    npm workspace descriptor. Declares @business360/module-sdk as a dep.
 
-  (Same pattern for: accounting, hr, inventory, projects, reports)
+  modules\<name>\backend\router.ts
+    What:    Express Router with all API endpoints for this module.
+             Imports utilities from @business360/module-sdk.
+             Mounted at /api/<key> automatically when the manifest is discovered.
+
+  modules\<name>\frontend\page.tsx        ← module overview / dashboard page
+  modules\<name>\frontend\layout.tsx      ← tab navigation layout (where applicable)
+  modules\<name>\frontend\<tab>\page.tsx  ← one file per sub-page (leads, invoices, …)
+    What:    The actual React component code for all this module's UI pages.
+             Uses @/ imports (resolved by Next.js to apps/web/src/) so shadcn/ui
+             components, API helpers, and utilities all work normally.
+             apps/web/src/app/dashboard/<name>/ files are thin re-exports that
+             simply forward to these module files — routing stays in Next.js,
+             logic lives here.
+
+  Pattern for apps/web re-export stubs:
+    apps/web/src/app/dashboard/crm/page.tsx →
+      export { default } from "../../../../../../modules/crm/frontend/page";
+
+  To add a new module: drop a folder in /modules/ with manifest.json +
+  backend/router.ts + frontend/ pages, then add matching re-export stubs in
+  apps/web/src/app/dashboard/<name>/.
+
+Active modules: crm, contacts, calendar, inventory, accounting, hr, projects, reports
+
+  Module frontend file counts:
+    crm:        layout + overview + leads + deals + customers     (5 files)
+    accounting: layout + overview + invoices + expenses           (4 files)
+    hr:         layout + overview + employees + leave             (4 files)
+    inventory:  layout + overview + products + warehouses + orders (5 files)
+    projects:   layout + overview + tasks                         (3 files)
+    contacts:   layout + overview + companies + contacts          (4 files)
+    calendar:   overview only                                     (1 file)
+    reports:    overview only                                     (1 file)
+
+────────────────────────────────────────────────────────────────────────────────
+MODULE SDK PACKAGE (packages/module-sdk/)
+────────────────────────────────────────────────────────────────────────────────
+
+  packages\module-sdk\src\index.ts
+    What:    Shared utilities for all module routers so they don't depend on
+             internal API paths. Exports:
+             AppError(statusCode, message)   — standard HTTP error
+             requireRole("manager"|"owner")  — Express middleware for role checks
+             logActivity(req, action, entity, id, meta) — writes to activityLog table
+             HookService interface           — { fire(event, payload): Promise<void> }
+             HookEvent type union            — all valid hook event names
+             fireHook(req, event, payload)   — fires via req.hookService (safe noop if absent)
+             Global Express.Request augment  — only adds hookService?: HookService
+             (tenantDb and user are declared in apps/api/src/types/index.ts instead)
 
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -1172,6 +2090,7 @@ SHARED PACKAGE (packages/shared/)
 
   TASK                                       FILE TO OPEN
   ─────────────────────────────────────────  ───────────────────────────────────────────
+  View ERPAI AI activity in sadmin           /sadmin/ai-log
   Add a new page to the dashboard            apps\web\src\app\dashboard\<name>\page.tsx
   Add a new API endpoint                     apps\api\src\routes\<name>.ts
   Change how login works                     apps\api\src\routes\auth.ts
@@ -1186,6 +2105,281 @@ SHARED PACKAGE (packages/shared/)
   Change how the org database connects       apps\api\src\lib\tenantDb.ts
   Add a new UI component                     apps\web\src\components\ui\<name>.tsx
 
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  AUTH FIX (2026-05-10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  - Added seed script: apps/api/src/scripts/seed.ts
+      Upserts the admin user (k.shwdfy@gmail.com, isAdmin: true) with a known
+      password and creates a default "Business360" org (plan: pro, status: active).
+      Run with: cd apps/api && npm run seed
+      Default password set by seed: Admin@360
+
+  - Removed "Don't have an account? Start free trial" link from login page
+      apps/web/src/app/(auth)/login/LoginForm.tsx — link to /register removed.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ERPAI MANAGEMENT IN SADMIN (Added 2026-05-10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  URL:     /sadmin/ai-log  (nav label: "AI Log")
+  Source:  apps/web/src/app/sadmin/ai-log/page.tsx
+           apps/api/src/routes/sadmin.ts  (ai-log + erpai/* endpoints)
+           erpai/src/lib/ai-log.ts        (log writer)
+           erpai/src/lib/ai-config.ts     (config reader in ERPAI)
+           erpai/data/ai-log.json         (log, max configurable entries)
+           erpai/data/ai-config.json      (live config file)
+
+  Three-tab management panel for ERPAI in the platform admin:
+
+  TAB 1 — ACTIVITY LOG
+    Stats cards: total requests, errors, avg duration, total tokens
+    Filters: by type (chat/analyze/task_suggest) and by status
+    Log table: time, type badge, prompt preview, tokens (↺ = cache hit),
+               duration (color-coded), status badge
+    Actions: Refresh, Clear log (DELETE /api/sadmin/ai-log)
+    Footer: input/output/cache-read token breakdown + cache saving %
+    Pagination: 25 per page
+
+  TAB 2 — TASKS
+    View and manage all ERPAI development tasks from sadmin
+    Click status circle to cycle: todo → in_progress → done
+    Delete tasks with the trash icon
+    Filter by status (all / todo / in_progress / done)
+    API: GET/PATCH/DELETE /api/sadmin/erpai/tasks/:id
+
+  TAB 3 — SETTINGS
+    Model selection: choose which Claude model ERPAI uses
+    Feature toggles: enable/disable chat, analyze, task suggestions
+    Limits: chatMaxTokens, analyzeMaxTokens, analyzeMaxIterations, maxLogEntries
+    Changes are saved to erpai/data/ai-config.json and take effect immediately
+    (ERPAI reads the config file on every request)
+    API: GET/PATCH /api/sadmin/erpai/config
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ERPAI — AI DEVELOPER AGENT (Added 2026-05-10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Location:  /erpai/  (root of monorepo, port 3001)
+  Start:     START.bat (auto-started alongside API and Web)
+             Or: npm run dev:erpai
+  Tech:      Next.js 16 + React 19, @anthropic-ai/sdk, claude-opus-4-7
+
+  WHAT IT IS:
+    A standalone Next.js app that acts as a 24/7 AI developer agent for
+    Business360. It has deep knowledge of the codebase and can chat,
+    analyze code by reading actual files, and manage development tasks.
+
+  KEY FEATURES:
+    1. AI Chat (/chat)
+       - Streaming chat powered by Claude Opus 4.7 with adaptive thinking
+       - Prompt caching: EXPLAIN.txt + project context cached each session
+       - Persistent conversation history in the browser session
+       - Suggests common questions about the codebase
+
+    2. Code Analysis (/analyze)
+       - Agentic loop: Claude reads real files, greps real code (no guessing)
+       - Tools: read_file, list_directory, grep_code
+       - Up to 12 tool-call iterations per analysis
+       - Preset buttons: Security Audit, Find Missing Tests, Performance Review,
+         Module Architecture, Dead Code, TypeScript Strictness
+
+    3. Task Manager (/tasks)
+       - Create, update, and delete development tasks
+       - AI can suggest tasks based on a selected focus area
+       - Persisted to erpai/data/tasks.json (no database needed)
+       - Filter by status (todo / in_progress / done)
+       - Task categories: bug, feature, refactor, test, docs
+
+  FOLDER STRUCTURE:
+    erpai/
+    ├── src/
+    │   ├── app/
+    │   │   ├── api/
+    │   │   │   ├── chat/route.ts      ← SSE streaming chat endpoint
+    │   │   │   ├── analyze/route.ts   ← Agentic analysis with file tools
+    │   │   │   └── tasks/route.ts     ← CRUD + AI task suggestion
+    │   │   ├── chat/page.tsx          ← Chat UI
+    │   │   ├── analyze/page.tsx       ← Analysis UI with presets
+    │   │   ├── tasks/page.tsx         ← Task manager UI
+    │   │   ├── page.tsx               ← Dashboard (stats + navigation)
+    │   │   ├── layout.tsx             ← Root layout (JetBrains Mono font)
+    │   │   └── globals.css            ← Dark theme + .prose markdown styles
+    │   ├── lib/
+    │   │   ├── claude.ts              ← Anthropic client + cached system blocks
+    │   │   ├── codebase.ts            ← File reading utils (REPO_ROOT resolution)
+    │   │   └── tasks.ts               ← JSON task CRUD
+    │   └── types/index.ts             ← Task, ChatMessage, TaskSuggestion types
+    ├── data/tasks.json                ← Persistent task storage
+    ├── package.json                   ← App config (port 3001)
+    ├── next.config.ts                 ← serverExternalPackages for Anthropic SDK
+    └── .env.local                     ← ANTHROPIC_API_KEY (must be set manually)
+
+  SETUP REQUIREMENT:
+    Create erpai/.env.local with:
+      ANTHROPIC_API_KEY=sk-ant-...
+    Without this the app starts but all AI features return 401 errors.
+
+  HOW REPO ROOT IS RESOLVED:
+    ERPAI runs from c:\Users\KR007\Business360\erpai\ so:
+      path.resolve(process.cwd(), "..") = c:\Users\KR007\Business360\
+    This is how codebase.ts reads EXPLAIN.txt and project files.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CLOUDFLARE DEPLOYMENT (deploy/)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  All deployment configs live in the deploy/ folder at the repo root.
+
+  STRATEGY:
+    Frontend (Next.js)  → Cloudflare Pages via @cloudflare/next-on-pages
+    Backend (Express)   → Docker on any VPS, exposed via Cloudflare Tunnel
+                          (no open firewall ports — tunnel punches outbound only)
+
+  KEY FILES:
+    deploy/README.md                   → Step-by-step deployment guide
+    deploy/.env.production.example     → Copy to .env.production and fill in values
+    deploy/cloudflare/pages/_headers   → Security headers applied by Cloudflare Pages
+    deploy/cloudflare/tunnel/config.yml → Tunnel config (edit YOUR_TUNNEL_ID/YOUR_DOMAIN)
+    deploy/docker/Dockerfile.api       → Multi-stage production image for Express API
+    deploy/docker/docker-compose.prod.yml → API + PostgreSQL + Redis + cloudflared
+    deploy/scripts/setup-cloudflare-tunnel.sh → One-time tunnel creation (run on VPS)
+    deploy/scripts/deploy-web.sh       → Build + push frontend to Cloudflare Pages
+    deploy/scripts/deploy-api.sh       → Build + start API Docker stack
+
+    apps/web/wrangler.toml             → Cloudflare Pages project config
+    apps/web/package.json              → Added build:cf and deploy:cf scripts
+
+  BUILD COMMANDS:
+    Frontend:  cd apps/web && npm run build:cf    (next build + next-on-pages)
+               cd apps/web && npm run deploy:cf   (wrangler pages deploy)
+    Backend:   bash deploy/scripts/deploy-api.sh  (docker compose up --build)
+
+  DOCKER SERVICES (docker-compose.prod.yml):
+    api          → Express app on port 4000 (not exposed to internet)
+    postgres     → PostgreSQL 16 with health check
+    redis        → Redis 7
+    cloudflared  → Cloudflare Tunnel daemon (connects API to api.YOUR_DOMAIN.com)
+
+  NOTES:
+    - The Express API uses pg + Prisma which require Node.js — it cannot run on
+      Cloudflare Workers directly. Cloudflare Tunnel is used instead.
+    - The cloudflared binary (cloudflare/cloudflared.exe) was already in the repo
+      for local dev tunneling; the same service is now run inside Docker in prod.
+    - After first deploy, run Prisma migrations inside the api container:
+        docker compose exec api npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 27 — SECURITY, PRODUCTION HARDENING & ADVANCED FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  CRITICAL-001: ERPAI Authentication
+    All ERPAI routes (chat, analyze, tasks) were previously unprotected.
+    Added apps/erpai/src/lib/requireAuth.ts using `jose` (jwtVerify) — the
+    only JWT library that works in Next.js Edge + Node runtimes.
+    Every API route handler now calls requireAuth(req) as the first step;
+    returns NextResponse (401) if invalid, or { user: AuthPayload } on success.
+    erpai/.env.local gets JWT_SECRET so it matches the main API token.
+
+  CRITICAL-010: JWT Invalidation on Role Change
+    New field `tokenIssuedBefore DateTime?` added to OrgMember in
+    packages/db/prisma/schema.prisma.
+    Migration: packages/db/prisma/migrations/20260510600000_token_issued_before/
+    When a member's role is changed (PATCH /api/org/members/:id or /:id/role),
+    tokenIssuedBefore is set to `new Date()`.
+    requireAuth middleware (apps/api/src/middleware/requireAuth.ts) now does an
+    async DB check: if the JWT's `iat` is before tokenIssuedBefore → 401
+    "session invalidated". Fail-open on DB error (request passes through).
+
+  DB-003: Float → Decimal for Financial Fields
+    All financial Float fields in apps/api/prisma/tenant.prisma migrated to
+    Decimal @db.Decimal(20, 4) to avoid floating-point rounding errors.
+    Affected models: Deal.value, Product.unitPrice/costPrice,
+    PurchaseOrder.totalAmount, PurchaseOrderItem.*,
+    Invoice.subtotal/tax/total, InvoiceItem.*, Expense.amount, Employee.salary.
+    Migration SQL: apps/api/prisma/migrations/tenant_financial_decimal.sql
+    Prisma Decimal objects serialize as strings by default — fixed with a
+    res.json() override middleware in index.ts that converts any object with
+    .toNumber() to a plain JS number before sending to the client.
+    packages/module-sdk/src/index.ts exports toNum() helper for safe arithmetic
+    on Decimal values (used in accounting router stats queries).
+
+  PRODUCTION HARDENING
+
+  Pino Logging:
+    apps/api/src/lib/logger.ts — pino instance with LOG_LEVEL env var.
+      - Development: pino-pretty with colorized, human-readable output.
+      - Production: structured JSON (Datadog / CloudWatch compatible).
+    pino-http middleware in index.ts logs every request with method/url/status/
+    response-time; /health and /api/health are excluded to reduce noise.
+
+  Health Endpoints:
+    GET /health and GET /api/health both return:
+      { status, service, version, uptime (seconds), timestamp }
+    The /health path is used by Docker healthchecks.
+
+  Graceful Shutdown:
+    SIGTERM and SIGINT handlers call shutdown(). Guards against double-shutdown
+    with isShuttingDown flag. server.close() drains open connections; callback
+    disconnects all Prisma clients (main + per-tenant). Force-exits after 10s.
+
+  Docker / docker-compose:
+    apps/api/Dockerfile  — multi-stage: base → deps (npm ci) → builder (tsc)
+                           → runner (production, copies dist + generated + modules)
+    apps/web/Dockerfile  — multi-stage for Next.js standalone output
+    docker-compose.yml   — postgres (healthcheck), api (depends on postgres healthy),
+                           web (depends on api healthy). All env vars via ${VAR:-default}.
+    .env.example at repo root — documents all required + optional env vars.
+
+  GitHub Actions CI (.github/workflows/ci.yml):
+    Two jobs:
+      test  — spins up a Postgres 16 service, npm ci, builds both apps, runs
+              npx vitest run in apps/api. Full integration test suite.
+      lint  — npm ci + tsc --noEmit on both api and web workspaces.
+    Triggers on push/PR to master or main.
+
+  OPENAPI / SWAGGER DOCS
+    swagger-jsdoc + swagger-ui-express already listed in apps/api/package.json.
+    apps/api/src/lib/openapi.ts — builds OpenAPI 3.0.3 spec from JSDoc comments
+    in route files. Defines reusable schemas (User, Organization, OrgMember, Module,
+    Error), cookieAuth security scheme, and 17 tags.
+    Mounted in index.ts at /api/docs (Swagger UI) and /api/docs.json (raw spec).
+    Enabled in non-production or when ENABLE_DOCS=true env var is set.
+    Auth routes (register, login, logout, me, forgot-password, reset-password,
+    switch-org) and organizations routes have full @openapi JSDoc annotations.
+
+  ADVANCED REPORTING (apps/web/src/app/dashboard/reports/page.tsx)
+    Replaced custom CSS bar chart with Recharts (added to web/package.json):
+      - AreaChart: revenue vs expenses over 12 months with gradient fills.
+      - BarChart: monthly profit (positive/negative bars).
+      - Custom CurrencyTooltip using Intl.NumberFormat.
+    PDF export: "Export PDF" button calls window.print(). Injected <style>
+    tag hides nav/sidebar in @media print; charts use page-break-inside: avoid.
+    Drill-down links: all KPI cards are wrapped in <Link> pointing to the
+    relevant module page (/dashboard/crm, /dashboard/accounting, etc.).
+    Alerts section: overdue invoices table links to /dashboard/accounting;
+    low-stock items link to /dashboard/inventory.
+    formatCurrency() in apps/web/src/lib/currency.ts updated to accept an
+    optional third Intl.NumberFormatOptions argument (used for compact notation
+    on chart Y-axes).
+
+  CUSTOMER PORTAL IMPROVEMENTS (apps/web/src/app/dashboard/billing/page.tsx)
+    Billing history was already fetched from GET /api/billing/invoices (Stripe).
+    Added plan downgrade confirmation modal:
+      - Clicking "Switch Plan" to a lower tier intercepts the checkout flow.
+      - Modal shows which modules will be lost (diff between current and target plan).
+      - If memberUsed > target plan's member limit, shows a red warning.
+      - "Yes, downgrade" proceeds to Stripe checkout; "Keep current plan" cancels.
+    Modal uses the existing Dialog component (apps/web/src/components/ui/dialog.tsx)
+    which is built on @base-ui/react/dialog.
+
+  ROADMAP TABLE (updated):
+  Phase  Feature                     Status
+  ──────────────────────────────────────────
+  27     Security + Production +     COMPLETE
+         Docs + Advanced Reports +
+         Customer Portal
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                               END OF EXPLAIN.txt

@@ -9,7 +9,7 @@ export interface ModuleManifest {
   routes: string[];
   permissions: string[];
   dependencies: string[];
-  planRequired: PlanTier;
+  requiredPlan: PlanTier;
 }
 
 export interface ModuleWithStatus extends ModuleManifest {

@@ -2,9 +2,10 @@
   "name": "@business360/module-crm",
   "version": "1.0.0",
   "private": true,
-  "main": "manifest.ts",
-  "types": "manifest.ts",
+  "main": "backend/router.ts",
   "dependencies": {
-    "@business360/engine": "*"
+    "@business360/module-sdk": "*",
+    "express": "^4.18.0",
+    "zod": "^3.23.0"
   }
 }

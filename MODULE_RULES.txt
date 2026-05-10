@@ -1,0 +1,505 @@
+# BUSINESS360 — MODULE DEVELOPMENT RULES
+
+# File Name: MODULE_RULES.txt
+
+================================================================================
+BUSINESS360 OPEN MODULE ECOSYSTEM — DEVELOPMENT RULES
+=====================================================
+
+Purpose:
+These rules define how third-party developers can build, structure, test,
+package, and publish modules for the Business360 App Store.
+
+The goal is to create a safe, scalable, high-quality open ecosystem similar to:
+
+* Odoo Apps
+* Shopify Apps
+* VSCode Extensions
+* Salesforce AppExchange
+
+Every module MUST follow these standards before being accepted into the
+Business360 Marketplace.
+
+================================================================================
+
+1. CORE PHILOSOPHY
+   ================================================================================
+
+Business360 is a modular ERP platform.
+
+Modules are installable feature packs that extend the system without modifying
+the core platform.
+
+A module may:
+
+* Add pages
+* Add backend APIs
+* Add database tables
+* Add dashboard widgets
+* Add automations
+* Add reports
+* Add AI functionality
+* Add integrations
+* Add workflows
+* Add settings pages
+
+A module MUST NOT:
+
+* Modify core Business360 files directly
+* Break tenant isolation
+* Access another organization's data
+* Override authentication/security systems
+* Inject unsafe scripts
+* Slow down the platform globally
+
+Every module must work as an isolated extension.
+
+================================================================================
+2. REQUIRED MODULE STRUCTURE
+============================
+
+Every module MUST follow this exact structure:
+
+modules/
+└── your-module-name/
+    ├── manifest.ts
+    ├── package.json
+    ├── README.md
+    ├── CHANGELOG.md
+    ├── frontend/
+    │   ├── pages/
+    │   ├── components/
+    │   ├── hooks/
+    │   └── styles/
+    ├── backend/
+    │   ├── router.ts
+    │   ├── services/
+    │   ├── middleware/
+    │   └── validators/
+    ├── prisma/
+    │   └── schema.prisma
+    ├── assets/
+    │   ├── icon.png
+    │   ├── banner.png
+    │   └── screenshots/
+    └── tests/
+        ├── frontend/
+        └── backend/
+
+DO NOT place files outside the module folder.
+
+================================================================================
+3. MANIFEST REQUIREMENTS
+========================
+
+Every module MUST contain a valid manifest.ts.
+
+Required fields:
+
+export const manifest = {
+  key: "crm-ai",
+  name: "CRM AI Assistant",
+  version: "1.0.0",
+  category: "Sales",
+  description: "AI assistant for CRM automation",
+  author: "Developer Name",
+  website: "https://yourwebsite.com",
+  icon: "/assets/icon.png",
+  price: 49,
+  billing: "monthly",
+  compatibility: ">=1.0.0",
+  permissions: [],
+  dependencies: [],
+};
+
+Rules:
+
+* key must be unique
+* version must use semantic versioning
+* description must be clear
+* category must match Business360 categories
+* compatibility must specify supported platform versions
+
+================================================================================
+4. FRONTEND RULES
+=================
+
+Frontend stack:
+
+* Next.js 16
+* React 19
+* TypeScript
+* Tailwind CSS v4
+* shadcn/ui using @base-ui
+
+MANDATORY RULES:
+
+* Use TypeScript everywhere
+* Use responsive design
+* Mobile support is REQUIRED
+* Use existing design system tokens
+* Support dark mode
+* Use reusable components
+* Use loading states
+* Use error states
+* Use toast notifications
+* Use proper empty states
+
+NEVER:
+
+* Hardcode colors outside design system
+* Use inline styles unless necessary
+* Add huge dependencies without reason
+* Break dashboard layout structure
+* Use window.confirm()
+* Bypass API wrapper
+
+Use:
+
+* sonner for toasts
+* useConfirm() for confirmations
+* cn() utility for classes
+* buttonVariants() for link buttons
+
+================================================================================
+5. BACKEND RULES
+================
+
+Backend stack:
+
+* Node.js
+* Express
+* Prisma ORM
+* PostgreSQL
+* JWT authentication
+
+MANDATORY:
+
+* All routes must validate auth
+* All routes must support tenant isolation
+* Use middleware properly
+* Use async/await
+* Return proper HTTP status codes
+* Validate all inputs
+* Handle errors safely
+
+NEVER:
+
+* Access tenant data directly
+* Trust frontend data
+* Store plain passwords
+* Disable auth middleware
+* Use raw SQL unless absolutely required
+
+All routes must follow:
+
+requireAuth
+→ tenantResolver
+→ requireModule
+→ route handler
+
+================================================================================
+6. DATABASE RULES
+=================
+
+Tenant data MUST stay inside tenant databases.
+
+Allowed:
+
+* Leads
+* Customers
+* Inventory
+* Tasks
+* ERP records
+
+NOT allowed in tenant DB:
+
+* Platform-wide billing
+* Global users
+* Marketplace payments
+
+Use Prisma only.
+
+Migration rules:
+
+* Every schema change must include migration
+* Never delete production columns without migration strategy
+* Never break existing installs
+
+================================================================================
+7. SECURITY RULES
+=================
+
+STRICTLY FORBIDDEN:
+
+* Malware
+* Crypto miners
+* Tracking scripts
+* Hidden analytics
+* Remote code execution
+* Unsafe eval()
+* Data collection outside module scope
+* Accessing another tenant's data
+* Injecting scripts into core app
+
+Every module will be reviewed.
+
+Business360 can disable any unsafe module instantly.
+
+================================================================================
+8. PERFORMANCE RULES
+====================
+
+Modules must be optimized.
+
+REQUIRED:
+
+* Pagination on large tables
+* Lazy loading where possible
+* Efficient DB queries
+* Avoid unnecessary rerenders
+* Cache expensive operations
+
+AVOID:
+
+* Massive bundle sizes
+* Blocking requests
+* N+1 query problems
+* Memory leaks
+* Polling abuse
+
+================================================================================
+9. UI/UX RULES
+==============
+
+All modules MUST visually match Business360.
+
+Design system:
+
+* Teal primary
+* Orange CTA
+* Poppins headings
+* Open Sans body
+* Glass cards
+* Consistent spacing
+* Consistent shadows
+* Consistent radius
+
+All pages must:
+
+* Look premium
+* Match existing dashboard
+* Support mobile
+* Support dark mode
+* Use skeleton loading
+* Use proper spacing
+
+Bad UI = rejection.
+
+================================================================================
+10. TESTING REQUIREMENTS
+========================
+
+Every module MUST include:
+
+* Backend tests
+* Frontend tests
+* Type safety
+* Build validation
+
+Before publishing:
+
+* npm run lint
+* npm run typecheck
+* npm run build
+* npm run test
+
+must pass successfully.
+
+================================================================================
+11. APP STORE RULES
+===================
+
+Developers can create a Developer Account.
+
+Developer accounts can:
+
+* Submit modules
+* Update modules
+* Publish paid modules
+* Publish free modules
+* View analytics
+* View installs
+* View revenue
+
+Business360 marketplace review checks:
+
+* Security
+* Performance
+* UX quality
+* Compatibility
+* Stability
+* Branding compliance
+
+Business360 may reject:
+
+* Low quality modules
+* Broken modules
+* Dangerous modules
+* Spam modules
+* Duplicate modules
+
+================================================================================
+12. VERSIONING RULES
+====================
+
+Use semantic versioning:
+
+MAJOR.MINOR.PATCH
+
+Example:
+1.0.0
+
+* MAJOR → breaking changes
+* MINOR → new features
+* PATCH → bug fixes
+
+Never overwrite old versions.
+
+================================================================================
+13. AI MODULE RULES
+===================
+
+AI modules are allowed.
+
+Examples:
+
+* AI accounting assistant
+* AI forecasting
+* AI sales assistant
+* AI chatbot
+* AI analytics
+* AI maintenance prediction
+
+AI modules MUST:
+
+* Clearly state AI provider used
+* Explain data usage
+* Explain privacy handling
+* Allow opt-out if collecting data
+
+================================================================================
+14. INTEGRATION RULES
+=====================
+
+Allowed integrations:
+
+* Stripe
+* PayPal
+* WhatsApp
+* OpenAI
+* Claude
+* SAP
+* Odoo
+* Shopify
+* Google
+* Microsoft
+* Slack
+* Telegram
+
+Integrations MUST:
+
+* Use secure APIs
+* Store secrets safely
+* Never expose keys to frontend
+
+================================================================================
+15. CODE QUALITY RULES
+======================
+
+Code must be:
+
+* Clean
+* Readable
+* Modular
+* Typed
+* Maintainable
+
+Use:
+
+* Service layers
+* Validation layers
+* Reusable hooks
+* Shared types
+
+Avoid:
+
+* Giant files
+* Duplicated logic
+* Hardcoded values
+* Unused code
+* Dead files
+
+================================================================================
+16. MODULE INSTALLATION FLOW
+============================
+
+User installs module
+→ Business360 validates compatibility
+→ Module migrations run
+→ Routes register dynamically
+→ Sidebar updates
+→ Permissions apply
+→ Module becomes active
+
+Uninstall:
+→ Routes removed
+→ Sidebar removed
+→ Data archived safely
+→ Module disabled cleanly
+
+================================================================================
+17. FUTURE ECOSYSTEM GOAL
+=========================
+
+Business360 aims to become a full open ERP ecosystem where developers worldwide
+can:
+
+* Build modules
+* Sell modules
+* Publish AI tools
+* Create vertical solutions
+* Create industry packs
+* Build integrations
+* Generate recurring revenue
+
+Target ecosystem:
+
+* Thousands of modules
+* Public marketplace
+* Enterprise marketplace
+* Certified developers
+* Revenue sharing
+* AI-powered business tools
+
+================================================================================
+18. FINAL RULES
+===============
+
+If you build for Business360:
+
+* Respect architecture
+* Respect security
+* Respect performance
+* Respect UI consistency
+* Respect tenant isolation
+
+A module should feel like:
+"Part of Business360"
+
+NOT:
+"A random plugin"
+
+================================================================================
+END OF MODULE_RULES.txt
+=======================

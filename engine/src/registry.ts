@@ -4,10 +4,11 @@ import { planIncludes } from "./types";
 const manifests = new Map<string, ModuleManifest>();
 
 export function register(manifest: ModuleManifest): void {
-  if (manifests.has(manifest.key)) {
-    throw new Error(`Module "${manifest.key}" is already registered`);
-  }
   manifests.set(manifest.key, manifest);
+}
+
+export function clearRegistry(): void {
+  manifests.clear();
 }
 
 export function getManifest(key: string): ModuleManifest | undefined {

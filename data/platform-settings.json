@@ -1,0 +1,29 @@
+{
+  "planPrices": {
+    "starter": 9,
+    "growth": 79,
+    "pro": 149,
+    "enterprise": 299
+  },
+  "trialDays": 14,
+  "maintenanceMode": false,
+  "announcement": "",
+  "planConfigs": [
+    {
+      "key": "starter",
+      "name": "Solo",
+      "description": "Just one user.",
+      "price": 9,
+      "yearlyPrice": 7,
+      "memberLimit": 1,
+      "isPopular": false,
+      "ctaText": "Start",
+      "features": [
+        {
+          "text": "CRM",
+          "included": true
+        }
+      ]
+    }
+  ]
+}

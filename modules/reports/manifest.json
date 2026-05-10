@@ -1,0 +1,28 @@
+{
+  "key": "reports",
+  "name": "Reports",
+  "version": "1.0.0",
+  "description": "Cross-module KPI dashboards, analytics, and financial summaries.",
+  "longDescription": "Unified analytics across all your Business360 modules. View KPI summary cards for CRM, inventory, accounting, HR, and projects in one place. Monitor monthly revenue vs expenses and get alerted to overdue invoices and low stock.",
+  "icon": "BarChart3",
+  "requiredPlan": "enterprise",
+  "category": "core",
+  "author": "Business360",
+  "rating": 4.8,
+  "reviewCount": 91,
+  "tags": ["reports", "analytics", "kpi", "dashboard", "finance"],
+  "features": [
+    "Cross-module KPI summary",
+    "Monthly revenue vs expenses chart",
+    "Overdue invoice alerts",
+    "Low stock alerts",
+    "Real-time data"
+  ],
+  "price": null,
+  "routes": [
+    { "path": "/dashboard/reports", "label": "Reports" }
+  ],
+  "permissions": [
+    { "key": "reports:read", "label": "View reports and analytics", "roles": ["owner", "manager", "member"] }
+  ]
+}

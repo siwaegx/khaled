@@ -14,6 +14,7 @@ export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const plan = params.get("plan");
+  const next = params.get("next");
   const { refresh } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -27,7 +28,9 @@ export function LoginForm() {
       await apiPost("/api/auth/login", form);
       // Reload auth state from the new JWT cookie before navigating
       await refresh();
-      if (plan) {
+      if (next) {
+        router.push(next);
+      } else if (plan) {
         router.push(`/onboarding?plan=${plan}`);
       } else {
         router.push("/dashboard");
@@ -89,10 +92,6 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </Button>
-          <p className="text-sm text-muted-foreground text-center">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-primary underline underline-offset-4">Start free trial</Link>
-          </p>
         </CardFooter>
       </form>
     </Card>

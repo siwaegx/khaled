@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, Store, Code2 } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, Store, Code2, ExternalLink, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import { apiPost, apiDelete } from "@/lib/api";
-import { MODULE_REGISTRY } from "@business360/shared";
+import { apiPost, apiDelete, apiGet } from "@/lib/api";
 import type { ModuleMeta, StoreCategory } from "@business360/shared";
 import { StoreModuleCard } from "@/components/store/StoreModuleCard";
 import Link from "next/link";
@@ -30,26 +29,57 @@ const FILTERS = [
   { key: "locked",    label: "Locked" },
 ];
 
+type EnrichedModule = ModuleMeta & { installed: boolean; available: boolean };
+
+type MarketplaceMod = {
+  id: string;
+  key: string;
+  name: string;
+  version: string;
+  category: string;
+  description: string;
+  author: string;
+  repoUrl: string;
+  price: number;
+  billing: string;
+  rating: number;
+  installCount: number;
+  isActive: boolean;
+};
+
 export default function StorePage() {
   const { org, refresh } = useAuth();
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<StoreCategory | "all">("all");
-  const [filter, setFilter] = useState("all");
+  const [search, setSearch]       = useState("");
+  const [category, setCategory]   = useState<StoreCategory | "all">("all");
+  const [filter, setFilter]       = useState("all");
   const [installing, setInstalling] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]         = useState<string | null>(null);
+  const [catalog, setCatalog]     = useState<EnrichedModule[]>([]);
+  const [marketplace, setMarketplace] = useState<MarketplaceMod[]>([]);
 
-  const installedKeys = new Set(org?.modules.map((m) => m.moduleKey) ?? []);
-  const orgPlanRank = PLAN_RANK[org?.plan ?? "starter"] ?? 0;
+  // Fetch catalog whenever org changes (so installed state stays fresh)
+  useEffect(() => {
+    apiGet<{ catalog: EnrichedModule[] }>("/api/store/catalog")
+      .then((res) => setCatalog(res.catalog))
+      .catch(() => {});
+  }, [org]);
 
-  const enriched = useMemo(() =>
-    MODULE_REGISTRY.map((mod: ModuleMeta) => ({
+  useEffect(() => {
+    apiGet<{ modules: MarketplaceMod[] }>("/api/store/marketplace")
+      .then((res) => setMarketplace(res.modules))
+      .catch(() => {});
+  }, []);
+
+  // Re-enrich with local plan rank in case API enrichment differs
+  const enriched = useMemo(() => {
+    const orgPlanRank = PLAN_RANK[org?.plan ?? "starter"] ?? 0;
+    const installedKeys = new Set(org?.modules.map((m) => m.moduleKey) ?? []);
+    return catalog.map((mod) => ({
       ...mod,
       installed: installedKeys.has(mod.key),
       available: PLAN_RANK[mod.requiredPlan] <= orgPlanRank,
-    })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [org]
-  );
+    }));
+  }, [catalog, org]);
 
   const filtered = useMemo(() => {
     let list = enriched;
@@ -62,7 +92,7 @@ export default function StorePage() {
       list = list.filter((m) =>
         m.name.toLowerCase().includes(q) ||
         m.description.toLowerCase().includes(q) ||
-        m.tags.some((t) => t.includes(q))
+        (m.tags ?? []).some((t) => t.includes(q))
       );
     }
     return list;
@@ -95,7 +125,7 @@ export default function StorePage() {
   }
 
   const stats = {
-    total: enriched.length,
+    total:     enriched.length,
     installed: enriched.filter((m) => m.installed).length,
     available: enriched.filter((m) => m.available && !m.installed && !m.isComingSoon).length,
   };
@@ -203,6 +233,67 @@ export default function StorePage() {
               onUninstall={handleUninstall}
             />
           ))}
+        </div>
+      )}
+
+      {/* Community Marketplace */}
+      {marketplace.length > 0 && (category === "all" || category === "community" || category === "integration") && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 pt-2">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs font-semibold text-muted-foreground px-2">COMMUNITY MARKETPLACE</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Third-party modules submitted by developers and approved by the Business360 team.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {marketplace
+              .filter((m) => {
+                if (search.trim()) {
+                  const q = search.toLowerCase();
+                  return m.name.toLowerCase().includes(q) || m.description.toLowerCase().includes(q) || m.author.toLowerCase().includes(q);
+                }
+                return true;
+              })
+              .map((mod) => (
+                <div key={mod.id} className="rounded-xl border bg-card p-5 space-y-3 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-sm truncate">{mod.name}</p>
+                        <Badge variant="outline" className="text-xs border-primary/30 bg-primary/5 text-primary shrink-0">
+                          Marketplace
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">by {mod.author} · v{mod.version}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{mod.description}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="text-xs capitalize">{mod.category}</Badge>
+                      {mod.rating > 0 && (
+                        <span className="flex items-center gap-0.5 text-xs text-amber-500">
+                          <Star className="w-3 h-3 fill-current" /> {mod.rating.toFixed(1)}
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {mod.price === 0 ? "Free" : `$${mod.price}/${mod.billing}`}
+                      </span>
+                    </div>
+                    <a
+                      href={mod.repoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      View <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+          </div>
         </div>
       )}
     </div>

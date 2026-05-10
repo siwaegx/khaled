@@ -1,0 +1,33 @@
+{
+  "key": "accounting",
+  "name": "Accounting",
+  "version": "1.0.0",
+  "description": "Invoices, expenses, accounts receivable, and financial reporting.",
+  "longDescription": "Full accounting suite for small and medium businesses. Create and track invoices with line items, log expenses by category, and monitor your financial health with revenue vs expense reports.",
+  "icon": "Calculator",
+  "requiredPlan": "pro",
+  "category": "core",
+  "author": "Business360",
+  "rating": 4.7,
+  "reviewCount": 102,
+  "tags": ["accounting", "invoices", "expenses", "finance", "billing"],
+  "features": [
+    "Invoice creation with line items",
+    "Payment tracking (draft → sent → paid)",
+    "Expense logging by category",
+    "Revenue vs expenses reporting",
+    "Overdue invoice alerts"
+  ],
+  "price": null,
+  "routes": [
+    { "path": "/dashboard/accounting",          "label": "Accounting" },
+    { "path": "/dashboard/accounting/invoices", "label": "Invoices" },
+    { "path": "/dashboard/accounting/expenses", "label": "Expenses" }
+  ],
+  "permissions": [
+    { "key": "accounting:invoices:read",  "label": "View invoices",  "roles": ["owner", "manager", "member"] },
+    { "key": "accounting:invoices:write", "label": "Edit invoices",  "roles": ["owner", "manager"] },
+    { "key": "accounting:expenses:read",  "label": "View expenses",  "roles": ["owner", "manager", "member"] },
+    { "key": "accounting:expenses:write", "label": "Edit expenses",  "roles": ["owner", "manager"] }
+  ]
+}
