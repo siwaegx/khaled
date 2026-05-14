@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { Request } from "express";
 import { z } from "zod";
-import { AppError } from "@business360/module-sdk";
+import { AppError, requireRole } from "@business360/module-sdk";
 
 export const router = Router();
 
@@ -169,4 +169,42 @@ router.delete("/leave/:id", async (req, res, next) => {
     await db(req).leaveRequest.delete({ where: { id: req.params.id } });
     res.json({ success: true });
   } catch (err) { next(err); }
+});
+
+// GET /api/hr/export — download all employees as CSV
+router.get("/export", requireRole("member"), async (req, res, next) => {
+  try {
+    const tenantDb = req.tenantDb as any;
+    const rows = await tenantDb.employee.findMany({ orderBy: { createdAt: "desc" } });
+
+    if (!rows.length) {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename="employees.csv"`);
+      return res.send("id,name,email,phone,position,department,salary,status,hireDate,terminationDate,notes,createdAt,updatedAt\n");
+    }
+
+    const headers = Object.keys(rows[0]).filter((k: string) => !["passwordHash", "totpSecret"].includes(k));
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v instanceof Date ? v.toISOString() : v);
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers.join(","), ...rows.map((r: Record<string, unknown>) => headers.map((h: string) => escape(r[h])).join(","))].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="employees.csv"`);
+    res.send(csv);
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/hr/bulk — delete multiple employees by IDs
+router.delete("/bulk", requireRole("manager"), async (req, res, next) => {
+  try {
+    const { ids } = z.object({ ids: z.array(z.string()).min(1).max(100) }).parse(req.body);
+    const tenantDb = req.tenantDb as any;
+    const { count } = await tenantDb.employee.deleteMany({ where: { id: { in: ids } } });
+    res.json({ deleted: count });
+  } catch (err) {
+    if (err instanceof z.ZodError) return next(new AppError(400, err.message));
+    next(err);
+  }
 });

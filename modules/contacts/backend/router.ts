@@ -306,3 +306,41 @@ router.delete("/contacts/:id", async (req, res, next) => {
     res.json({ success: true });
   } catch (err) { next(err); }
 });
+
+// GET /api/contacts/export — download all contacts as CSV
+router.get("/export", requireRole("member"), async (req, res, next) => {
+  try {
+    const tenantDb = req.tenantDb as any;
+    const rows = await tenantDb.crmContact.findMany({ orderBy: { createdAt: "desc" } });
+
+    if (!rows.length) {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename="contacts.csv"`);
+      return res.send("id,name,position,email,phone,notes,companyId,createdAt,updatedAt\n");
+    }
+
+    const headers = Object.keys(rows[0]).filter((k: string) => !["passwordHash", "totpSecret"].includes(k));
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v instanceof Date ? v.toISOString() : v);
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers.join(","), ...rows.map((r: Record<string, unknown>) => headers.map((h: string) => escape(r[h])).join(","))].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="contacts.csv"`);
+    res.send(csv);
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/contacts/bulk — delete multiple contacts by IDs
+router.delete("/bulk", requireRole("manager"), async (req, res, next) => {
+  try {
+    const { ids } = z.object({ ids: z.array(z.string()).min(1).max(100) }).parse(req.body);
+    const tenantDb = req.tenantDb as any;
+    const { count } = await tenantDb.crmContact.deleteMany({ where: { id: { in: ids } } });
+    res.json({ deleted: count });
+  } catch (err) {
+    if (err instanceof z.ZodError) return next(new AppError(400, err.message));
+    next(err);
+  }
+});

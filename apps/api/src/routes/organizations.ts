@@ -131,6 +131,13 @@ orgRouter.post("/", async (req, res, next) => {
     // Re-issue JWT with the new orgId so the frontend reflects membership immediately
     const newPayload: JwtPayload = { userId, orgId: org.id, role: "owner", isAdmin: false };
     const newToken = jwt.sign(newPayload, process.env.JWT_SECRET ?? "secret", { expiresIn: "7d" });
+
+    // Track session for revocation support
+    const { createHash } = await import("crypto");
+    prisma.userSession.create({
+      data: { userId, tokenHash: createHash("sha256").update(newToken).digest("hex") },
+    }).catch(() => {});
+
     res
       .cookie("access_token", newToken, {
         httpOnly: true,
@@ -141,7 +148,7 @@ orgRouter.post("/", async (req, res, next) => {
       .status(201)
       .json({ organization: orgWithDb });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });

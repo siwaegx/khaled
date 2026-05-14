@@ -88,7 +88,7 @@ invitesRouter.post("/accept", requireAuth, async (req, res, next) => {
 
     res.json({ success: true, orgId: invite.organizationId });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -137,8 +137,8 @@ invitesRouter.post("/", async (req, res, next) => {
     if (existing) throw new AppError(409, "This person is already a member of your organization");
 
     // Enforce plan member limit
-    const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { plan: true } });
-    const planConfig = platformSettings.planConfigs.find((p) => p.key === org?.plan);
+    const orgPlan = await prisma.organization.findUnique({ where: { id: orgId }, select: { plan: true } });
+    const planConfig = platformSettings.planConfigs.find((p) => p.key === orgPlan?.plan);
     if (planConfig && planConfig.memberLimit > 0) {
       const currentCount = await prisma.orgMember.count({ where: { organizationId: orgId } });
       const pendingCount = await (prisma as unknown as { orgInvite: { count: (a: unknown) => Promise<number> } }).orgInvite.count({
@@ -174,7 +174,7 @@ invitesRouter.post("/", async (req, res, next) => {
 
     res.status(201).json({ invite: { id: invite.id, email, role, expiresAt }, emailError });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });

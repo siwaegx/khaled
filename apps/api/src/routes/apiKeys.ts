@@ -15,7 +15,7 @@ type ApiKeyRecord = { id: string; name: string; prefix: string; createdAt: Date;
 const apiKeyPrisma = prisma.apiKey as unknown as {
   findMany: (a: unknown) => Promise<ApiKeyRecord[]>;
   create: (a: unknown) => Promise<ApiKeyRecord>;
-  update: (a: unknown) => Promise<ApiKeyRecord>;
+  updateMany: (a: unknown) => Promise<{ count: number }>;
   delete: (a: unknown) => Promise<void>;
 };
 
@@ -54,7 +54,7 @@ apiKeysRouter.post("/", async (req, res, next) => {
       secret: rawKey, // returned ONCE — store it now, it cannot be retrieved again
     });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -65,10 +65,12 @@ apiKeysRouter.delete("/:id", async (req, res, next) => {
     const { orgId } = req.user!;
     if (!orgId) throw new AppError(400, "No organization");
 
-    await apiKeyPrisma.update({
-      where: { id: req.params["id"]! },
+    // updateMany atomically verifies ownership and revokes in one op — prevents cross-org key revocation
+    const result = await apiKeyPrisma.updateMany({
+      where: { id: req.params["id"]!, organizationId: orgId },
       data: { isActive: false },
     });
+    if (result.count === 0) throw new AppError(404, "API key not found");
 
     res.json({ success: true });
   } catch (err) { next(err); }

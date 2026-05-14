@@ -198,7 +198,7 @@ authRouter.post("/register", async (req, res, next) => {
     sendWelcomeEmail(data.email, data.name).catch(() => {/* non-fatal */});
     res.status(201).json({ user });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -216,7 +216,7 @@ authRouter.post("/login", async (req, res, next) => {
       })
       .json({ user });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -257,9 +257,15 @@ authRouter.post("/change-password", requireAuth, async (req, res, next) => {
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
 
+    // Revoke all active sessions so stolen tokens cannot be reused after a password change
+    await prisma.userSession.updateMany({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
     res.json({ success: true });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -283,7 +289,7 @@ authRouter.post("/forgot-password", async (req, res, next) => {
     // Always return success — don't leak whether the email exists
     res.json({ success: true });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -308,7 +314,7 @@ authRouter.post("/reset-password", async (req, res, next) => {
 
     res.json({ success: true });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -333,6 +339,11 @@ authRouter.post("/switch-org", requireAuth, async (req, res, next) => {
     };
     const token = jwt.sign(payload, process.env.JWT_SECRET ?? "secret", { expiresIn: "7d" });
 
+    // Track session so it can be revoked via session management
+    prisma.userSession.create({
+      data: { userId: userId!, tokenHash: crypto.createHash("sha256").update(token).digest("hex") },
+    }).catch(() => {});
+
     res
       .cookie("access_token", token, {
         httpOnly: true,
@@ -342,7 +353,7 @@ authRouter.post("/switch-org", requireAuth, async (req, res, next) => {
       })
       .json({ success: true });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });

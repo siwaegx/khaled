@@ -10,6 +10,9 @@ vi.mock("../lib/prisma", () => ({
     orgMember: {
       findFirst: vi.fn(),
     },
+    userSession: {
+      create: vi.fn().mockResolvedValue(null),
+    },
   },
 }));
 

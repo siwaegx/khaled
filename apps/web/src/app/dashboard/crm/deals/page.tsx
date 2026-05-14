@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { ConfirmDialog, useConfirm } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 
-type Customer = { id: string; name: string; company: string | null };
+type Company = { id: string; name: string; industry: string | null };
 
 type Deal = {
   id: string;
@@ -26,8 +26,8 @@ type Deal = {
   value: number | null;
   currency: string;
   status: string;
-  customerId: string | null;
-  customer: Customer | null;
+  companyId: string | null;
+  company: Company | null;
   assignedTo: string | null;
   closeDate: string | null;
   notes: string | null;
@@ -47,7 +47,7 @@ const DEAL_STATUSES = COLUMNS.map((c) => c.key);
 
 const EMPTY_BASE: Record<string, string> = {
   title: "", value: "", status: "prospect",
-  customerId: "", assignedTo: "", closeDate: "", notes: "",
+  companyId: "", assignedTo: "", closeDate: "", notes: "",
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -62,7 +62,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function DealsPage() {
   const currency = useCurrency();
   const [deals, setDeals]       = useState<Deal[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading]   = useState(true);
   const [open, setOpen]         = useState(false);
   const [editing, setEditing]   = useState<Deal | null>(null);
@@ -90,9 +90,9 @@ export default function DealsPage() {
     setLoading(true);
     Promise.all([
       apiGet<{ deals: Deal[] }>("/api/crm/deals"),
-      apiGet<{ customers: Customer[] }>("/api/crm/customers"),
+      apiGet<{ customers: Company[] }>("/api/crm/customers"),
     ])
-      .then(([d, c]) => { setDeals(d.deals); setCustomers(c.customers); })
+      .then(([d, c]) => { setDeals(d.deals); setCompanies(c.customers); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -115,7 +115,7 @@ export default function DealsPage() {
       value:      deal.value != null ? String(deal.value) : "",
       currency:   deal.currency,
       status:     deal.status,
-      customerId: deal.customerId ?? "",
+      companyId: deal.companyId ?? "",
       assignedTo: deal.assignedTo ?? "",
       closeDate:  deal.closeDate ? deal.closeDate.slice(0, 10) : "",
       notes:      deal.notes ?? "",
@@ -138,7 +138,7 @@ export default function DealsPage() {
         value:      form.value !== "" ? parseFloat(form.value) : undefined,
         currency:   form.currency,
         status:     form.status,
-        customerId: form.customerId || undefined,
+        companyId: form.companyId || undefined,
         assignedTo: form.assignedTo || undefined,
         closeDate:  form.closeDate ? new Date(form.closeDate).toISOString() : undefined,
         notes:      form.notes || undefined,
@@ -227,10 +227,10 @@ export default function DealsPage() {
                     <p className="text-sm font-medium leading-snug group-hover:text-primary transition-colors">
                       {deal.title}
                     </p>
-                    {deal.customer && (
+                    {deal.company && (
                       <p className="text-xs text-muted-foreground truncate">
-                        {deal.customer.name}
-                        {deal.customer.company ? ` · ${deal.customer.company}` : ""}
+                        {deal.company.name}
+                        {deal.company.industry ? ` · ${deal.company.industry}` : ""}
                       </p>
                     )}
                     {deal.value != null && (
@@ -300,16 +300,16 @@ export default function DealsPage() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Customer">
-              <Select value={form.customerId || "__none__"} onValueChange={(v) => set("customerId", !v || v === "__none__" ? "" : v)}>
+            <Field label="Company">
+              <Select value={form.companyId || "__none__"} onValueChange={(v) => set("companyId", !v || v === "__none__" ? "" : v)}>
                 <SelectTrigger className="w-full h-9">
                   <SelectValue placeholder="None" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">None</SelectItem>
-                  {customers.map((c) => (
+                  {companies.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.name}{c.company ? ` (${c.company})` : ""}
+                      {c.name}{c.industry ? ` (${c.industry})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -1,12 +1,22 @@
-import type { Express, Router } from "express";
+import type { Express, Router, Request, Response, NextFunction } from "express";
 import path from "path";
 import fs from "fs";
 import { getManifest } from "@business360/engine";
 import { requireAuth } from "../middleware/requireAuth";
+import { requireApiKey } from "../middleware/requireApiKey";
 import { resolveTenant } from "../middleware/tenantResolver";
 import { requireModule } from "../middleware/requireModule";
 import { attachHookService } from "../middleware/hookMiddleware";
 import { attachOrgCurrency } from "../middleware/orgCurrency";
+
+// Accept either cookie JWT or Bearer API key
+function requireAuthOrApiKey(req: Request, res: Response, next: NextFunction): void {
+  if (req.headers["authorization"]?.startsWith("Bearer b360_")) {
+    requireApiKey(req, res, next);
+  } else {
+    requireAuth(req, res, next);
+  }
+}
 
 // Root-level /modules/ directory — matches where registerModules.ts loads from
 const MODULES_DIR = path.resolve(__dirname, "../../../../modules");
@@ -19,7 +29,12 @@ const routerCache = new Map<string, Router>();
 function loadRouter(moduleKey: string): Router | null {
   if (routerCache.has(moduleKey)) return routerCache.get(moduleKey)!;
 
-  const base = path.join(MODULES_DIR, moduleKey, "backend", "router");
+  // path.resolve normalises any ".." sequences — guard ensures we stay inside MODULES_DIR
+  const base = path.resolve(MODULES_DIR, moduleKey, "backend", "router");
+  if (!base.startsWith(MODULES_DIR + path.sep)) {
+    console.error(`  ✗ Module router path traversal attempt blocked: "${moduleKey}"`);
+    return null;
+  }
   const filePath = fs.existsSync(`${base}.ts`)
     ? `${base}.ts`
     : fs.existsSync(`${base}.js`)
@@ -49,7 +64,7 @@ function loadRouter(moduleKey: string): Router | null {
 export function attachDynamicModuleRoutes(app: Express): void {
   app.use(
     "/api/:moduleKey",
-    requireAuth,
+    requireAuthOrApiKey,
     resolveTenant,
     attachOrgCurrency,
     attachHookService,

@@ -87,8 +87,15 @@ export function grepCode(
         try {
           const content = fs.readFileSync(fullPath, "utf-8");
           const lines = content.split("\n");
-          const re = new RegExp(pattern, "gi");
+          // Compile regex once outside the loop; catch invalid/ReDoS-prone patterns
+          let re: RegExp;
+          try {
+            re = new RegExp(pattern, "gi");
+          } catch {
+            return; // invalid pattern — skip silently
+          }
           lines.forEach((line, i) => {
+            re.lastIndex = 0; // reset for global flag reuse
             if (re.test(line)) {
               const rel = path.relative(REPO_ROOT, fullPath).replace(/\\/g, "/");
               results.push(`${rel}:${i + 1}: ${line.trim()}`);

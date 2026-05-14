@@ -1,11 +1,24 @@
 import { Router } from "express";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
 import { requireAuth } from "../middleware/requireAuth";
 import { prisma } from "../lib/prisma";
 import { AppError } from "../middleware/errorHandler";
 import { getAllManifests } from "@business360/engine";
 import { installModule, uninstallModule } from "../engine/module_installer";
 import type { PlanTier } from "../engine/types";
+import { cacheGet, cacheSet, cacheDel } from "../lib/cache";
+
+// Per-org limiter: 20 installs per hour (prevents install-loop DoS)
+const moduleInstallLimiter = rateLimit({
+  windowMs: 60 * 60_000,
+  max: 20,
+  keyGenerator: (req) => (req as { user?: { orgId?: string } }).user?.orgId ?? req.ip ?? "anon",
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many module installs, please try again later" },
+  skip: () => process.env.NODE_ENV !== "production",
+});
 
 export const modulesRouter = Router();
 modulesRouter.use(requireAuth);
@@ -14,6 +27,12 @@ modulesRouter.use(requireAuth);
 modulesRouter.get("/", async (req, res, next) => {
   try {
     const orgId = req.user!.orgId;
+    const cacheKey = orgId ? `modules:${orgId}` : null;
+
+    if (cacheKey) {
+      const cached = await cacheGet(cacheKey);
+      if (cached) return res.json(cached);
+    }
 
     const [installed, org] = await Promise.all([
       orgId
@@ -39,14 +58,16 @@ modulesRouter.get("/", async (req, res, next) => {
       available: planRank >= (PLAN_ORDER[m.requiredPlan as PlanTier] ?? 0),
     }));
 
-    res.json({ modules });
+    const payload = { modules };
+    if (cacheKey) await cacheSet(cacheKey, payload, 30); // 30s TTL
+    res.json(payload);
   } catch (err) {
     next(err);
   }
 });
 
 // POST /api/modules/install
-modulesRouter.post("/install", async (req, res, next) => {
+modulesRouter.post("/install", moduleInstallLimiter, async (req, res, next) => {
   try {
     const { moduleKey } = z.object({ moduleKey: z.string().min(1) }).parse(req.body);
     const orgId = req.user!.orgId;
@@ -56,6 +77,7 @@ modulesRouter.post("/install", async (req, res, next) => {
     if (!org) throw new AppError(404, "Organization not found");
 
     await installModule(orgId, moduleKey, org.plan as PlanTier);
+    await cacheDel(`modules:${orgId}`);
 
     const result = await prisma.installedModule.findUnique({
       where: { organizationId_moduleKey: { organizationId: orgId, moduleKey } },
@@ -63,7 +85,7 @@ modulesRouter.post("/install", async (req, res, next) => {
 
     res.status(201).json({ installedModule: result });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -84,6 +106,7 @@ modulesRouter.patch("/:key/toggle", async (req, res, next) => {
       where: { organizationId_moduleKey: { organizationId: orgId, moduleKey } },
       data: { isActive: !existing.isActive },
     });
+    await cacheDel(`modules:${orgId}`);
 
     res.json({ installedModule: updated });
   } catch (err) {
@@ -99,6 +122,7 @@ modulesRouter.delete("/:key", async (req, res, next) => {
     if (!orgId) throw new AppError(400, "No organization in session");
 
     await uninstallModule(orgId, moduleKey);
+    await cacheDel(`modules:${orgId}`);
     res.json({ success: true });
   } catch (err) {
     next(err);

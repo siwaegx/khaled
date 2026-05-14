@@ -1,3 +1,4 @@
+import { cacheDel } from "../lib/cache";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const StripeLib = require("stripe") as typeof import("stripe");
 
@@ -101,7 +102,7 @@ export async function getOrCreateStripeCustomer(orgId: string, email: string, or
 }
 
 export async function createCheckoutSession(opts: {
-  orgId: string; plan: string; email: string; orgName: string;
+  orgId: string; plan: string; userCount: number; email: string; orgName: string;
   successUrl: string; cancelUrl: string;
 }): Promise<string> {
   if (!stripe) throw new Error("Stripe is not configured");
@@ -110,15 +111,16 @@ export async function createCheckoutSession(opts: {
   if (!priceId) throw new Error(`No Stripe price configured for plan: ${opts.plan}`);
 
   const customerId = await getOrCreateStripeCustomer(opts.orgId, opts.email, opts.orgName);
+  const quantity   = Math.max(1, opts.userCount);
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{ price: priceId, quantity }],
     success_url: opts.successUrl,
     cancel_url: opts.cancelUrl,
-    metadata: { orgId: opts.orgId, plan: opts.plan },
-    subscription_data: { metadata: { orgId: opts.orgId, plan: opts.plan } },
+    metadata: { orgId: opts.orgId, plan: opts.plan, userCount: String(quantity) },
+    subscription_data: { metadata: { orgId: opts.orgId, plan: opts.plan, userCount: String(quantity) } },
   });
 
   if (!session.url) throw new Error("Stripe did not return a checkout URL. Please try again.");
@@ -163,6 +165,7 @@ export async function handleWebhook(rawBody: Buffer, signature: string): Promise
 
     if (orgId && plan) {
       await prisma.organization.update({ where: { id: orgId }, data: { plan, status: "active" } });
+      await cacheDel(`billing:status:${orgId}`, `modules:${orgId}`);
     }
   }
 
@@ -172,6 +175,7 @@ export async function handleWebhook(rawBody: Buffer, signature: string): Promise
     const orgId = meta?.orgId;
     if (orgId) {
       await prisma.organization.update({ where: { id: orgId }, data: { plan: "starter", status: "trial" } });
+      await cacheDel(`billing:status:${orgId}`, `modules:${orgId}`);
     }
   }
 }

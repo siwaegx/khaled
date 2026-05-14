@@ -7,7 +7,11 @@ import jwt from "jsonwebtoken";
 vi.mock("../lib/prisma", () => ({
   prisma: {
     user: { findUnique: vi.fn(), create: vi.fn() },
-    orgMember: { findFirst: vi.fn() },
+    orgMember: { findFirst: vi.fn(), findUnique: vi.fn().mockResolvedValue(null) },
+    userSession: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      update: vi.fn().mockResolvedValue(null),
+    },
   },
 }));
 

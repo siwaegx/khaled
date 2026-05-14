@@ -38,7 +38,7 @@ moduleAccessRouter.put("/", requireRole("owner"), async (req, res, next) => {
     });
     res.json({ ok: true, moduleAccess });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });

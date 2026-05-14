@@ -1,10 +1,22 @@
 import { Router } from "express";
 import { z } from "zod";
 import dns from "dns/promises";
+import rateLimit from "express-rate-limit";
 import { requireAuth } from "../middleware/requireAuth";
 import { requireRole } from "../middleware/requireRole";
 import { prisma } from "../lib/prisma";
 import { AppError } from "../middleware/errorHandler";
+
+// Per-org limiter: 10 webhook creates per 10 minutes
+const webhookCreateLimiter = rateLimit({
+  windowMs: 10 * 60_000,
+  max: 10,
+  keyGenerator: (req) => (req as { user?: { orgId?: string } }).user?.orgId ?? req.ip ?? "anon",
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many webhooks created, please try again later" },
+  skip: () => process.env.NODE_ENV !== "production",
+});
 
 // Private IPv4 ranges and loopback — block SSRF
 const SSRF_BLOCKED_HOSTS = new Set([
@@ -33,7 +45,7 @@ async function assertSafeWebhookUrl(rawUrl: string): Promise<void> {
   if (SSRF_BLOCKED_HOSTS.has(host)) {
     throw new AppError(400, "Webhook URL cannot point to internal or metadata addresses");
   }
-  // Resolve hostname and check resulting IPs
+  // Resolve hostname and check resulting IPs — fail-closed: any DNS error blocks the URL
   try {
     const { address } = await dns.lookup(host);
     if (isPrivateIp(address) || SSRF_BLOCKED_HOSTS.has(address)) {
@@ -41,7 +53,8 @@ async function assertSafeWebhookUrl(rawUrl: string): Promise<void> {
     }
   } catch (err) {
     if (err instanceof AppError) throw err;
-    // DNS resolution failure — allow (prevents false positives on valid external hosts)
+    // DNS resolution failure treated as blocked: unresolvable hosts cannot be validated as safe
+    throw new AppError(400, "Webhook URL hostname could not be resolved");
   }
 }
 
@@ -99,7 +112,7 @@ webhooksRouter.get("/", async (req, res, next) => {
 });
 
 // POST /api/webhooks
-webhooksRouter.post("/", requireRole("owner"), async (req, res, next) => {
+webhooksRouter.post("/", webhookCreateLimiter, requireRole("owner"), async (req, res, next) => {
   try {
     const orgId = req.user!.orgId!;
     if (migrationPending()) {
@@ -130,13 +143,12 @@ webhooksRouter.patch("/:id", requireRole("owner"), async (req, res, next) => {
     if (migrationPending()) { res.status(503).json({ error: "Run database migration." }); return; }
 
     const data = patchWebhookSchema.parse(req.body);
-    const existing = await db.orgWebhook.findFirst({ where: { id: req.params.id, organizationId: orgId } });
-    if (!existing) throw new AppError(404, "Webhook not found");
 
     if (data.url) await assertSafeWebhookUrl(data.url);
 
-    const updated = await db.orgWebhook.update({
-      where: { id: req.params.id },
+    // updateMany includes organizationId to atomically verify ownership and write in one op
+    const result = await db.orgWebhook.updateMany({
+      where: { id: req.params.id, organizationId: orgId },
       data: {
         ...(data.url      !== undefined && { url:      data.url }),
         ...(data.events   !== undefined && { events:   data.events }),
@@ -144,6 +156,8 @@ webhooksRouter.patch("/:id", requireRole("owner"), async (req, res, next) => {
         ...(data.isActive !== undefined && { isActive: data.isActive }),
       },
     });
+    if (result.count === 0) throw new AppError(404, "Webhook not found");
+    const updated = await db.orgWebhook.findFirst({ where: { id: req.params.id, organizationId: orgId } });
     res.json({ webhook: updated });
   } catch (err) {
     if (err instanceof z.ZodError) next(new AppError(400, err.message));
@@ -157,10 +171,9 @@ webhooksRouter.delete("/:id", requireRole("owner"), async (req, res, next) => {
     const orgId = req.user!.orgId!;
     if (migrationPending()) { res.status(503).json({ error: "Run database migration." }); return; }
 
-    const existing = await db.orgWebhook.findFirst({ where: { id: req.params.id, organizationId: orgId } });
-    if (!existing) throw new AppError(404, "Webhook not found");
-
-    await db.orgWebhook.delete({ where: { id: req.params.id } });
+    // deleteMany includes organizationId to eliminate TOCTOU between ownership check and write
+    const result = await db.orgWebhook.deleteMany({ where: { id: req.params.id, organizationId: orgId } });
+    if (result.count === 0) throw new AppError(404, "Webhook not found");
     res.json({ ok: true });
   } catch (err) { next(err); }
 });

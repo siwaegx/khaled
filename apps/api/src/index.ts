@@ -21,6 +21,9 @@ import { platformRouter } from "./routes/platform";
 import { billingRouter } from "./routes/billing";
 import { activityRouter } from "./routes/activity";
 import { searchRouter } from "./routes/search";
+import { totpRouter } from "./routes/totp";
+import { oauthRouter } from "./routes/oauth";
+import { sessionsRouter } from "./routes/sessions";
 import { apiKeysRouter } from "./routes/apiKeys";
 import { invitesRouter } from "./routes/invites";
 import { membersRouter } from "./routes/members";
@@ -47,6 +50,18 @@ if (process.env.NODE_ENV === "production") {
   const missing = REQUIRED_PROD_VARS.filter((k) => !process.env[k]);
   if (missing.length > 0) {
     console.error(`FATAL: Missing required environment variables: ${missing.join(", ")}`);
+    process.exit(1);
+  }
+  // Refuse to start with the insecure JWT default
+  if (process.env.JWT_SECRET === "secret") {
+    console.error("FATAL: JWT_SECRET is set to the insecure default 'secret'. Set a strong secret.");
+    process.exit(1);
+  }
+  // If one Stripe var is set, both must be set (partial config = webhook failures)
+  const stripeVars = ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"];
+  if (stripeVars.some((k) => process.env[k]) && !stripeVars.every((k) => process.env[k])) {
+    const missingStripe = stripeVars.filter((k) => !process.env[k]);
+    console.error(`FATAL: Stripe partially configured — also set: ${missingStripe.join(", ")}`);
     process.exit(1);
   }
 }
@@ -165,6 +180,9 @@ app.use("/api/auth/register",        authLimiter);
 app.use("/api/auth/forgot-password", authLimiter);
 app.use("/api/auth/reset-password",  authLimiter);
 app.use("/api/auth", authRouter);
+app.use("/api/auth/totp", totpRouter);
+app.use("/api/auth/oauth", oauthRouter);
+app.use("/api/auth/sessions", sessionsRouter);
 app.use("/api/organizations", orgRouter);
 app.use("/api/modules", modulesRouter);
 app.use("/api/store", storeRouter);

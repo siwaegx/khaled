@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   Plus, Pencil, Trash2, Download, Users, TrendingUp,
-  Phone, Mail, Building2, ClipboardList, DollarSign,
+  Phone, Mail, Building2, ClipboardList, DollarSign, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,18 +36,6 @@ type Deal = {
   currency: string;
 };
 
-type Customer = {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  company: string | null;
-  address: string | null;
-  notes: string | null;
-  createdAt: string;
-  deals: Deal[];
-};
-
 type Contact = {
   id: string;
   companyId: string;
@@ -55,7 +43,20 @@ type Contact = {
   position: string | null;
   email: string | null;
   phone: string | null;
-  company: { id: string; name: string; industry: string | null } | null;
+};
+
+type Customer = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  industry: string | null;
+  website: string | null;
+  address: string | null;
+  notes: string | null;
+  createdAt: string;
+  contacts: Contact[];
+  deals: Deal[];
 };
 
 type CompanyLog = {
@@ -91,7 +92,9 @@ const DEAL_STATUS_COLOR: Record<string, string> = {
   lost:        "bg-red-100 text-red-700",
 };
 
-const CUSTOMER_EMPTY = { name: "", email: "", phone: "", company: "", address: "", notes: "" };
+const CUSTOMER_EMPTY = {
+  name: "", email: "", phone: "", industry: "", website: "", address: "", notes: "",
+};
 const DEAL_EMPTY_BASE = { title: "", value: "", status: "prospect", closeDate: "" };
 const LOG_EMPTY = { type: "note", subject: "", body: "" };
 
@@ -116,7 +119,6 @@ function CustomerAvatar({ name }: { name: string }) {
 export default function CustomersPage() {
   const currency = useCurrency();
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [contacts, setContacts]   = useState<Contact[]>([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState("");
   const [page, setPage]           = useState(1);
@@ -146,14 +148,8 @@ export default function CustomersPage() {
 
   const load = useCallback(() => {
     setLoading(true);
-    Promise.all([
-      apiGet<{ customers: Customer[] }>("/api/crm/customers"),
-      apiGet<{ contacts: Contact[] }>("/api/contacts/contacts?limit=200"),
-    ])
-      .then(([cd, cnd]) => {
-        setCustomers(cd.customers);
-        setContacts(cnd.contacts);
-      })
+    apiGet<{ customers: Customer[] }>("/api/crm/customers")
+      .then((cd) => setCustomers(cd.customers))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -161,21 +157,9 @@ export default function CustomersPage() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { setPage(1); }, [search]);
 
-  function getCustomerContacts(customer: Customer): Contact[] {
-    if (!customer.company) return [];
-    const q = customer.company.toLowerCase();
-    return contacts.filter((c) => c.company?.name?.toLowerCase() === q);
-  }
-
-  function getCompanyId(customer: Customer): string | null {
-    return getCustomerContacts(customer)[0]?.companyId ?? null;
-  }
-
   function loadLogs(customer: Customer) {
-    const companyId = getCompanyId(customer);
-    if (!companyId) { setLogs([]); return; }
     setLogsLoading(true);
-    apiGet<{ logs: CompanyLog[] }>(`/api/contacts/companies/${companyId}/logs`)
+    apiGet<{ logs: CompanyLog[] }>(`/api/contacts/companies/${customer.id}/logs`)
       .then((d) => setLogs(d.logs))
       .catch(() => setLogs([]))
       .finally(() => setLogsLoading(false));
@@ -209,12 +193,13 @@ export default function CustomersPage() {
   function openEdit(c: Customer) {
     setEditingCustomer(c);
     setCustomerForm({
-      name:    c.name,
-      email:   c.email    ?? "",
-      phone:   c.phone    ?? "",
-      company: c.company  ?? "",
-      address: c.address  ?? "",
-      notes:   c.notes    ?? "",
+      name:     c.name,
+      email:    c.email    ?? "",
+      phone:    c.phone    ?? "",
+      industry: c.industry ?? "",
+      website:  c.website  ?? "",
+      address:  c.address  ?? "",
+      notes:    c.notes    ?? "",
     });
     setCustomerError(null);
     setCustomerSheetOpen(true);
@@ -256,12 +241,12 @@ export default function CustomersPage() {
     setDealSaving(true); setDealError(null);
     try {
       const { deal } = await apiPost<{ deal: Deal }>("/api/crm/deals", {
-        title:      dealForm.title,
-        value:      dealForm.value ? parseFloat(dealForm.value) : undefined,
-        currency:   dealForm.currency,
-        status:     dealForm.status,
-        customerId: selected.id,
-        closeDate:  dealForm.closeDate ? new Date(dealForm.closeDate).toISOString() : undefined,
+        title:     dealForm.title,
+        value:     dealForm.value ? parseFloat(dealForm.value) : undefined,
+        currency:  dealForm.currency,
+        status:    dealForm.status,
+        companyId: selected.id,
+        closeDate: dealForm.closeDate ? new Date(dealForm.closeDate).toISOString() : undefined,
       });
       const newDeal = deal as Deal;
       setSelected((prev) => prev ? { ...prev, deals: [newDeal, ...prev.deals] } : prev);
@@ -279,11 +264,6 @@ export default function CustomersPage() {
 
   async function handleAddLog() {
     if (!selected) return;
-    const companyId = getCompanyId(selected);
-    if (!companyId) {
-      toast.error("No linked company — add this customer's company in Contacts first");
-      return;
-    }
     if (!logForm.subject.trim() && !logForm.body.trim()) {
       setLogError("Subject or details are required");
       return;
@@ -291,7 +271,7 @@ export default function CustomersPage() {
     setLogSaving(true); setLogError(null);
     try {
       const { log } = await apiPost<{ log: CompanyLog }>(
-        `/api/contacts/companies/${companyId}/logs`,
+        `/api/contacts/companies/${selected.id}/logs`,
         { type: logForm.type, subject: logForm.subject || undefined, body: logForm.body || undefined },
       );
       setLogs((prev) => [log, ...prev]);
@@ -306,12 +286,10 @@ export default function CustomersPage() {
 
   async function handleDeleteLog(logId: string) {
     if (!selected) return;
-    const companyId = getCompanyId(selected);
-    if (!companyId) return;
     const ok = await askConfirm();
     if (!ok) return;
     try {
-      await apiDelete(`/api/contacts/companies/${companyId}/logs/${logId}`);
+      await apiDelete(`/api/contacts/companies/${selected.id}/logs/${logId}`);
       setLogs((prev) => prev.filter((l) => l.id !== logId));
       toast.success("Log deleted");
     } catch (err) { toast.error(err instanceof Error ? err.message : "Delete failed"); }
@@ -321,8 +299,8 @@ export default function CustomersPage() {
     const q = search.toLowerCase();
     return (
       c.name.toLowerCase().includes(q) ||
-      (c.company ?? "").toLowerCase().includes(q) ||
-      (c.email   ?? "").toLowerCase().includes(q)
+      (c.industry ?? "").toLowerCase().includes(q) ||
+      (c.email    ?? "").toLowerCase().includes(q)
     );
   });
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -340,8 +318,8 @@ export default function CustomersPage() {
         <div className="ml-auto flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={() =>
             exportCSV("customers.csv",
-              ["Name", "Email", "Phone", "Company"],
-              filtered.map((c) => [c.name, c.email, c.phone, c.company]),
+              ["Name", "Email", "Phone", "Industry", "Website"],
+              filtered.map((c) => [c.name, c.email, c.phone, c.industry, c.website]),
             )
           }>
             <Download className="w-3.5 h-3.5 mr-1" />Export
@@ -356,8 +334,8 @@ export default function CustomersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
               <TableHead>Company</TableHead>
+              <TableHead>Industry</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Contacts</TableHead>
               <TableHead>Deals</TableHead>
@@ -377,7 +355,6 @@ export default function CustomersPage() {
                 </TableCell>
               </TableRow>
             ) : paginated.map((c) => {
-              const linked      = getCustomerContacts(c);
               const activeDeals = c.deals.filter((d) => !["won", "lost"].includes(d.status));
               const wonDeals    = c.deals.filter((d) => d.status === "won");
               return (
@@ -387,12 +364,12 @@ export default function CustomersPage() {
                   onClick={() => openDetail(c)}
                 >
                   <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.company ?? "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.industry ?? "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{c.email ?? "—"}</TableCell>
                   <TableCell>
-                    {linked.length > 0 ? (
+                    {c.contacts.length > 0 ? (
                       <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
-                        <Users className="w-3 h-3" />{linked.length}
+                        <Users className="w-3 h-3" />{c.contacts.length}
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -452,19 +429,19 @@ export default function CustomersPage() {
                 {customerError}
               </p>
             )}
-            <Field label="Name *">
+            <Field label="Company Name *">
               <Input
                 value={customerForm.name}
                 onChange={(e) => setCustomerForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="Full name"
+                placeholder="Acme Inc."
               />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Company">
+              <Field label="Industry">
                 <Input
-                  value={customerForm.company}
-                  onChange={(e) => setCustomerForm((f) => ({ ...f, company: e.target.value }))}
-                  placeholder="Acme Inc."
+                  value={customerForm.industry}
+                  onChange={(e) => setCustomerForm((f) => ({ ...f, industry: e.target.value }))}
+                  placeholder="Manufacturing"
                 />
               </Field>
               <Field label="Phone">
@@ -481,6 +458,13 @@ export default function CustomersPage() {
                 value={customerForm.email}
                 onChange={(e) => setCustomerForm((f) => ({ ...f, email: e.target.value }))}
                 placeholder="email@example.com"
+              />
+            </Field>
+            <Field label="Website">
+              <Input
+                value={customerForm.website}
+                onChange={(e) => setCustomerForm((f) => ({ ...f, website: e.target.value }))}
+                placeholder="https://example.com"
               />
             </Field>
             <Field label="Address">
@@ -518,8 +502,8 @@ export default function CustomersPage() {
                   <CustomerAvatar name={selected.name} />
                   <div className="min-w-0 flex-1">
                     <SheetTitle className="text-lg leading-tight">{selected.name}</SheetTitle>
-                    {selected.company && (
-                      <p className="text-sm text-muted-foreground">{selected.company}</p>
+                    {selected.industry && (
+                      <p className="text-sm text-muted-foreground">{selected.industry}</p>
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
@@ -546,6 +530,14 @@ export default function CustomersPage() {
                       <Phone className="w-4 h-4 text-muted-foreground shrink-0" />{selected.phone}
                     </div>
                   )}
+                  {selected.website && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <a href={selected.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">
+                        {selected.website}
+                      </a>
+                    </div>
+                  )}
                   {selected.address && (
                     <div className="flex items-center gap-2 text-sm">
                       <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />{selected.address}
@@ -562,18 +554,16 @@ export default function CustomersPage() {
                     <Users className="w-4 h-4" />
                     Contacts
                     <span className="ml-1 text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                      {getCustomerContacts(selected).length}
+                      {selected.contacts.length}
                     </span>
                   </p>
-                  {getCustomerContacts(selected).length === 0 ? (
+                  {selected.contacts.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg">
-                      {selected.company
-                        ? `No contacts found for "${selected.company}" — add them in the Contacts module`
-                        : "Set a company name to see linked contacts"}
+                      No contacts yet — add people to this company in the Contacts module
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {getCustomerContacts(selected).map((contact) => (
+                      {selected.contacts.map((contact) => (
                         <div key={contact.id} className="flex items-start gap-3 rounded-lg border p-3">
                           <CustomerAvatar name={contact.name} />
                           <div className="flex-1 min-w-0">
@@ -723,7 +713,7 @@ export default function CustomersPage() {
                         {logs.length}
                       </span>
                     </p>
-                    {!addingLog && getCompanyId(selected) != null && (
+                    {!addingLog && (
                       <Button size="sm" variant="outline" onClick={() => {
                         setLogForm(LOG_EMPTY);
                         setLogError(null);
@@ -733,14 +723,6 @@ export default function CustomersPage() {
                       </Button>
                     )}
                   </div>
-
-                  {getCompanyId(selected) == null && (
-                    <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg">
-                      {selected.company
-                        ? `Add "${selected.company}" to the Contacts module to enable activity logging`
-                        : "Set a company name and add it to Contacts to track activity"}
-                    </p>
-                  )}
 
                   {addingLog && (
                     <div className="rounded-lg border p-3 space-y-3">
@@ -788,54 +770,52 @@ export default function CustomersPage() {
                     </div>
                   )}
 
-                  {getCompanyId(selected) != null && (
-                    logsLoading ? (
-                      <p className="text-sm text-muted-foreground text-center py-4">Loading activity…</p>
-                    ) : logs.length === 0 && !addingLog ? (
-                      <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg">
-                        No activity yet — click Log Activity to add one
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {logs.map((log) => (
-                          <div
-                            key={log.id}
-                            className={cn(
-                              "flex items-start gap-3 rounded-lg border p-3",
-                              LOG_COLORS[log.type] ?? LOG_COLORS.other,
-                            )}
-                          >
-                            <span className="text-base shrink-0 mt-0.5" aria-hidden>
-                              {LOG_EMOJIS[log.type] ?? "💬"}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold uppercase tracking-wide">
-                                  {LOG_LABELS[log.type] ?? log.type}
-                                </span>
-                                <span className="text-xs text-muted-foreground ml-auto shrink-0">
-                                  {new Date(log.loggedAt).toLocaleDateString()}
-                                </span>
-                              </div>
-                              {log.subject && (
-                                <p className="text-sm font-medium mt-0.5">{log.subject}</p>
-                              )}
-                              {log.body && (
-                                <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line">{log.body}</p>
-                              )}
+                  {logsLoading ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Loading activity…</p>
+                  ) : logs.length === 0 && !addingLog ? (
+                    <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg">
+                      No activity yet — click Log Activity to add one
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {logs.map((log) => (
+                        <div
+                          key={log.id}
+                          className={cn(
+                            "flex items-start gap-3 rounded-lg border p-3",
+                            LOG_COLORS[log.type] ?? LOG_COLORS.other,
+                          )}
+                        >
+                          <span className="text-base shrink-0 mt-0.5" aria-hidden>
+                            {LOG_EMOJIS[log.type] ?? "💬"}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold uppercase tracking-wide">
+                                {LOG_LABELS[log.type] ?? log.type}
+                              </span>
+                              <span className="text-xs text-muted-foreground ml-auto shrink-0">
+                                {new Date(log.loggedAt).toLocaleDateString()}
+                              </span>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              className="shrink-0 hover:text-destructive opacity-60 hover:opacity-100"
-                              onClick={() => handleDeleteLog(log.id)}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                            {log.subject && (
+                              <p className="text-sm font-medium mt-0.5">{log.subject}</p>
+                            )}
+                            {log.body && (
+                              <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line">{log.body}</p>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    )
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="shrink-0 hover:text-destructive opacity-60 hover:opacity-100"
+                            onClick={() => handleDeleteLog(log.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
 

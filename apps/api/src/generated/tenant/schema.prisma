@@ -50,6 +50,7 @@ model CrmCompany {
   notes     String?
   contacts  CrmContact[]
   logs      CrmCompanyLog[]
+  deals     Deal[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
@@ -130,36 +131,20 @@ model Lead {
   @@map("crm_leads")
 }
 
-model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  email     String?
-  phone     String?
-  company   String?
-  address   String?
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  deals Deal[]
-
-  @@map("crm_customers")
-}
-
 model Deal {
   id         String     @id @default(cuid())
   title      String
-  value      Float?
+  value      Decimal?   @db.Decimal(20, 4)
   currency   String     @default("USD")
   status     DealStatus @default(prospect)
-  customerId String?
+  companyId  String?
   assignedTo String?
   closeDate  DateTime?
   notes      String?
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
-  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  company CrmCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@map("crm_deals")
@@ -187,8 +172,8 @@ model Product {
   sku         String        @unique
   description String?
   category    String?
-  unitPrice   Float?
-  costPrice   Float?
+  unitPrice   Decimal?      @db.Decimal(20, 4)
+  costPrice   Decimal?      @db.Decimal(20, 4)
   unit        String        @default("unit")
   status      ProductStatus @default(active)
   createdAt   DateTime      @default(now())
@@ -234,7 +219,7 @@ model PurchaseOrder {
   id           String              @id @default(cuid())
   supplierName String
   status       PurchaseOrderStatus @default(draft)
-  totalAmount  Float?
+  totalAmount  Decimal?            @db.Decimal(20, 4)
   notes        String?
   orderDate    DateTime?
   expectedDate DateTime?
@@ -253,9 +238,9 @@ model PurchaseOrderItem {
   purchaseOrderId String
   productId       String?
   productName     String
-  quantity        Float
-  unitCost        Float
-  totalCost       Float
+  quantity        Decimal  @db.Decimal(20, 4)
+  unitCost        Decimal  @db.Decimal(20, 4)
+  totalCost       Decimal  @db.Decimal(20, 4)
   createdAt       DateTime @default(now())
 
   purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
@@ -280,9 +265,9 @@ model Invoice {
   customerName String
   customerId   String?
   status       InvoiceStatus @default(draft)
-  subtotal     Float         @default(0)
-  tax          Float         @default(0)
-  total        Float         @default(0)
+  subtotal     Decimal       @default(0) @db.Decimal(20, 4)
+  tax          Decimal       @default(0) @db.Decimal(20, 4)
+  total        Decimal       @default(0) @db.Decimal(20, 4)
   notes        String?
   issueDate    DateTime      @default(now())
   dueDate      DateTime?
@@ -300,9 +285,9 @@ model InvoiceItem {
   id          String   @id @default(cuid())
   invoiceId   String
   description String
-  quantity    Float    @default(1)
-  unitPrice   Float
-  amount      Float
+  quantity    Decimal  @default(1) @db.Decimal(20, 4)
+  unitPrice   Decimal  @db.Decimal(20, 4)
+  amount      Decimal  @db.Decimal(20, 4)
   createdAt   DateTime @default(now())
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
@@ -314,7 +299,7 @@ model Expense {
   id          String   @id @default(cuid())
   category    String
   description String
-  amount      Float
+  amount      Decimal  @db.Decimal(20, 4)
   currency    String   @default("USD")
   date        DateTime @default(now())
   reference   String?
@@ -357,7 +342,7 @@ model Employee {
   phone           String?
   position        String?
   department      String?
-  salary          Float?
+  salary          Decimal?       @db.Decimal(20, 4)
   status          EmployeeStatus @default(active)
   hireDate        DateTime?
   terminationDate DateTime?

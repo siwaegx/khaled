@@ -1,8 +1,21 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import jwt from "jsonwebtoken";
+
+vi.mock("../lib/prisma", () => ({
+  prisma: {
+    userSession: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      update: vi.fn().mockResolvedValue(null),
+    },
+    orgMember: {
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
+  },
+}));
+
 import { requireAuth } from "../middleware/requireAuth";
 import { errorHandler } from "../middleware/errorHandler";
 

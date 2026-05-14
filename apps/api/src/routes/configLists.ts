@@ -157,7 +157,7 @@ configListsRouter.get("/:key", async (req, res, next) => {
   try {
     const orgId = req.user!.orgId!;
     const list = await prisma.configList.findUnique({
-      where:   { organizationId_key: { organizationId: orgId, key: req.params.key } },
+      where:   { organizationId_key: { organizationId: orgId, key: req.params["key"] ?? "" } },
       include: { items: { where: { isActive: true }, orderBy: { order: "asc" } } },
     });
     if (!list) throw new AppError(404, "List not found");
@@ -186,7 +186,7 @@ configListsRouter.post("/", requireRole("manager"), async (req, res, next) => {
     });
     res.status(201).json({ list });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -196,7 +196,7 @@ configListsRouter.delete("/:key", requireRole("manager"), async (req, res, next)
   try {
     const orgId = req.user!.orgId!;
     const list  = await prisma.configList.findUnique({
-      where: { organizationId_key: { organizationId: orgId, key: req.params.key } },
+      where: { organizationId_key: { organizationId: orgId, key: req.params["key"] ?? "" } },
     });
     if (!list)          throw new AppError(404, "List not found");
     if (list.isSystem)  throw new AppError(400, "System lists cannot be deleted");
@@ -215,18 +215,19 @@ configListsRouter.post("/:key/items", requireRole("manager"), async (req, res, n
   try {
     const orgId = req.user!.orgId!;
     const list  = await prisma.configList.findUnique({
-      where:   { organizationId_key: { organizationId: orgId, key: req.params.key } },
+      where:   { organizationId_key: { organizationId: orgId, key: req.params["key"] ?? "" } },
       include: { items: { orderBy: { order: "desc" }, take: 1 } },
     });
     if (!list) throw new AppError(404, "List not found");
     const { value, color } = itemSchema.parse(req.body);
-    const nextOrder = (list.items[0]?.order ?? -1) + 1;
+    const listWithItems = list as typeof list & { items: Array<{ order: number | null }> };
+    const nextOrder = (listWithItems.items[0]?.order ?? -1) + 1;
     const item = await prisma.configListItem.create({
       data: { listId: list.id, value, color, order: nextOrder },
     });
     res.status(201).json({ item });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -242,17 +243,17 @@ configListsRouter.patch("/:key/items/:itemId", requireRole("manager"), async (re
   try {
     const orgId = req.user!.orgId!;
     const list  = await prisma.configList.findUnique({
-      where: { organizationId_key: { organizationId: orgId, key: req.params.key } },
+      where: { organizationId_key: { organizationId: orgId, key: req.params["key"] ?? "" } },
     });
     if (!list) throw new AppError(404, "List not found");
     const data = patchItemSchema.parse(req.body);
     const item = await prisma.configListItem.update({
-      where: { id: req.params.itemId },
+      where: { id: req.params["itemId"] ?? "" },
       data,
     });
     res.json({ item });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -262,10 +263,10 @@ configListsRouter.delete("/:key/items/:itemId", requireRole("manager"), async (r
   try {
     const orgId = req.user!.orgId!;
     const list  = await prisma.configList.findUnique({
-      where: { organizationId_key: { organizationId: orgId, key: req.params.key } },
+      where: { organizationId_key: { organizationId: orgId, key: req.params["key"] ?? "" } },
     });
     if (!list) throw new AppError(404, "List not found");
-    await prisma.configListItem.delete({ where: { id: req.params.itemId } });
+    await prisma.configListItem.delete({ where: { id: req.params["itemId"] ?? "" } });
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
@@ -275,7 +276,7 @@ configListsRouter.put("/:key/items/reorder", requireRole("manager"), async (req,
   try {
     const orgId = req.user!.orgId!;
     const list  = await prisma.configList.findUnique({
-      where: { organizationId_key: { organizationId: orgId, key: req.params.key } },
+      where: { organizationId_key: { organizationId: orgId, key: req.params["key"] ?? "" } },
     });
     if (!list) throw new AppError(404, "List not found");
     const { order } = z.object({ order: z.array(z.string()) }).parse(req.body);
@@ -284,7 +285,7 @@ configListsRouter.put("/:key/items/reorder", requireRole("manager"), async (req,
     );
     res.json({ ok: true });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });

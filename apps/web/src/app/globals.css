@@ -203,3 +203,16 @@
     box-shadow: 0 12px 32px -8px oklch(0.56 0.115 174 / 0.14), 0 4px 12px -4px oklch(0.30 0.065 174 / 0.08);
   }
 }
+
+
+/* Mobile: all tables inside the dashboard main content scroll horizontally */
+@media (max-width: 768px) {
+  main table {
+    min-width: 600px;
+  }
+  main .table-container,
+  main [data-slot="table-wrapper"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

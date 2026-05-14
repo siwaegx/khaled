@@ -5,11 +5,53 @@ import { getConfig } from "@/lib/ai-config";
 import { requireAuth } from "@/lib/requireAuth";
 import type { ChatMessage } from "@/types";
 
+// Simple in-memory per-user rate limiter: max 20 chat calls per minute
+const chatRateMap = new Map<string, { count: number; resetAt: number }>();
+function checkChatRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = chatRateMap.get(userId);
+  if (!entry || entry.resetAt < now) {
+    chatRateMap.set(userId, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= 20) return false;
+  entry.count++;
+  return true;
+}
+
 export const runtime = "nodejs";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
+async function fetchOrgContext(accessToken: string | undefined): Promise<string | null> {
+  if (!accessToken) return null;
+  try {
+    const res = await fetch(`${API_URL}/api/reports/summary`, {
+      headers: { Cookie: `access_token=${accessToken}` },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return null;
+    const context = await res.json();
+    return `--- ORG CONTEXT (live data, use to answer questions about this organization) ---
+CRM: ${context.crm.leads} leads, ${context.crm.customers} customers, ${context.crm.deals} open deals worth ${context.crm.dealValue}
+Accounting: ${context.accounting.paidRevenue} revenue, ${context.accounting.totalExpenses} expenses, ${context.accounting.invoices} invoices
+HR: ${context.hr.activeEmployees} employees, ${context.hr.pendingLeave} pending leave requests
+Projects: ${context.projects.activeProjects} projects, ${context.projects.openTasks} open tasks
+Inventory: ${context.inventory.products} products, ${context.inventory.warehouses} warehouses
+---`;
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
+
+  // Rate limit: 20 chat requests per user per minute
+  if (!checkChatRateLimit(auth.user.userId)) {
+    return NextResponse.json({ error: "Rate limit exceeded. Maximum 20 chat requests per minute." }, { status: 429 });
+  }
 
   const config = getConfig();
   if (!config.features.chat) {
@@ -19,9 +61,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { messages }: { messages: ChatMessage[] } = await req.json();
+  const body = await req.json() as Record<string, unknown>;
+  if (!Array.isArray(body.messages) || body.messages.length === 0) {
+    return NextResponse.json({ error: "messages array is required and must not be empty." }, { status: 400 });
+  }
+  if (body.messages.length > 100) {
+    return NextResponse.json({ error: "Too many messages. Maximum 100 messages per request." }, { status: 400 });
+  }
+  const messages = body.messages as ChatMessage[];
 
-  const systemBlocks = getSystemBlocks();
+  // Build system blocks — start with the cached base blocks, then optionally
+  // append a live org context block (not cached, changes per request).
+  const accessToken = req.cookies.get("access_token")?.value;
+  const orgContextText = await fetchOrgContext(accessToken);
+
+  const systemBlocks = [
+    ...getSystemBlocks(),
+    ...(orgContextText
+      ? [{ type: "text" as const, text: orgContextText }]
+      : []),
+  ];
   const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
   const promptPreview = (lastUserMsg?.content ?? "").slice(0, 200);
   const startMs = Date.now();
@@ -82,7 +141,7 @@ export async function POST(req: NextRequest) {
         appendLog({
           type: "chat",
           prompt: promptPreview,
-          model: MODEL,
+          model: config.model ?? MODEL,
           inputTokens,
           outputTokens,
           cacheReadTokens,

@@ -1,10 +1,15 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import { AppError } from "../middleware/errorHandler";
 import type { JwtPayload } from "../types";
 
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+function hashToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
 
 export async function registerUser(data: {
   email: string;
@@ -42,5 +47,11 @@ export async function loginUser(email: string, password: string) {
   };
 
   const token = jwt.sign(payload, process.env.JWT_SECRET ?? "secret", { expiresIn: "7d" });
+
+  // Record session for management UI (best-effort)
+  prisma.userSession.create({
+    data: { userId: user.id, tokenHash: hashToken(token) },
+  }).catch(() => {});
+
   return { token, cookieMaxAge: COOKIE_MAX_AGE, user: { id: user.id, email: user.email, name: user.name } };
 }

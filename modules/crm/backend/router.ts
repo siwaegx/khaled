@@ -26,7 +26,6 @@ type DbModel = {
 
 type CrmDb = {
   lead:       DbModel;
-  customer:   DbModel;
   deal:       DbModel;
   crmCompany: DbModel;
   crmContact: DbModel;
@@ -50,12 +49,13 @@ const leadSchema = z.object({
 });
 
 const customerSchema = z.object({
-  name:    z.string().min(1),
-  email:   z.string().email().optional().or(z.literal("")),
-  phone:   z.string().optional(),
-  company: z.string().optional(),
-  address: z.string().optional(),
-  notes:   z.string().optional(),
+  name:     z.string().min(1),
+  email:    z.string().email().optional().or(z.literal("")),
+  phone:    z.string().optional(),
+  industry: z.string().optional(),
+  website:  z.string().optional(),
+  address:  z.string().optional(),
+  notes:    z.string().optional(),
 });
 
 const dealSchema = z.object({
@@ -63,7 +63,7 @@ const dealSchema = z.object({
   value:      z.number().nonnegative().optional(),
   currency:   z.string().optional(),
   status:     z.enum(["prospect", "qualified", "proposal", "negotiation", "won", "lost"]).optional(),
-  customerId: z.string().optional(),
+  companyId:  z.string().optional(),
   assignedTo: z.string().optional(),
   closeDate:  z.string().datetime({ offset: true }).optional(),
   notes:      z.string().optional(),
@@ -75,12 +75,11 @@ router.get("/stats", async (req, res, next) => {
   try {
     const d = db(req);
     const [
-      totalLeads, totalCustomers, totalDeals,
+      totalLeads, totalDeals,
       leadsByStatus, dealsByStatus,
       totalCompanies, totalContacts,
     ] = await Promise.all([
       d.lead.count(),
-      d.customer.count(),
       d.deal.count(),
       d.lead.groupBy({ by: ["status"], _count: { id: true } }),
       d.deal.groupBy({ by: ["status"], _count: { id: true }, _sum: { value: true } }),
@@ -88,7 +87,11 @@ router.get("/stats", async (req, res, next) => {
       d.crmContact.count(),
     ]);
 
-    res.json({ totalLeads, totalCustomers, totalDeals, leadsByStatus, dealsByStatus, totalCompanies, totalContacts });
+    res.json({
+      totalLeads, totalDeals, leadsByStatus, dealsByStatus,
+      totalCompanies, totalContacts,
+      totalCustomers: totalCompanies,
+    });
   } catch (err) { next(err); }
 });
 
@@ -158,56 +161,64 @@ router.post("/leads/:id/convert", async (req, res, next) => {
     if (!lead) throw new AppError(404, "Lead not found");
     if (lead.status === "converted") throw new AppError(400, "Lead already converted");
 
-    const [customer] = await Promise.all([
-      d.customer.create({
-        data: {
-          name:    lead.name,
-          email:   lead.email   || null,
-          phone:   lead.phone   || null,
-          company: lead.company || null,
-          notes:   lead.notes   || null,
-        },
-      }),
-      d.lead.update({ where: { id: lead.id }, data: { status: "converted" } }),
-    ]);
+    await d.lead.update({ where: { id: lead.id }, data: { status: "converted" } });
 
-    if (lead.company) {
-      let company = await d.crmCompany.findFirst({
-        where: { name: { equals: lead.company, mode: "insensitive" } },
-      }) as { id: string } | null;
-      if (!company) {
-        company = await d.crmCompany.create({ data: { name: lead.company } }) as { id: string };
-      }
-      await d.crmContact.create({
+    const companyName = lead.company || lead.name;
+    let company = await d.crmCompany.findFirst({
+      where: { name: { equals: companyName, mode: "insensitive" } },
+    }) as { id: string } | null;
+    if (!company) {
+      company = await d.crmCompany.create({
         data: {
-          companyId: company.id,
-          name:      lead.name,
-          email:     lead.email || null,
-          phone:     lead.phone || null,
+          name:  companyName,
+          email: !lead.company ? (lead.email || null) : null,
+          phone: !lead.company ? (lead.phone || null) : null,
         },
-      });
+      }) as { id: string };
     }
 
-    res.status(201).json({ customer });
+    const contact = await d.crmContact.create({
+      data: {
+        companyId: company.id,
+        name:      lead.name,
+        email:     lead.email || null,
+        phone:     lead.phone || null,
+      },
+    });
+
+    res.status(201).json({ customer: company, contact });
   } catch (err) { next(err); }
 });
 
-// ─── Customers ───────────────────────────────────────────────────────────────
+// ─── Customers (backed by CrmCompany — contacts module is the source of truth) ─
 
 router.get("/customers", async (req, res, next) => {
   try {
-    const page  = Math.max(1, parseInt(String(req.query["page"]  ?? "1")));
-    const limit = Math.min(200, Math.max(1, parseInt(String(req.query["limit"] ?? "50"))));
-    const skip  = (page - 1) * limit;
+    const page   = Math.max(1, parseInt(String(req.query["page"]  ?? "1")));
+    const limit  = Math.min(200, Math.max(1, parseInt(String(req.query["limit"] ?? "50"))));
+    const skip   = (page - 1) * limit;
+    const search = String(req.query["search"] ?? "").trim();
+
+    const where = search
+      ? { OR: [
+          { name:     { contains: search, mode: "insensitive" as const } },
+          { email:    { contains: search, mode: "insensitive" as const } },
+          { industry: { contains: search, mode: "insensitive" as const } },
+        ] }
+      : {};
 
     const [customers, total] = await Promise.all([
-      db(req).customer.findMany({
+      db(req).crmCompany.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        include: { deals: { select: { id: true, title: true, status: true, value: true } } },
+        include: {
+          contacts: { orderBy: { createdAt: "asc" as const } },
+          deals: { select: { id: true, title: true, status: true, value: true, currency: true } },
+        },
       }),
-      db(req).customer.count(),
+      db(req).crmCompany.count({ where }),
     ]);
     res.json({ customers, total, page, limit });
   } catch (err) { next(err); }
@@ -216,7 +227,10 @@ router.get("/customers", async (req, res, next) => {
 router.post("/customers", async (req, res, next) => {
   try {
     const data     = customerSchema.parse(req.body);
-    const customer = await db(req).customer.create({ data: { ...data, email: data.email || null } });
+    const customer = await db(req).crmCompany.create({
+      data: { ...data, email: data.email || null },
+      include: { contacts: true, deals: true },
+    });
     res.status(201).json({ customer });
   } catch (err) {
     if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
@@ -227,9 +241,10 @@ router.post("/customers", async (req, res, next) => {
 router.patch("/customers/:id", async (req, res, next) => {
   try {
     const data     = customerSchema.partial().parse(req.body);
-    const customer = await db(req).customer.update({
+    const customer = await db(req).crmCompany.update({
       where: { id: req.params["id"]! },
       data: { ...data, email: data.email !== undefined ? (data.email || null) : undefined },
+      include: { contacts: true, deals: true },
     });
     res.json({ customer });
   } catch (err) {
@@ -240,7 +255,7 @@ router.patch("/customers/:id", async (req, res, next) => {
 
 router.delete("/customers/:id", async (req, res, next) => {
   try {
-    await db(req).customer.delete({ where: { id: req.params["id"]! } });
+    await db(req).crmCompany.delete({ where: { id: req.params["id"]! } });
     res.json({ success: true });
   } catch (err) { next(err); }
 });
@@ -261,7 +276,7 @@ router.get("/deals", async (req, res, next) => {
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        include: { customer: { select: { id: true, name: true, company: true } } },
+        include: { company: { select: { id: true, name: true, industry: true } } },
       }),
       db(req).deal.count({ where }),
     ]);
@@ -278,7 +293,7 @@ router.post("/deals", async (req, res, next) => {
         currency:  data.currency ?? req.orgCurrency ?? "USD",
         closeDate: data.closeDate ? new Date(data.closeDate) : null,
       },
-      include: { customer: { select: { id: true, name: true, company: true } } },
+      include: { company: { select: { id: true, name: true, industry: true } } },
     });
     res.status(201).json({ deal });
   } catch (err) {
@@ -296,7 +311,7 @@ router.patch("/deals/:id", async (req, res, next) => {
         ...data,
         closeDate: data.closeDate !== undefined ? (data.closeDate ? new Date(data.closeDate) : null) : undefined,
       },
-      include: { customer: { select: { id: true, name: true, company: true } } },
+      include: { company: { select: { id: true, name: true, industry: true } } },
     });
     res.json({ deal });
   } catch (err) {
@@ -310,4 +325,42 @@ router.delete("/deals/:id", async (req, res, next) => {
     await db(req).deal.delete({ where: { id: req.params["id"]! } });
     res.json({ success: true });
   } catch (err) { next(err); }
+});
+
+// GET /api/crm/export — download all leads as CSV
+router.get("/export", requireRole("member"), async (req, res, next) => {
+  try {
+    const tenantDb = req.tenantDb as any;
+    const rows = await tenantDb.lead.findMany({ orderBy: { createdAt: "desc" } });
+
+    if (!rows.length) {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename="leads.csv"`);
+      return res.send("id,name,email,phone,company,status,source,notes,assignedTo,createdAt,updatedAt\n");
+    }
+
+    const headers = Object.keys(rows[0]).filter((k: string) => !["passwordHash", "totpSecret"].includes(k));
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v instanceof Date ? v.toISOString() : v);
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers.join(","), ...rows.map((r: Record<string, unknown>) => headers.map((h: string) => escape(r[h])).join(","))].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="leads.csv"`);
+    res.send(csv);
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/crm/bulk — delete multiple leads by IDs
+router.delete("/bulk", requireRole("manager"), async (req, res, next) => {
+  try {
+    const { ids } = z.object({ ids: z.array(z.string()).min(1).max(100) }).parse(req.body);
+    const tenantDb = req.tenantDb as any;
+    const { count } = await tenantDb.lead.deleteMany({ where: { id: { in: ids } } });
+    res.json({ deleted: count });
+  } catch (err) {
+    if (err instanceof z.ZodError) return next(new AppError(400, err.message));
+    next(err);
+  }
 });

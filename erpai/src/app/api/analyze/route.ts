@@ -6,7 +6,44 @@ import { getConfig } from "@/lib/ai-config";
 import { requireAuth } from "@/lib/requireAuth";
 import Anthropic from "@anthropic-ai/sdk";
 
+// Simple in-memory per-user rate limiter: max 5 analyze calls per minute
+const analyzeRateMap = new Map<string, { count: number; resetAt: number }>();
+function checkAnalyzeRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = analyzeRateMap.get(userId);
+  if (!entry || entry.resetAt < now) {
+    analyzeRateMap.set(userId, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= 5) return false;
+  entry.count++;
+  return true;
+}
+
 export const runtime = "nodejs";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
+async function fetchOrgContext(accessToken: string | undefined): Promise<string | null> {
+  if (!accessToken) return null;
+  try {
+    const res = await fetch(`${API_URL}/api/reports/summary`, {
+      headers: { Cookie: `access_token=${accessToken}` },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return null;
+    const context = await res.json();
+    return `--- ORG CONTEXT (live data, use to answer questions about this organization) ---
+CRM: ${context.crm.leads} leads, ${context.crm.customers} customers, ${context.crm.deals} open deals worth ${context.crm.dealValue}
+Accounting: ${context.accounting.paidRevenue} revenue, ${context.accounting.totalExpenses} expenses, ${context.accounting.invoices} invoices
+HR: ${context.hr.activeEmployees} employees, ${context.hr.pendingLeave} pending leave requests
+Projects: ${context.projects.activeProjects} projects, ${context.projects.openTasks} open tasks
+Inventory: ${context.inventory.products} products, ${context.inventory.warehouses} warehouses
+---`;
+  } catch {
+    return null;
+  }
+}
 
 const TOOLS: Anthropic.Messages.Tool[] = [
   {
@@ -99,14 +136,36 @@ export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
 
+  // Rate limit: 5 analyze requests per user per minute
+  if (!checkAnalyzeRateLimit(auth.user.userId)) {
+    return NextResponse.json({ error: "Rate limit exceeded. Maximum 5 analyze requests per minute." }, { status: 429 });
+  }
+
   const config = getConfig();
   if (!config.features.analyze) {
     return NextResponse.json({ error: "Analysis feature is disabled by the platform admin." }, { status: 403 });
   }
 
-  const { prompt }: { prompt: string } = await req.json();
+  const body = await req.json() as Record<string, unknown>;
+  const prompt = typeof body.prompt === "string" ? body.prompt : "";
+  if (!prompt || prompt.length === 0) {
+    return NextResponse.json({ error: "Prompt is required." }, { status: 400 });
+  }
+  if (prompt.length > 8000) {
+    return NextResponse.json({ error: "Prompt too long. Maximum 8000 characters." }, { status: 400 });
+  }
 
-  const systemBlocks = getSystemBlocks();
+  // Build system blocks — cached base + optional live org context.
+  const accessToken = req.cookies.get("access_token")?.value;
+  const orgContextText = await fetchOrgContext(accessToken);
+
+  const systemBlocks = [
+    ...getSystemBlocks(),
+    ...(orgContextText
+      ? [{ type: "text" as const, text: orgContextText }]
+      : []),
+  ];
+
   const messages: Anthropic.Messages.MessageParam[] = [
     { role: "user", content: prompt },
   ];
@@ -148,7 +207,7 @@ export async function POST(req: NextRequest) {
         appendLog({
           type: "analyze",
           prompt: prompt.slice(0, 200),
-          model: MODEL,
+          model: config.model ?? MODEL,
           inputTokens: totalInputTokens,
           outputTokens: totalOutputTokens,
           cacheReadTokens: totalCacheRead,

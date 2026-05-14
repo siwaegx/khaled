@@ -129,3 +129,41 @@ router.delete("/events/:id", requireRole("manager"), async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/calendar/export — download all calendar events as CSV
+router.get("/export", requireRole("member"), async (req, res, next) => {
+  try {
+    const tenantDb = req.tenantDb as any;
+    const rows = await tenantDb.calendarEvent.findMany({ orderBy: { createdAt: "desc" } });
+
+    if (!rows.length) {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename="calendar-events.csv"`);
+      return res.send("id,title,description,startAt,endAt,allDay,type,entityType,entityId,color,createdBy,createdAt,updatedAt\n");
+    }
+
+    const headers = Object.keys(rows[0]).filter((k: string) => !["passwordHash", "totpSecret"].includes(k));
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v instanceof Date ? v.toISOString() : v);
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers.join(","), ...rows.map((r: Record<string, unknown>) => headers.map((h: string) => escape(r[h])).join(","))].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="calendar-events.csv"`);
+    res.send(csv);
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/calendar/bulk — delete multiple calendar events by IDs
+router.delete("/bulk", requireRole("manager"), async (req, res, next) => {
+  try {
+    const { ids } = z.object({ ids: z.array(z.string()).min(1).max(100) }).parse(req.body);
+    const tenantDb = req.tenantDb as any;
+    const { count } = await tenantDb.calendarEvent.deleteMany({ where: { id: { in: ids } } });
+    res.json({ deleted: count });
+  } catch (err) {
+    if (err instanceof z.ZodError) return next(new AppError(400, err.message));
+    next(err);
+  }
+});
+

@@ -45,6 +45,9 @@ vi.mock("../lib/prisma", () => ({
       update:   vi.fn(),
       delete:   vi.fn(),
     },
+    userSession: {
+      create: vi.fn().mockResolvedValue({}),
+    },
     $transaction: vi.fn(),
   },
 }));

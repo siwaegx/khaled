@@ -10,11 +10,13 @@ vi.mock("../middleware/requireAuth", () => ({
 }));
 
 const mockOrgWebhook = {
-  findMany:  vi.fn(),
-  findFirst: vi.fn(),
-  create:    vi.fn(),
-  update:    vi.fn(),
-  delete:    vi.fn(),
+  findMany:    vi.fn(),
+  findFirst:   vi.fn(),
+  create:      vi.fn(),
+  update:      vi.fn(),
+  updateMany:  vi.fn(),
+  delete:      vi.fn(),
+  deleteMany:  vi.fn(),
 };
 
 const mockWebhookDelivery = {
@@ -84,15 +86,16 @@ describe("PATCH /api/webhooks/:id", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("updates a webhook", async () => {
-    mockOrgWebhook.findFirst.mockResolvedValue(sampleWebhook);
-    mockOrgWebhook.update.mockResolvedValue({ ...sampleWebhook, isActive: false });
+    const updated = { ...sampleWebhook, isActive: false };
+    mockOrgWebhook.updateMany.mockResolvedValue({ count: 1 });
+    mockOrgWebhook.findFirst.mockResolvedValue(updated);
     const res = await request(app()).patch("/wh1").send({ isActive: false });
     expect(res.status).toBe(200);
     expect(res.body.webhook.isActive).toBe(false);
   });
 
   it("returns 404 for wrong org", async () => {
-    mockOrgWebhook.findFirst.mockResolvedValue(null);
+    mockOrgWebhook.updateMany.mockResolvedValue({ count: 0 });
     const res = await request(app()).patch("/wh999").send({ isActive: false });
     expect(res.status).toBe(404);
   });
@@ -102,15 +105,14 @@ describe("DELETE /api/webhooks/:id", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("deletes a webhook", async () => {
-    mockOrgWebhook.findFirst.mockResolvedValue(sampleWebhook);
-    mockOrgWebhook.delete.mockResolvedValue(sampleWebhook);
+    mockOrgWebhook.deleteMany.mockResolvedValue({ count: 1 });
     const res = await request(app()).delete("/wh1");
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
   });
 
   it("returns 404 if not found", async () => {
-    mockOrgWebhook.findFirst.mockResolvedValue(null);
+    mockOrgWebhook.deleteMany.mockResolvedValue({ count: 0 });
     const res = await request(app()).delete("/wh999");
     expect(res.status).toBe(404);
   });

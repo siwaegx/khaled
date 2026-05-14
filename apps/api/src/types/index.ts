@@ -7,6 +7,8 @@ export interface JwtPayload {
   role: string;
   isAdmin: boolean;
   impersonated?: boolean;
+  /** Standard JWT issued-at claim (seconds since epoch) — set by jsonwebtoken automatically */
+  iat?: number;
 }
 
 declare global {

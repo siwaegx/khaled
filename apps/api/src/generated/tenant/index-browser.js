@@ -187,25 +187,13 @@ exports.Prisma.LeadScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.CustomerScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  email: 'email',
-  phone: 'phone',
-  company: 'company',
-  address: 'address',
-  notes: 'notes',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.DealScalarFieldEnum = {
   id: 'id',
   title: 'title',
   value: 'value',
   currency: 'currency',
   status: 'status',
-  customerId: 'customerId',
+  companyId: 'companyId',
   assignedTo: 'assignedTo',
   closeDate: 'closeDate',
   notes: 'notes',
@@ -525,7 +513,6 @@ exports.Prisma.ModelName = {
   CrmContact: 'CrmContact',
   CrmCompanyLog: 'CrmCompanyLog',
   Lead: 'Lead',
-  Customer: 'Customer',
   Deal: 'Deal',
   Product: 'Product',
   Warehouse: 'Warehouse',

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2, Download, UserPlus } from "lucide-react";
+import { Plus, Pencil, Trash2, Download, UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ import { exportCSV } from "@/lib/csv";
 import { Pagination } from "@/components/ui/pagination";
 
 const PAGE_SIZE = 20;
+const STORAGE_KEY = "filter_crm_search";
 
 type Lead = {
   id: string;
@@ -70,8 +71,10 @@ export default function LeadsPage() {
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const { confirm: askConfirm, isOpen: confirmOpen, handleConfirm, handleCancel } = useConfirm();
-  const [search, setSearch]     = useState("");
+  const [search, setSearch]     = useState(() => (typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) ?? "" : ""));
   const [page, setPage]         = useState(1);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -84,6 +87,10 @@ export default function LeadsPage() {
   useEffect(() => {
     void (async () => { load(); })();
   }, [load]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, search);
+  }, [search]);
 
   function openCreate() {
     setEditing(null);
@@ -150,6 +157,25 @@ export default function LeadsPage() {
     } catch (err) { toast.error(err instanceof Error ? err.message : "Conversion failed"); }
   }
 
+  async function handleBulkDelete() {
+    if (!confirm(`Delete ${selectedIds.size} items? This cannot be undone.`)) return;
+    setBulkDeleting(true);
+    try {
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+      const res = await fetch(`${BASE_URL}/api/crm/bulk`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+      if (!res.ok) throw new Error("Bulk delete failed");
+      setLeads((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+      setSelectedIds(new Set());
+      toast.success(`Deleted ${selectedIds.size} items`);
+    } catch { toast.error("Bulk delete failed"); }
+    finally { setBulkDeleting(false); }
+  }
+
   const filtered = leads.filter((l) => {
     const q = search.toLowerCase();
     return (
@@ -163,15 +189,52 @@ export default function LeadsPage() {
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const allVisibleSelected = paginated.length > 0 && paginated.every((l) => selectedIds.has(l.id));
+
+  function toggleSelectAll() {
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        paginated.forEach((l) => next.delete(l.id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        paginated.forEach((l) => next.add(l.id));
+        return next;
+      });
+    }
+  }
+
+  function toggleRow(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Input
-          placeholder="Search leads…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs h-8 text-sm"
-        />
+        <div className="relative max-w-xs">
+          <Input
+            placeholder="Search leads…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 text-sm pr-7"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
         <div className="ml-auto flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => exportCSV("leads.csv",
             ["Name","Email","Phone","Company","Status","Source"],
@@ -184,10 +247,36 @@ export default function LeadsPage() {
         </div>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg mb-3">
+          <span className="text-sm font-medium">{selectedIds.size} selected</span>
+          <button
+            onClick={handleBulkDelete}
+            disabled={bulkDeleting}
+            className="ml-auto flex items-center gap-1.5 text-sm text-destructive hover:text-destructive/80 disabled:opacity-50"
+          >
+            <Trash2 className="w-4 h-4" />
+            {bulkDeleting ? "Deleting…" : "Delete selected"}
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} className="text-sm text-muted-foreground hover:text-foreground">
+            Cancel
+          </button>
+        </div>
+      )}
+
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleSelectAll}
+                  className="rounded border-input"
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Company</TableHead>
               <TableHead>Email</TableHead>
@@ -200,16 +289,25 @@ export default function LeadsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-10">Loading…</TableCell>
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-10">Loading…</TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
                   {search ? "No matching leads" : "No leads yet — add your first one"}
                 </TableCell>
               </TableRow>
             ) : paginated.map((lead) => (
-              <TableRow key={lead.id}>
+              <TableRow key={lead.id} className={selectedIds.has(lead.id) ? "bg-primary/5" : undefined}>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(lead.id)}
+                    onChange={() => toggleRow(lead.id)}
+                    className="rounded border-input"
+                    aria-label={`Select ${lead.name}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{lead.name}</TableCell>
                 <TableCell className="text-muted-foreground">{lead.company ?? "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{lead.email ?? "—"}</TableCell>

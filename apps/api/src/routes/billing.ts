@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth";
 import { AppError } from "../middleware/errorHandler";
 import { prisma } from "../lib/prisma";
+import { cacheGet, cacheSet, cacheDel } from "../lib/cache";
 import {
   createCheckoutSession,
   createPortalSession,
@@ -38,6 +39,10 @@ billingRouter.get("/status", requireAuth, async (req, res, next) => {
       });
     }
 
+    const ck = `billing:status:${orgId}`;
+    const cached = await cacheGet(ck);
+    if (cached) return res.json(cached);
+
     const org = await (prisma.organization.findUnique as (a: unknown) => Promise<{
       plan: string; status: string; trialEnds: Date; stripeCustomerId: string | null;
     } | null>)({
@@ -46,13 +51,15 @@ billingRouter.get("/status", requireAuth, async (req, res, next) => {
     });
     if (!org) throw new AppError(404, "Organization not found");
 
-    res.json({
+    const payload = {
       plan: org.plan,
       status: org.status,
       trialEnds: org.trialEnds,
       hasPaymentMethod: !!org.stripeCustomerId,
       stripeConfigured,
-    });
+    };
+    await cacheSet(ck, payload, 60);
+    res.json(payload);
   } catch (err) { next(err); }
 });
 
@@ -61,8 +68,10 @@ billingRouter.post("/checkout", requireAuth, async (req, res, next) => {
   try {
     if (!getStripeClient()) throw new AppError(503, "Billing is not configured on this server");
 
-    const { plan } = z.object({
-      plan: z.enum(["starter", "growth", "pro", "enterprise"]),
+    const { plan, userCount } = z.object({
+      plan:      z.enum(["starter", "growth", "pro", "enterprise"]),
+      userCount: z.number().int().min(1).max(10000).optional().default(1),
+      annual:    z.boolean().optional().default(false),
     }).parse(req.body);
 
     const { orgId, userId } = req.user!;
@@ -77,6 +86,7 @@ billingRouter.post("/checkout", requireAuth, async (req, res, next) => {
     const url = await createCheckoutSession({
       orgId,
       plan,
+      userCount,
       email: user.email,
       orgName: org.name,
       successUrl: `${WEB_URL}/dashboard/billing?success=1`,
@@ -85,7 +95,7 @@ billingRouter.post("/checkout", requireAuth, async (req, res, next) => {
 
     res.json({ url });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });

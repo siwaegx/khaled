@@ -155,13 +155,16 @@ so they can share code easily.
   /sadmin/submissions                   Submissions        Module submission queue — approve or reject with notes
   /sadmin/marketplace                   Marketplace        Manage published marketplace modules (toggle, price, delete)
   /sadmin/settings                      Platform Settings  Plan prices, trial days, maintenance mode, announcement
-  /sadmin/plans/config                  Plan Config Editor Full plan editor: name, description, price, yearly price,
-                                                           member limit, CTA text, features list (add/remove/reorder),
-                                                           popular flag. Changes live-reflect on /pricing page.
+  /sadmin/plans/config                  Plan Config Editor Add/edit/delete plans. New plans: editable key (slug).
+                                                           Per-plan: name, description, price ($/user/mo), yearly
+                                                           price, max users (0=unlimited), CTA text, features
+                                                           (add/remove/reorder/toggle). Delete: instant for unsaved,
+                                                           confirm dialog for saved. Save & Publish → /pricing and
+                                                           dashboard billing update immediately (no-store cache).
   /dashboard/crm                        CRM Overview       See CRM stats at a glance
   /dashboard/crm/leads                  CRM Leads          Add/edit/delete sales leads
   /dashboard/crm/deals                  CRM Deals          Drag-and-drop kanban board for deals
-  /dashboard/crm/customers              CRM Customers      Customers table with contacts sync (from Contacts module), deal creation, activity logs
+  /dashboard/crm/customers              CRM Customers      Companies from Contacts module as customers; contacts embedded, deals via companyId, activity logs
   /dashboard/inventory                  Inventory Overview Stats: product count, warehouse count
   /dashboard/inventory/products         Products           Add/edit/delete product catalog
   /dashboard/inventory/warehouses       Warehouses         Add/edit/delete storage locations
@@ -172,11 +175,12 @@ so they can share code easily.
   /dashboard/projects                   Projects Overview  Create projects, view task breakdown
   /dashboard/projects/tasks             Tasks              Add/edit/delete tasks, assign to projects
   /dashboard/reports                    Reports            Cross-module KPIs + monthly P&L table
-  /dashboard/billing                    Billing            Interactive plan selector: monthly/annual toggle,
-                                                           click-to-select cards with module-unlock preview,
-                                                           collapsible feature comparison table, sticky checkout
-                                                           CTA bar. Payment method strip + paginated invoice
-                                                           history with PDF download links.
+  /dashboard/billing                    Billing            Per-seat pricing: plan price × user count = total.
+                                                           Plans loaded from SADMIN config. Monthly/annual
+                                                           toggle, click-to-select cards ($/user/mo), sticky
+                                                           checkout bar with +/− user picker + live total.
+                                                           Downgrade modal, payment method strip, paginated
+                                                           invoice history with PDF download links.
                                                            API: GET /api/billing/invoices (invoices + PM from
                                                            Stripe). Dashboard "Upgrade" → /dashboard/billing.
   /dashboard/activity                   Activity Log       Paginated audit trail of actions in this org,
@@ -570,6 +574,73 @@ These are gotchas — things that look wrong but are correct on purpose:
   27      Security + Prod +    COMPLETE
           Docs + Reports +
           Customer Portal
+  28      2FA + OAuth +       COMPLETE
+          Sessions + Redis +
+          CSV + Bulk + ERPAI +
+          PWA + Mobile
+  29      Enterprise Forensic COMPLETE
+          Audit + Full Fix
+
+  Phase 29 delivered (enterprise forensic audit — all issues fixed):
+    - SEC-001 CRITICAL: Path traversal guard added to route_registry.ts loadRouter().
+        path.resolve() used for moduleKey resolution; guard checks resolved path stays
+        inside MODULES_DIR before any file-system access or require().
+    - SEC-002 HIGH: requireAuth changed from fail-open to fail-closed on DB error.
+        Previously: DB failure → next() (any valid JWT bypasses revocation checks).
+        Now: DB failure → 503 "Authentication service unavailable" — prevents revoked
+        tokens from remaining valid during a DB outage.
+    - SEC-003 HIGH: Password change now revokes ALL active sessions (UserSession.revokedAt).
+        Prevents stolen JWTs from remaining valid after the victim changes their password.
+    - SEC-004 MEDIUM: JWT re-issue on switch-org now creates a UserSession record.
+        New token can be tracked and revoked via the session management interface.
+    - SEC-004 (org creation): JWT re-issue on POST /api/organizations now creates a
+        UserSession record so the owner's initial token is tracked from the start.
+    - SEC-005 MEDIUM: Impersonation token now tracked in UserSession (auditable + revocable).
+        Optional-chaining used so the call is safe in test environments.
+    - SEC-006 HIGH: PATCH /api/sadmin/organizations/:id now calls cacheDel() to
+        immediately invalidate the tenant resolver cache and billing status cache.
+        Previously: suspended orgs could still access tenant data for up to 2 minutes.
+    - SEC-007 MEDIUM: Webhook PATCH/DELETE now use updateMany/deleteMany with organizationId
+        in the where clause, eliminating the TOCTOU window between ownership check and write.
+    - QUA-001: requireSaasAdmin now calls next(new AppError(...)) instead of throw —
+        consistent with the rest of the Express middleware codebase.
+    - QUA-002: errorHandler now uses pino logger.error() instead of console.error()
+        so production logs are structured JSON matching all other request logs.
+    - QUA-003: ERPAI analyze route — prompt validated (1–8000 chars); model logged as
+        config.model ?? MODEL (not hardcoded MODEL constant); rate limit added (5/min/user).
+    - QUA-004: ERPAI chat route — messages array validated (non-empty, max 100); model
+        logged as config.model ?? MODEL; rate limit added (20/min/user).
+    - QUA-005 HIGH: grepCode() in codebase.ts now compiles the user-controlled regex inside
+        a try/catch to prevent ReDoS; lastIndex reset correctly for global flag reuse.
+    - TS-FIX: JwtPayload type now includes optional iat?: number (standard JWT issued-at
+        claim) — fixes the pre-existing TypeScript error in requireAuth.ts.
+    - TS-FIX: oauth.ts issueJwt() calls now include orgId and role (looked up from
+        OrgMember) — matches the loginUser pattern; fixes TS2345 errors.
+    - TS-FIX: configLists.ts all req.params["key"]/req.params["itemId"] now use safe
+        string access; list.items type assertion added for Prisma inference.
+    - TS-FIX: Installed @types/swagger-ui-express + @types/swagger-jsdoc dev deps.
+    - Tests: webhooksRoutes.test.ts updated to mock updateMany/deleteMany (reflecting
+        the TOCTOU fix); sadminRoutes.test.ts mock extended with userSession.
+    - Final state: 326 API tests pass (21 files), all 3 apps TypeScript-clean (zero errors).
+
+  Deep-Test Hardening Pass (2026-05-14) — Enterprise hardening sweep:
+    - SEC-010 HIGH: API key DELETE now uses updateMany with organizationId in where clause.
+        Prevents cross-org API key revocation (TOCTOU attack).
+    - SEC-011 HIGH: SSRF DNS check changed from fail-open to fail-closed.
+        Previously: DNS resolution failure → URL allowed through.
+        Now: DNS failure → 400 "hostname could not be resolved" — blocks DNS-evasion attacks.
+    - SEC-012 MEDIUM: Production startup now rejects JWT_SECRET="secret" literal value.
+        Previously: only warned on missing; trivially-guessable default accepted in prod.
+    - SEC-013 MEDIUM: STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET added to REQUIRED_PROD_VARS.
+        Server refuses to start in production if Stripe is unconfigured.
+    - SEC-014 MEDIUM: Added per-org rate limiter (10/10min) on POST /api/webhooks.
+        Prevents webhook-creation flooding and resource exhaustion.
+    - SEC-015 MEDIUM: Added per-org rate limiter (20/hr) on POST /api/modules/install.
+        Prevents install-loop DoS attack.
+    - QUA-010: Sadmin backup export validates table names against /^[a-zA-Z_][a-zA-Z0-9_]*$/
+        and caps each table export at 10,000 rows — prevents memory exhaustion.
+    - QUA-011: All 33 Zod error catch blocks now use err.message instead of err.errors[0]?.message.
+        Ensures compatibility with Zod v4 (root node_modules), where .errors does not exist.
 
   Phase 26 delivered:
     - Notification Center:
@@ -1583,9 +1654,15 @@ FRONTEND WEB APP (apps/web/)
 
   apps\web\src\app\dashboard\billing\page.tsx
     What:    Billing page (/dashboard/billing).
-             Shows current plan card with trial countdown (if on trial). Plan comparison grid
-             with Upgrade buttons → POST /api/billing/checkout → redirect to Stripe Checkout.
-             "Manage Billing" button → POST /api/billing/portal → redirect to Stripe Customer Portal.
+             Plans are loaded live from GET /api/billing/plans (mirrors SADMIN plan configs).
+             Pricing is per-seat: plan price × number of users = total monthly cost.
+             Shows current plan card with trial countdown (if on trial). Plan cards show
+             "$X/user/mo". Selecting a plan reveals a sticky checkout bar with a +/− user
+             count picker; total updates live (plan price × users). Supports monthly/annual
+             toggle (annual shows ×12 total). Downgrade flow shows a confirmation modal
+             listing modules that will be lost. "Manage Billing" → Stripe Customer Portal.
+             POST /api/billing/checkout accepts { plan, userCount, annual } and passes
+             quantity to Stripe so the invoice reflects the actual seat count.
              Handles ?success=1 / ?cancelled=1 redirect params from Stripe. Shows a friendly
              note when STRIPE_SECRET_KEY is not configured (dev mode).
 
@@ -1659,14 +1736,18 @@ FRONTEND WEB APP (apps/web/)
 
   apps\web\src\app\sadmin\plans\config\page.tsx
     What:    Full plan configuration editor (/sadmin/plans/config).
-             Tab navigation (one tab per plan, dirty indicator dot, Popular Zap badge).
-             Per-plan editor: Identity card (name, description), Pricing & Limits card
-             (monthly/yearly price, member limit with 0=unlimited), Display card (CTA text,
-             isPopular toggle with one-popular-at-a-time enforcement), Features card (add,
-             remove, reorder up/down, included/excluded toggle per feature).
-             Live preview card shows how the plan card will appear on /pricing.
-             "Save & Publish" → PATCH /api/sadmin/plans/config → changes immediately
-             appear on the public /pricing page. Unsaved-changes banner + Reset button.
+             "Add Plan" button (up to 10 plans) — new plans have an editable key field
+             (auto-slugified; readonly once saved). Tab per plan with dirty-dot and Popular
+             badge. "Delete Plan" button per tab: instant removal for unsaved plans, confirm
+             dialog for already-saved plans (warns about existing subscribers).
+             Per-plan editor cards: Identity (name + key), Pricing & Limits (monthly price,
+             yearly price — both per user/mo — and max users with 0=unlimited), Display
+             (CTA text, isPopular one-at-a-time toggle), Features (add/remove/reorder/
+             included toggle). Full validation on save: unique non-empty keys, slug format,
+             non-empty name/description/ctaText, at least 1 non-empty feature.
+             Live preview card matches how the card appears on /pricing and billing.
+             "Save & Publish" → PATCH /api/sadmin/plans/config → immediately reflected on
+             /pricing (no-store) and dashboard /billing (loads same planConfigs from API).
              Calls GET/PATCH /api/sadmin/plans/config.
 
   apps\web\src\app\sadmin\users\page.tsx
@@ -1740,7 +1821,11 @@ FRONTEND WEB APP (apps/web/)
 
   apps\web\src\app\dashboard\crm\customers\page.tsx
     What:    Customers table (/dashboard/crm/customers).
-             Full CRUD: add customer, edit, delete. Calls /api/crm/customers.
+             Backed by CrmCompany records from the Contacts module — the Contacts
+             module is the single source of truth for all company/contact data.
+             Full CRUD: add/edit/delete companies (customers). Shows embedded
+             contacts (people), deals, and activity logs. Calls /api/crm/customers
+             which maps to CrmCompany. Deals link via companyId → CrmCompany.
 
   ── INVENTORY PAGES ─────────────────────────────────────────────────────────
 
@@ -2380,6 +2465,127 @@ PHASE 27 — SECURITY, PRODUCTION HARDENING & ADVANCED FEATURES
   27     Security + Production +     COMPLETE
          Docs + Advanced Reports +
          Customer Portal
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 28 — SECURITY, PERFORMANCE & UX ENHANCEMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  DATABASE MIGRATIONS (packages/db/prisma/migrations/20260510700000_totp_oauth_sessions/)
+    User model: totpSecret String?, totpEnabled Boolean @default(false),
+                googleId String? @unique, githubId String? @unique
+    New model:  UserSession (id, userId, tokenHash @unique, userAgent?, ipAddress?,
+                createdAt, lastUsedAt, revokedAt?) — indexed by userId
+
+  TWO-FACTOR AUTHENTICATION (TOTP)
+    Backend (apps/api/src/routes/totp.ts) — all routes require cookie JWT:
+      POST /api/auth/totp/setup   → generates otplib secret, stores in User.totpSecret,
+                                    returns { secret, qrDataUrl } (QR via qrcode package)
+      POST /api/auth/totp/verify  → verifies 6-digit token, sets totpEnabled = true
+      POST /api/auth/totp/disable → verifies current token, clears totpEnabled + totpSecret
+      GET  /api/auth/totp/status  → returns { totpEnabled: bool }
+    Frontend: TotpSection component in settings Account tab — shows enable/disable
+    button; enable flow renders QR code data URL + 6-digit verification input;
+    disable flow requires current TOTP code.
+
+  OAUTH LOGIN (apps/api/src/routes/oauth.ts)
+    Google: GET /api/auth/oauth/google → redirects to Google consent
+            GET /api/auth/oauth/google/callback → exchanges code, fetches profile via
+            googleapis.com, finds-or-creates User (links by googleId or email)
+    GitHub: GET /api/auth/oauth/github → redirects to github.com/login/oauth/authorize
+            GET /api/auth/oauth/github/callback → exchanges code, fetches /user + /user/emails,
+            requires verified primary email, finds-or-creates User
+    Both: issue JWT + set access_token cookie + redirect to /dashboard.
+    CSRF protection: oauth_state cookie compared to ?state= param.
+    New env vars: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
+    Login page: "Continue with Google" + "Continue with GitHub" buttons below the form divider.
+
+  SESSION MANAGEMENT (apps/api/src/routes/sessions.ts)
+    On every login (loginUser in authService.ts), a UserSession row is created with
+    tokenHash = SHA-256(token).
+    requireAuth.ts now: (1) checks UserSession.revokedAt — 401 if revoked;
+    (2) touches lastUsedAt on each successful auth (non-blocking); (3) still checks
+    tokenIssuedBefore for role-change invalidation (both checks in one Promise.all).
+    GET    /api/auth/sessions     → list active (non-revoked) sessions for current user
+    DELETE /api/auth/sessions/:id → revoke specific session (ownership checked)
+    DELETE /api/auth/sessions     → revoke all except current token
+    Frontend: SessionsSection in settings Account tab — lists sessions with device info
+    + last-active date; individual revoke buttons + "Revoke all other sessions" button.
+
+  CSV EXPORT (all 7 module backends)
+    GET /api/<moduleKey>/export — requireRole("member"), returns text/csv with
+    Content-Disposition: attachment. Builds CSV dynamically from DB rows (header from
+    field names; values properly escaped for commas/quotes/newlines). Empty tables
+    return header row only. Sensitive fields (passwordHash, totpSecret) excluded.
+    Modules: crm (leads), contacts (contacts), inventory (products),
+    accounting (invoices with itemCount), hr (employees), projects (projects),
+    calendar (events).
+
+  BULK DELETE (all 7 module backends)
+    DELETE /api/<moduleKey>/bulk — requireRole("manager"), body: { ids: string[] } (1-100).
+    Responds { deleted: count }.
+
+  BULK OPERATIONS UI (module frontend pages)
+    Checkbox column in every module list table. Floating action bar appears when items
+    are selected: shows count + "Delete selected" + "Cancel". confirm() before deleting.
+    Uses DELETE /api/<moduleKey>/bulk endpoint.
+
+  SAVED FILTERS (module frontend pages)
+    Search/filter state persisted to localStorage key "filter_<moduleKey>_search".
+    Restored on page mount. Clear (×) button visible when filter is active.
+
+  REDIS CACHING (apps/api/src/lib/cache.ts)
+    ioredis client — lazy connect, fail-open (returns null on any Redis error).
+    cacheGet/cacheSet/cacheDel/cacheDelPattern helpers (all best-effort).
+    Cached: GET /api/modules → key "modules:<orgId>" (30s TTL, invalidated on install/toggle/uninstall)
+            GET /api/billing/status → key "billing:status:<orgId>" (60s TTL, invalidated on Stripe webhook)
+            resolveTenant → key "org:tenant:<orgId>" (120s TTL — eliminates per-request DB lookup)
+    New env var: REDIS_URL (optional — if absent, caching is skipped silently).
+
+  API KEY AUTH ON MODULE ENDPOINTS
+    route_registry.ts now uses requireAuthOrApiKey() instead of requireAuth():
+    if Authorization header starts with "Bearer b360_" → requireApiKey middleware;
+    otherwise → requireAuth (cookie JWT). Module routes now accept external
+    programmatic access via API keys from the settings API Keys tab.
+
+  WEBHOOK RETRY (apps/api/src/services/webhookService.ts)
+    deliverWithRetry() replaces direct fetch: on failure (statusCode >= 400 or network
+    error), schedules retries at 5s, 30s, 5min using setTimeout().unref().
+    X-Business360-Attempt header increments per attempt. Delivery is logged after each
+    attempt (not just final). Up to 3 retries (4 total attempts).
+
+  ERPAI IMPROVEMENTS
+    Chat persistence: messages saved/loaded from localStorage("erpai_messages"); "Clear
+    history" button wipes both state and storage.
+    Context injection: chat + analyze route handlers fetch /api/reports/summary using the
+    user's access_token cookie (forwarded). If successful, appends a formatted org context
+    block to the system prompt (CRM/Accounting/HR/Projects/Inventory counts + values).
+    Fetch has 4s timeout; any failure is silently ignored (request proceeds without context).
+
+  PWA (apps/web/public/manifest.json)
+    Web App Manifest: name, short_name, start_url=/dashboard, display=standalone,
+    theme_color=#6366f1, icons (192 + 512), shortcuts (Dashboard, CRM).
+    layout.tsx: manifest link, theme-color meta, apple-touch-icon.
+
+  MOBILE TABLE SCROLL
+    dashboard/layout.tsx: main content wrapped in <div className="min-w-0 overflow-x-auto">.
+    globals.css: @media (max-width: 768px) adds min-width: 600px to main table elements
+    so tables never reflow below minimum readable width.
+
+  N+1 QUERY FIXES
+    tenantResolver.ts now caches org dbUrl + status in Redis ("org:tenant:<orgId>", 120s),
+    eliminating the SELECT query that was firing on every single module API request.
+    Module stats endpoints already use groupBy + Promise.all — no sequential per-item queries.
+
+  ROADMAP TABLE (updated):
+  Phase  Feature                     Status
+  ──────────────────────────────────────────
+  27     Security + Production +     COMPLETE
+         Docs + Advanced Reports +
+         Customer Portal
+  28     Security (2FA, OAuth,       COMPLETE
+         Sessions) + Performance +
+         Bulk ops + CSV export +
+         ERPAI + PWA + Mobile
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                               END OF EXPLAIN.txt

@@ -72,6 +72,8 @@ export default function ProjectsOverviewPage() {
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const { confirm: askConfirm, isOpen: confirmOpen, handleConfirm, handleCancel } = useConfirm();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -124,6 +126,43 @@ export default function ProjectsOverviewPage() {
     if (!ok) return;
     try { await apiDelete(`/api/projects/projects/${id}`); toast.success("Deleted successfully"); load(); }
     catch (err) { toast.error(err instanceof Error ? err.message : "Delete failed"); }
+  }
+
+  async function handleBulkDelete() {
+    if (!confirm(`Delete ${selectedIds.size} items? This cannot be undone.`)) return;
+    setBulkDeleting(true);
+    try {
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+      const res = await fetch(`${BASE_URL}/api/projects/bulk`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+      if (!res.ok) throw new Error("Bulk delete failed");
+      setProjects((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+      setSelectedIds(new Set());
+      toast.success(`Deleted ${selectedIds.size} items`);
+    } catch { toast.error("Bulk delete failed"); }
+    finally { setBulkDeleting(false); }
+  }
+
+  function toggleRow(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  const allSelected = projects.length > 0 && projects.every((p) => selectedIds.has(p.id));
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(projects.map((p) => p.id)));
+    }
   }
 
   return (
@@ -184,10 +223,45 @@ export default function ProjectsOverviewPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleting}
+                  className="ml-auto flex items-center gap-1.5 text-sm text-destructive hover:text-destructive/80 disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {bulkDeleting ? "Deleting…" : "Delete selected"}
+                </button>
+                <button onClick={() => setSelectedIds(new Set())} className="text-sm text-muted-foreground hover:text-foreground">
+                  Cancel
+                </button>
+              </div>
+            )}
+            {!loading && projects.length > 1 && (
+              <div className="flex items-center gap-2 px-2 pb-1">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleSelectAll}
+                  className="rounded border-input"
+                  aria-label="Select all projects"
+                />
+                <span className="text-xs text-muted-foreground">Select all</span>
+              </div>
+            )}
             {loading ? <div className="h-32 animate-pulse bg-muted rounded-lg" /> : projects.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No projects yet</p>
             ) : projects.map((p) => (
-              <div key={p.id} className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-muted/50 group">
+              <div key={p.id} className={cn("flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-muted/50 group", selectedIds.has(p.id) && "bg-primary/5")}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(p.id)}
+                  onChange={() => toggleRow(p.id)}
+                  className="rounded border-input shrink-0"
+                  aria-label={`Select ${p.name}`}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{p.name}</p>
                   {p.description && <p className="text-xs text-muted-foreground truncate">{p.description}</p>}

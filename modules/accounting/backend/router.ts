@@ -239,3 +239,47 @@ router.delete("/expenses/:id", async (req, res, next) => {
     res.json({ success: true });
   } catch (err) { next(err); }
 });
+
+// GET /api/accounting/export — download all invoices as CSV
+router.get("/export", requireRole("member"), async (req, res, next) => {
+  try {
+    const tenantDb = req.tenantDb as any;
+    const rows = await tenantDb.invoice.findMany({ include: { items: true }, orderBy: { createdAt: "desc" } });
+
+    if (!rows.length) {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename="invoices.csv"`);
+      return res.send("id,number,customerName,customerId,status,subtotal,tax,total,notes,issueDate,dueDate,paidDate,itemCount,createdAt,updatedAt\n");
+    }
+
+    // Flatten: replace items array with itemCount
+    const flatRows = (rows as Array<Record<string, unknown>>).map((r) => {
+      const { items, ...rest } = r;
+      return { ...rest, itemCount: Array.isArray(items) ? items.length : 0 };
+    });
+
+    const headers = Object.keys(flatRows[0]).filter((k: string) => !["passwordHash", "totpSecret"].includes(k));
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v instanceof Date ? v.toISOString() : v);
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers.join(","), ...flatRows.map((r: Record<string, unknown>) => headers.map((h: string) => escape(r[h])).join(","))].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="invoices.csv"`);
+    res.send(csv);
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/accounting/bulk — delete multiple invoices by IDs
+router.delete("/bulk", requireRole("manager"), async (req, res, next) => {
+  try {
+    const { ids } = z.object({ ids: z.array(z.string()).min(1).max(100) }).parse(req.body);
+    const tenantDb = req.tenantDb as any;
+    const { count } = await tenantDb.invoice.deleteMany({ where: { id: { in: ids } } });
+    res.json({ deleted: count });
+  } catch (err) {
+    if (err instanceof z.ZodError) return next(new AppError(400, err.message));
+    next(err);
+  }
+});

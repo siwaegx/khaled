@@ -154,7 +154,7 @@ export default async function PricingPage() {
                   <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-4xl font-extrabold tracking-tight">${plan.price}</span>
-                    <span className="text-muted-foreground text-sm">/mo</span>
+                    <span className="text-muted-foreground text-sm">/user/mo</span>
                   </div>
                 </div>
 

@@ -50,6 +50,7 @@ model CrmCompany {
   notes     String?
   contacts  CrmContact[]
   logs      CrmCompanyLog[]
+  deals     Deal[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
@@ -131,36 +132,20 @@ model Lead {
   @@map("crm_leads")
 }
 
-model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  email     String?
-  phone     String?
-  company   String?
-  address   String?
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  deals     Deal[]
-
-  @@map("crm_customers")
-}
-
 model Deal {
   id         String     @id @default(cuid())
   title      String
   value      Decimal?   @db.Decimal(20, 4)
   currency   String     @default("USD")
   status     DealStatus @default(prospect)
-  customerId String?
+  companyId  String?
   assignedTo String?
   closeDate  DateTime?
   notes      String?
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
-  customer   Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  company    CrmCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@map("crm_deals")

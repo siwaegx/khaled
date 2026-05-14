@@ -67,7 +67,7 @@ membersRouter.post("/", requireRole("owner"), async (req, res, next) => {
     });
     res.status(201).json({ member });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -129,7 +129,7 @@ membersRouter.patch("/:memberId", requireRole("owner"), async (req, res, next) =
 
     res.json({ member: updated });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -159,7 +159,7 @@ membersRouter.patch("/:memberId/role", requireRole("owner"), async (req, res, ne
     });
     res.json({ member: updated });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });

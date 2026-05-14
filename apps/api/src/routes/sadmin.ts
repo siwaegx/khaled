@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import path from "path";
@@ -7,6 +8,7 @@ import { requireAuth } from "../middleware/requireAuth";
 import { requireSaasAdmin } from "../middleware/requireSaasAdmin";
 import { prisma } from "../lib/prisma";
 import { getTenantClient } from "../lib/tenantDb";
+import { cacheDel } from "../lib/cache";
 import { AppError } from "../middleware/errorHandler";
 import type { JwtPayload } from "../types";
 
@@ -236,9 +238,13 @@ sadminRouter.patch("/organizations/:id", async (req, res, next) => {
     if (data.status    !== undefined) update["status"]    = data.status;
     if (data.trialEnds !== undefined) update["trialEnds"] = data.trialEnds;
     const org = await prisma.organization.update({ where: { id: req.params["id"]! }, data: update });
+
+    // Invalidate tenant cache so status/plan changes take effect immediately
+    await cacheDel(`org:tenant:${req.params["id"]!}`, `billing:status:${req.params["id"]!}`);
+
     res.json({ organization: org });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -295,7 +301,7 @@ sadminRouter.patch("/users/:id", async (req, res, next) => {
     });
     res.json({ user });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -392,7 +398,7 @@ sadminRouter.patch("/submissions/:id", async (req, res, next) => {
     }
     res.json({ success: true });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -430,6 +436,14 @@ sadminRouter.post("/organizations/:id/impersonate", async (req, res, next) => {
       { expiresIn: "8h" },
     );
 
+    // Track impersonation token so it can be audited and revoked via session management
+    (prisma.userSession as typeof prisma.userSession | undefined)?.create?.({
+      data: {
+        userId: ownerMember.userId,
+        tokenHash: crypto.createHash("sha256").update(impersonationToken).digest("hex"),
+      },
+    })?.catch(() => {});
+
     res
       .cookie("admin_session", adminToken, cookieOpts)
       .cookie("access_token", impersonationToken, cookieOpts)
@@ -460,8 +474,14 @@ sadminRouter.get("/organizations/:id/backup", async (req, res, next) => {
         const tables = await tenantDb.$queryRaw<{ tablename: string }[]>`
           SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename
         `;
+        // Validate table names against safe identifier pattern before using in raw query
+        const SAFE_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+        const ROW_EXPORT_LIMIT = 10_000;
         for (const { tablename } of tables) {
-          const rows = await tenantDb.$queryRawUnsafe<unknown[]>(`SELECT * FROM "${tablename}"`);
+          if (!SAFE_IDENTIFIER.test(tablename)) continue; // skip malformed names
+          const rows = await tenantDb.$queryRawUnsafe<unknown[]>(
+            `SELECT * FROM "${tablename}" LIMIT ${ROW_EXPORT_LIMIT}`
+          );
           tenantDatabase[tablename] = rows;
         }
       } catch {
@@ -537,7 +557,7 @@ sadminRouter.patch("/marketplace/:id", async (req, res, next) => {
     });
     res.json({ module });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -578,7 +598,7 @@ sadminRouter.patch("/settings", (req, res, next) => {
     savePlatformSettings();
     res.json({ settings: platformSettings });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -621,7 +641,7 @@ sadminRouter.patch("/plans/config", (req, res, next) => {
     savePlatformSettings();
     res.json({ planConfigs: platformSettings.planConfigs });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -738,7 +758,7 @@ sadminRouter.patch("/erpai/config", (req, res, next) => {
     writeJson(AI_CONFIG_PATH, updated);
     res.json({ config: updated });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -775,7 +795,7 @@ sadminRouter.patch("/erpai/tasks/:id", (req, res, next) => {
     writeJson(AI_TASKS_PATH, tasks);
     res.json(tasks[idx]);
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });

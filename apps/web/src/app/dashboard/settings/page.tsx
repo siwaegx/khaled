@@ -6,6 +6,7 @@ import {
   Eye, EyeOff, Mail, X, UserPlus, Users, LayoutGrid, ChevronDown, Check,
   ShieldCheck, LogOut, Settings2, Webhook, AlertCircle, CheckCircle2,
   Lock, Info, TrendingUp, Package, Calculator, Wrench, HeadphonesIcon, Pencil,
+  Smartphone, Monitor, QrCode,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -163,6 +164,197 @@ function PasswordChangeForm() {
   );
 }
 
+// ─── TOTP 2FA Section ─────────────────────────────────────────────────────────
+
+function TotpSection() {
+  const [enabled, setEnabled]   = useState<boolean | null>(null);
+  const [step, setStep]         = useState<"idle" | "setup" | "disable">("idle");
+  const [qr, setQr]             = useState<string | null>(null);
+  const [token, setToken]       = useState("");
+  const [error, setError]       = useState<string | null>(null);
+  const [saving, setSaving]     = useState(false);
+
+  useEffect(() => {
+    apiGet<{ totpEnabled: boolean }>("/api/auth/totp/status")
+      .then((d) => setEnabled(d.totpEnabled))
+      .catch(() => setEnabled(false));
+  }, []);
+
+  async function startSetup() {
+    setSaving(true); setError(null);
+    try {
+      const d = await apiPost<{ qrDataUrl: string }>("/api/auth/totp/setup", {});
+      setQr(d.qrDataUrl);
+      setStep("setup");
+    } catch (e) { setError(e instanceof Error ? e.message : "Failed"); }
+    finally { setSaving(false); }
+  }
+
+  async function verifyToken() {
+    setSaving(true); setError(null);
+    try {
+      await apiPost("/api/auth/totp/verify", { token });
+      setEnabled(true); setStep("idle"); setQr(null); setToken("");
+      toast.success("Two-factor authentication enabled");
+    } catch (e) { setError(e instanceof Error ? e.message : "Invalid code"); }
+    finally { setSaving(false); }
+  }
+
+  async function disableTotp() {
+    setSaving(true); setError(null);
+    try {
+      await apiPost("/api/auth/totp/disable", { token });
+      setEnabled(false); setStep("idle"); setToken("");
+      toast.success("Two-factor authentication disabled");
+    } catch (e) { setError(e instanceof Error ? e.message : "Invalid code"); }
+    finally { setSaving(false); }
+  }
+
+  if (enabled === null) return <div className="h-8 animate-pulse bg-muted rounded" />;
+
+  return (
+    <div className="space-y-3">
+      {error && <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">{error}</p>}
+
+      {step === "idle" && (
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">{enabled ? "Enabled" : "Disabled"}</p>
+            <p className="text-xs text-muted-foreground">
+              {enabled ? "Your account is protected with an authenticator app." : "Add an extra layer of security to your account."}
+            </p>
+          </div>
+          <Button size="sm" variant={enabled ? "destructive" : "default"}
+            onClick={() => enabled ? setStep("disable") : startSetup()} disabled={saving}>
+            {saving ? "Loading…" : enabled ? "Disable 2FA" : "Enable 2FA"}
+          </Button>
+        </div>
+      )}
+
+      {step === "setup" && qr && (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code to confirm.</p>
+          <div className="flex justify-center p-4 bg-white rounded-lg border w-fit mx-auto">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qr} alt="TOTP QR code" className="w-40 h-40" />
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="000000"
+              maxLength={6}
+              value={token}
+              onChange={(e) => setToken(e.target.value.replace(/\D/g, ""))}
+              className="font-mono text-center tracking-widest"
+            />
+            <Button size="sm" onClick={verifyToken} disabled={token.length !== 6 || saving}>
+              {saving ? "Verifying…" : "Verify"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => { setStep("idle"); setQr(null); setToken(""); setError(null); }}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === "disable" && (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">Enter your current 6-digit code to confirm disabling 2FA.</p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="000000"
+              maxLength={6}
+              value={token}
+              onChange={(e) => setToken(e.target.value.replace(/\D/g, ""))}
+              className="font-mono text-center tracking-widest"
+            />
+            <Button size="sm" variant="destructive" onClick={disableTotp} disabled={token.length !== 6 || saving}>
+              {saving ? "Disabling…" : "Disable 2FA"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => { setStep("idle"); setToken(""); setError(null); }}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Sessions Section ──────────────────────────────────────────────────────────
+
+type SessionItem = { id: string; userAgent: string | null; ipAddress: string | null; createdAt: string; lastUsedAt: string };
+
+function SessionsSection() {
+  const [sessions, setSessions] = useState<SessionItem[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [revoking, setRevoking] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiGet<{ sessions: SessionItem[] }>("/api/auth/sessions")
+      .then((d) => setSessions(d.sessions))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function revoke(id: string) {
+    setRevoking(id);
+    try {
+      await apiDelete(`/api/auth/sessions/${id}`);
+      setSessions((s) => s.filter((x) => x.id !== id));
+      toast.success("Session revoked");
+    } catch { toast.error("Failed to revoke session"); }
+    finally { setRevoking(null); }
+  }
+
+  async function revokeAll() {
+    setRevoking("all");
+    try {
+      await apiDelete("/api/auth/sessions");
+      setSessions([]);
+      toast.success("All other sessions revoked");
+    } catch { toast.error("Failed to revoke sessions"); }
+    finally { setRevoking(null); }
+  }
+
+  if (loading) return <div className="h-12 animate-pulse bg-muted rounded" />;
+
+  return (
+    <div className="space-y-3">
+      {sessions.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No active sessions found.</p>
+      ) : (
+        <>
+          <div className="space-y-2">
+            {sessions.map((s) => (
+              <div key={s.id} className="flex items-center justify-between gap-3 py-2 border-b last:border-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Monitor className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium truncate">{s.userAgent ?? "Unknown device"}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {s.ipAddress ?? "Unknown IP"} · Last active {new Date(s.lastUsedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <Button size="xs" variant="ghost" className="shrink-0 text-destructive hover:text-destructive"
+                  onClick={() => revoke(s.id)} disabled={revoking === s.id}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          {sessions.length > 1 && (
+            <Button size="sm" variant="outline" onClick={revokeAll} disabled={revoking === "all"}>
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
+              {revoking === "all" ? "Revoking…" : "Revoke all other sessions"}
+            </Button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function AccountTab() {
   const { user, role } = useAuth();
   const RoleIcon = ROLE_ICON[role ?? "member"] ?? UserCircle;
@@ -200,6 +392,24 @@ function AccountTab() {
           </CardTitle>
         </CardHeader>
         <CardContent><PasswordChangeForm /></CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Smartphone className="w-4 h-4 text-muted-foreground" /> Two-Factor Authentication
+          </CardTitle>
+        </CardHeader>
+        <CardContent><TotpSection /></CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Monitor className="w-4 h-4 text-muted-foreground" /> Active Sessions
+          </CardTitle>
+        </CardHeader>
+        <CardContent><SessionsSection /></CardContent>
       </Card>
     </div>
   );

@@ -38,7 +38,7 @@ developerRouter.post("/profile", async (req, res, next) => {
     });
     res.status(201).json({ profile });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -78,7 +78,7 @@ developerRouter.patch("/profile", async (req, res, next) => {
     });
     res.json({ profile: updated });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });
@@ -104,7 +104,7 @@ developerRouter.post("/submissions", async (req, res, next) => {
     });
     res.status(201).json({ submission });
   } catch (err) {
-    if (err instanceof z.ZodError) next(new AppError(400, err.errors[0]?.message ?? "Validation error"));
+    if (err instanceof z.ZodError) next(new AppError(400, err.message ?? "Validation error"));
     else next(err);
   }
 });

@@ -46,6 +46,21 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Load saved messages from localStorage on first mount
+  useEffect(() => {
+    const saved = localStorage.getItem("erpai_messages");
+    if (saved) {
+      try {
+        setMessages(JSON.parse(saved));
+      } catch {}
+    }
+  }, []);
+
+  // Persist messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("erpai_messages", JSON.stringify(messages));
+  }, [messages]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -152,7 +167,10 @@ export default function ChatPage() {
           </span>
         )}
         <button
-          onClick={() => setMessages([])}
+          onClick={() => {
+            setMessages([]);
+            localStorage.removeItem("erpai_messages");
+          }}
           style={{
             fontSize: 12,
             color: "var(--muted)",
@@ -163,7 +181,7 @@ export default function ChatPage() {
             cursor: "pointer",
           }}
         >
-          Clear
+          Clear history
         </button>
       </header>
 

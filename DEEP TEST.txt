@@ -1,0 +1,288 @@
+================================================================================
+CRITICAL ADDITION — AUTO FIX + HARDENING MODE
+================================================================================
+
+You are NOT allowed to only detect problems.
+
+You MUST ALSO:
+
+- FIX issues
+- REFACTOR bad code
+- HARDEN security
+- OPTIMIZE performance
+- IMPROVE architecture
+- CLEAN structure
+- REMOVE dead code
+- STANDARDIZE patterns
+- IMPROVE UX
+- STABILIZE runtime behavior
+- ADD missing validation
+- ADD missing protections
+- ADD missing tests
+- ADD missing loading/error states
+- ADD missing edge-case handling
+- ADD missing RBAC protections
+- ADD missing tenant protections
+- ADD missing production safeguards
+
+================================================================================
+MANDATORY FIXING RULES
+================================================================================
+
+For EVERY issue discovered:
+
+1. IDENTIFY the root cause
+2. EXPLAIN why it is dangerous
+3. IMPLEMENT the proper fix
+4. VERIFY the fix does not break existing systems
+5. RE-TEST the affected flow
+6. CHECK for regressions
+7. UPDATE related code if needed
+8. IMPROVE architecture if necessary
+9. IMPROVE type safety
+10. IMPROVE maintainability
+
+DO NOT:
+- leave TODOs
+- leave half fixes
+- leave commented temporary code
+- create hacks
+- create fragile patches
+- create duplicate logic
+- ignore side effects
+
+================================================================================
+MANDATORY REFACTORING
+================================================================================
+
+You MUST actively improve the codebase.
+
+Refactor:
+- duplicated logic
+- oversized components
+- oversized route files
+- unsafe abstractions
+- repeated API patterns
+- repeated validation
+- repeated UI structures
+- bad folder organization
+- inconsistent naming
+- weak typings
+- unsafe any usage
+- unnecessary casts
+- stale utilities
+- dead imports
+- dead files
+
+Create:
+- reusable abstractions
+- shared helpers
+- cleaner services
+- safer hooks
+- modular architecture
+- enterprise-grade organization
+
+================================================================================
+MANDATORY SECURITY HARDENING
+================================================================================
+
+You MUST automatically harden:
+
+- auth flows
+- JWT validation
+- cookie handling
+- RBAC enforcement
+- tenant isolation
+- webhook verification
+- API key validation
+- uploads
+- middleware order
+- rate limits
+- request validation
+- file handling
+- error exposure
+- admin isolation
+- impersonation safety
+
+Add:
+- missing validation
+- missing guards
+- missing sanitization
+- missing rate limits
+- missing permission checks
+- missing ownership checks
+- missing audit logging
+- missing rollback safety
+
+================================================================================
+MANDATORY PERFORMANCE OPTIMIZATION
+================================================================================
+
+You MUST optimize:
+
+- slow queries
+- repeated renders
+- unnecessary fetching
+- duplicate API calls
+- hydration waste
+- large components
+- memory-heavy logic
+- blocking operations
+- expensive calculations
+- inefficient Prisma usage
+- missing pagination
+- missing caching
+
+Add:
+- memoization where needed
+- pagination where needed
+- caching where safe
+- query optimization
+- lazy loading
+- virtualization if needed
+- suspense boundaries
+- loading skeletons
+
+================================================================================
+MANDATORY UX IMPROVEMENT
+================================================================================
+
+You MUST improve:
+
+- responsiveness
+- spacing consistency
+- mobile layout
+- accessibility
+- keyboard navigation
+- loading states
+- empty states
+- error states
+- confirmation flows
+- visual hierarchy
+- component consistency
+- navigation clarity
+- dashboard usability
+
+Fix:
+- ugly layouts
+- broken modals
+- stale forms
+- inconsistent buttons
+- inaccessible controls
+- bad dark mode behavior
+- hydration flashing
+- layout shifts
+
+================================================================================
+MANDATORY PRODUCTION HARDENING
+================================================================================
+
+You MUST make the system enterprise production ready.
+
+Add or improve:
+- environment validation
+- startup validation
+- health checks
+- error boundaries
+- logging
+- monitoring readiness
+- deployment safety
+- migration safety
+- backup safety
+- recovery safety
+- retry handling
+- timeout handling
+- queue readiness
+- crash resistance
+
+================================================================================
+MANDATORY TESTING AFTER FIXES
+================================================================================
+
+After EVERY fix:
+
+- retest the affected system
+- verify no regressions
+- verify RBAC still works
+- verify tenant isolation still works
+- verify UI still works
+- verify TypeScript passes
+- verify runtime safety
+- verify API consistency
+- verify edge cases
+- verify mobile behavior
+
+================================================================================
+MANDATORY AUTO TEST CREATION
+================================================================================
+
+You MUST create missing tests automatically.
+
+Add:
+- unit tests
+- integration tests
+- RBAC tests
+- tenant isolation tests
+- API tests
+- E2E tests
+- concurrency tests
+- failure tests
+- webhook tests
+- billing tests
+- AI safety tests
+- impersonation tests
+- marketplace tests
+
+================================================================================
+MANDATORY FINAL OUTPUT
+================================================================================
+
+Do NOT only provide reports.
+
+You MUST:
+
+1. FIX issues directly
+2. REFACTOR directly
+3. HARDEN directly
+4. CLEAN directly
+5. OPTIMIZE directly
+6. ADD TESTS directly
+7. VERIFY fixes directly
+
+Then generate final report including:
+
+- what was found
+- what was fixed
+- what was optimized
+- what was hardened
+- what was removed
+- what was refactored
+- what remains risky
+- what still needs scaling work
+- what should be redesigned later
+
+================================================================================
+CRITICAL RULE
+================================================================================
+
+You are acting as a REAL enterprise engineering strike team.
+
+Your mission is NOT only analysis.
+
+Your mission is to:
+- transform Business360 into enterprise-grade production software
+- stabilize architecture
+- maximize scalability
+- maximize maintainability
+- maximize security
+- maximize reliability
+- maximize UX quality
+- maximize production readiness
+
+Do NOT stop after finding issues.
+
+FIX THEM.
+VERIFY THEM.
+RETEST THEM.
+HARDEN EVERYTHING.
+================================================================================

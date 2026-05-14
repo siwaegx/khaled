@@ -139,6 +139,7 @@ export default function BillingPage() {
   const [planConfigs, setPlanConfigs]   = useState<PlanConfig[]>([]);
   const [loading, setLoading]           = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(null);
+  const [numUsers, setNumUsers]         = useState(1);
   const [annual, setAnnual]             = useState(false);
   const [upgrading, setUpgrading]       = useState(false);
   const [openingPortal, setOpeningPortal] = useState(false);
@@ -192,7 +193,7 @@ export default function BillingPage() {
     setShowDowngradeModal(false);
     setUpgrading(true);
     try {
-      const data = await apiPost<{ url: string }>("/api/billing/checkout", { plan: selectedPlan, annual });
+      const data = await apiPost<{ url: string }>("/api/billing/checkout", { plan: selectedPlan, annual, userCount: numUsers });
       window.location.href = data.url;
     } catch {
       toast.error("Failed to start checkout. Please try again.");
@@ -423,10 +424,10 @@ export default function BillingPage() {
                   <p className="font-bold text-base leading-tight">{plan.name}</p>
                   <div className="flex items-baseline gap-0.5 mt-1.5">
                     <span className="text-3xl font-extrabold tracking-tight">${price}</span>
-                    <span className="text-sm text-muted-foreground font-normal ml-0.5">/mo</span>
+                    <span className="text-sm text-muted-foreground font-normal ml-0.5">/user/mo</span>
                   </div>
                   {annual && plan.yearlyPrice > 0 && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">${price * 12} billed annually</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">${price * 12}/user billed annually</p>
                   )}
                 </div>
 
@@ -724,7 +725,8 @@ export default function BillingPage() {
         selectedPlanData ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none md:hidden"
       )}>
         <div className="bg-card/95 backdrop-blur-md border-t border-border md:border md:rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl md:shadow-sm">
-          <div className="flex items-center gap-3">
+          {/* Plan info */}
+          <div className="flex items-center gap-3 min-w-0">
             {selectedPlanData && (() => {
               const ui = PLAN_UI[selectedPlanData.key] ?? PLAN_UI["starter"]!;
               const PlanIcon = ui.icon;
@@ -734,21 +736,68 @@ export default function BillingPage() {
                 </div>
               );
             })()}
-            <div>
+            <div className="min-w-0">
               <p className="font-semibold text-sm">
                 {isUpgrade ? "Upgrade to" : "Switch to"}{" "}
                 <span className="text-primary">{selectedPlanData?.name} Plan</span>
               </p>
               <p className="text-xs text-muted-foreground">
+                ${annual ? selectedPlanData?.yearlyPrice : selectedPlanData?.price}/user/mo
+                {" · "}
                 <span className="font-semibold">
                   {memberLimitLabel(selectedPlanData?.memberLimit ?? 0)}
                 </span>
-                {" · "}
-                ${annual ? selectedPlanData?.yearlyPrice : selectedPlanData?.price}/mo
-                {annual ? ` · $${((annual ? selectedPlanData?.yearlyPrice : selectedPlanData?.price) ?? 0) * 12}/year` : " · billed monthly"}
               </p>
             </div>
           </div>
+
+          {/* User count × price = total */}
+          {selectedPlanData && (() => {
+            const unitPrice = annual ? selectedPlanData.yearlyPrice : selectedPlanData.price;
+            const maxUsers  = selectedPlanData.memberLimit === 0 ? 9999 : selectedPlanData.memberLimit;
+            const total     = unitPrice * numUsers;
+            const totalYear = unitPrice * numUsers * 12;
+            return (
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2 shrink-0">
+                <Users className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setNumUsers((n) => Math.max(1, n - 1))}
+                    className="w-6 h-6 rounded-md bg-background border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors font-bold text-sm select-none"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={maxUsers}
+                    value={numUsers}
+                    onChange={(e) => {
+                      const v = Math.max(1, Math.min(maxUsers, parseInt(e.target.value) || 1));
+                      setNumUsers(v);
+                    }}
+                    className="w-14 text-center border border-border rounded-md py-0.5 text-sm font-semibold bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setNumUsers((n) => Math.min(maxUsers, n + 1))}
+                    className="w-6 h-6 rounded-md bg-background border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors font-bold text-sm select-none"
+                  >
+                    +
+                  </button>
+                </div>
+                <span className="text-xs text-muted-foreground">users</span>
+                <div className="h-5 w-px bg-border" />
+                <div className="text-right">
+                  <p className="text-sm font-bold tabular-nums text-foreground">${total}/mo</p>
+                  {annual && <p className="text-[10px] text-muted-foreground tabular-nums">${totalYear}/yr</p>}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Actions */}
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
             <Button variant="outline" size="sm" onClick={() => setSelectedPlan(null)} className="flex-1 sm:flex-none">
               Cancel
