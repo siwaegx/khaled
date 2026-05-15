@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory - Business 3D</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #fff;
+      --surface-2: #eef2f7;
+      --text: #172033;
+      --muted: #667085;
+      --border: #d9e0ea;
+      --border-soft: #edf1f6;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --warning: #b45309;
+      --success: #047857;
+      --shadow: 0 16px 38px rgba(15,23,42,.08);
+      --dp-width: 400px;
+      --topbar-h: 72px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: Arial, Helvetica, sans-serif; color: var(--text); background: radial-gradient(circle at top left,#eaf2ff 0,transparent 280px),var(--bg); }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+
+    /* ── Topbar ── */
+    .topbar { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 26px; background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%); border-bottom: 1px solid rgba(148,163,184,.16); position: sticky; top: 0; z-index: 30; backdrop-filter: blur(12px); box-shadow: 0 18px 40px rgba(15,23,42,.08); }
+    .brand { display: flex; gap: 14px; align-items: center; min-width: 0; }
+    .brand-mark { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; color: #fff; background: linear-gradient(135deg,var(--primary),#14b8a6); font-size: 18px; font-weight: 800; box-shadow: 0 14px 32px rgba(37,99,235,.18); }
+    .brand h1 { margin: 0; font-size: 20px; line-height: 1.1; letter-spacing: -.02em; }
+    .brand span { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .top-actions .btn { min-width: 110px; }
+
+    /* ── Sheets bar ── */
+    .sheets-bar { display: flex; align-items: center; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; gap: 0; overflow: hidden; }
+    .sheets-tabs { display: flex; align-items: flex-end; gap: 2px; overflow-x: auto; padding: 8px 0 0; flex: 1; min-width: 0; scrollbar-width: none; }
+    .sheets-tabs::-webkit-scrollbar { display: none; }
+    .sheet-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 14px; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: background .12s, color .12s; white-space: nowrap; }
+    .sheet-tab:hover { background: var(--surface-2); color: var(--text); }
+    .sheet-tab.active { background: var(--surface); border-color: var(--border); color: var(--primary); position: relative; }
+    .sheet-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px; background: var(--surface); }
+    .sheet-tab .tab-close { opacity: 0; width: 16px; height: 16px; display: grid; place-items: center; border-radius: 4px; font-size: 12px; line-height: 1; }
+    .sheet-tab:hover .tab-close, .sheet-tab.active .tab-close { opacity: 1; }
+    .sheet-tab .tab-close:hover { background: var(--border); }
+    .sheets-add { flex: 0 0 auto; padding: 8px 12px; display: flex; align-items: center; }
+
+    /* ── Page ── */
+    .page { width: calc(100% - 32px); max-width: 100%; margin: 16px auto 24px; }
+    .summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; margin-bottom: 16px; }
+    .metric { position: relative; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 16px 15px; box-shadow: 0 8px 24px rgba(15,23,42,.05); cursor: default; }
+    .metric::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--primary); }
+    .metric:nth-child(2)::before { background: #14b8a6; }
+    .metric:nth-child(3)::before { background: #7c3aed; }
+    .metric:nth-child(4)::before { background: #f59e0b; }
+    .metric span { display: block; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+    .metric strong { display: block; font-size: 24px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .metric-clickable { cursor: pointer; }
+    .metric-clickable:hover { box-shadow: 0 8px 24px rgba(15,23,42,.12); }
+
+    /* ── Bulk bar ── */
+    .bulk-bar { display: none; align-items: center; gap: 10px; padding: 10px 16px; background: #eff6ff; border-bottom: 1px solid #bfdbfe; flex-wrap: wrap; }
+    .bulk-bar.visible { display: flex; }
+    .bulk-count { font-size: 13px; font-weight: 700; color: var(--primary); margin-right: 4px; }
+
+    /* ── Main panel ── */
+    .panel { background: var(--surface); border: 1px solid rgba(148,163,184,.18); border-radius: 16px; box-shadow: rgba(15,23,42,.08) 0 24px 50px -24px; min-width: 0; overflow: hidden; }
+    .panel-head { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 20px; border-bottom: 1px solid rgba(148,163,184,.15); flex-wrap: wrap; }
+    .panel-title h2 { margin: 0; font-size: 18px; }
+    .panel-title span { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .search { width: min(340px,100%); height: 44px; border: 1px solid rgba(148,163,184,.3); border-radius: 12px; padding: 0 14px; background: #fff; box-shadow: inset 0 1px 0 rgba(15,23,42,.04); }
+    .filter-select { min-width: 180px; height: 44px; border: 1px solid rgba(148,163,184,.3); border-radius: 12px; padding: 0 12px; background: #fff; color: var(--text); }
+    .filter-strip { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid rgba(148,163,184,.12); background: #f8fbff; flex-wrap: wrap; }
+    .category-chips { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; flex-wrap: nowrap; }
+    .chip { flex: 0 0 auto; min-height: 34px; border: 1px solid rgba(148,163,184,.35); border-radius: 999px; padding: 7px 14px; background: #fff; color: #334155; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+    .chip:hover { border-color: var(--primary); color: var(--primary); background: rgba(59,130,246,.08); }
+    .chip.active { color: #fff; border-color: var(--primary); background: var(--primary); }
+    .chip.low-chip { border-color: #f59e0b; color: #b45309; background: #fffbeb; }
+    .chip.low-chip.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+    .chip-count { margin-left: 6px; opacity: .72; }
+    .filter-meta { flex: 0 0 auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+    /* ── Buttons ── */
+    .btn { min-height: 40px; border: 1px solid transparent; border-radius: 10px; padding: 10px 14px; background: var(--surface-2); color: var(--text); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .14s ease,box-shadow .14s ease,background .14s ease,border-color .14s ease,color .14s ease; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(15,23,42,.11); }
+    .btn.primary { color: #fff; background: var(--primary); border-color: transparent; }
+    .btn.primary:hover { background: var(--primary-dark); }
+    .btn.danger { color: #fff; background: var(--danger); }
+    .btn.ghost { background: rgba(255,255,255,.92); border-color: rgba(148,163,184,.35); }
+    .btn.ghost:hover { background: #f8fbff; }
+    .btn.small { min-height: 34px; padding: 8px 12px; font-size: 13px; }
+    .btn.xs { min-height: 28px; padding: 4px 8px; font-size: 12px; }
+    .btn:focus-visible { outline: 3px solid rgba(37,99,235,.25); outline-offset: 2px; }
+    .btn.primary.focus-visible { outline-color: rgba(59,130,246,.35); }
+    .btn.danger.focus-visible { outline-color: rgba(239,68,68,.35); }
+
+    /* ── Table ── */
+    .table-wrap { overflow: auto; max-height: calc(100vh - 240px); background: var(--surface); border-top: 1px solid rgba(148,163,184,.16); border-radius: 0 0 16px 16px; box-shadow: inset 0 1px 0 rgba(15,23,42,.04); }
+    .table-wrap.hidden { display: none; }
+    .table-wrap::-webkit-scrollbar { height: 10px; border-radius: 10px; }
+    .table-wrap::-webkit-scrollbar-thumb { background: rgba(148,163,184,.45); border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid rgba(148,163,184,.12); vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    th { color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; background: #f8fbff; position: sticky; top: 0; z-index: 3; box-shadow: inset 0 -1px 0 rgba(148,163,184,.12); user-select: none; }
+    th.col-cb { width: 40px; min-width: 40px; text-align: center; }
+    th[data-col="name"] { width: 200px; }
+    th[data-col="category"] { width: 120px; }
+    th[data-col="selling_price"], th[data-col="cost_price"] { width: 130px; }
+    th[data-col="stock_quantity"], th[data-col="min_stock"] { width: 90px; }
+    th[data-col="part_number"] { width: 110px; }
+    th[data-col="size"], th[data-col="unit"] { width: 80px; }
+    th[data-col="brand"], th[data-col="origin"] { width: 110px; }
+    th[data-col="last_updated_price"] { width: 110px; }
+    th[data-col="last_modifier"] { width: 120px; }
+    th[data-col="supplier"] { width: 130px; }
+    th[data-col="description"], th[data-col="function_text"], th[data-col="function_arabic"] { width: 180px; }
+    th[data-col="dtu"] { width: 80px; }
+    td.col-cb { text-align: center; width: 40px; }
+    td.name-cell { font-weight: 700; }
+    td.actions-col { width: 100px; min-width: 100px; }
+    tbody tr { cursor: pointer; transition: background .15s; }
+    tbody tr:hover td { background: #eff6ff; }
+    tbody tr.selected td { background: #e0efff; }
+    tbody tr.row-low-stock td { background-color: #fffbeb !important; }
+    tbody tr.row-low-stock:hover td { background-color: #fef3c7 !important; }
+    tbody tr.row-low-stock.selected td { background-color: #fef9c3 !important; }
+    /* Column resize handle */
+    .col-resizer { position: absolute; right: 0; top: 0; bottom: 0; width: 5px; cursor: col-resize; z-index: 2; border-radius: 0 3px 3px 0; }
+    .col-resizer:hover, .col-resizer.resizing { background: rgba(37,99,235,.4); }
+    .muted { color: var(--muted); font-size: 13px; }
+    .actions-cell { display: flex; gap: 8px; flex-wrap: wrap; }
+    .stock-pill { display: inline-flex; min-width: 64px; justify-content: center; padding: 5px 10px; border-radius: 999px; background: #ecfdf5; color: var(--success); font-weight: 700; font-size: 13px; }
+    .stock-pill.low { background: #fff7ed; color: var(--warning); }
+    .empty-state { display: grid; place-items: center; min-height: 340px; padding: 34px; text-align: center; background: linear-gradient(180deg,#f8fbff,#ffffff); border: 1px dashed rgba(148,163,184,.35); }
+    .empty-card { width: min(460px,100%); }
+    .empty-icon { width: 56px; height: 56px; display: grid; place-items: center; margin: 0 auto 16px; border-radius: 12px; color: var(--primary); background: rgba(37,99,235,.12); font-weight: 800; font-size: 24px; }
+    .empty-card h3 { margin: 0; font-size: 20px; }
+    .empty-card p { margin: 10px 0 18px; color: var(--muted); line-height: 1.6; }
+    .empty-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+    /* ── Inline cell editing ── */
+    td.cell-editable { position: relative; }
+    td.cell-editable:hover::after { content: '✎'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--primary); opacity: .5; pointer-events: none; }
+    .cell-input { width: 100%; min-width: 80px; height: 30px; border: 2px solid var(--primary); border-radius: 6px; padding: 0 6px; background: #fff; font-size: 13px; outline: none; }
+
+    /* ── Column settings ── */
+    .col-settings-list { display: grid; gap: 6px; }
+    .col-settings-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; background: #fff; cursor: grab; transition: background .1s, box-shadow .1s; user-select: none; }
+    .col-settings-item:hover { background: #f8fafc; }
+    .col-settings-item.dragging { opacity: .3; }
+    .col-settings-item.drag-over { box-shadow: inset 0 3px 0 var(--primary); }
+    .col-drag-handle { color: var(--muted); font-size: 16px; flex: 0 0 auto; line-height: 1; }
+    .col-settings-item input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; flex: 0 0 auto; accent-color: var(--primary); }
+    .col-settings-item .col-name { flex: 1; font-size: 13px; font-weight: 600; }
+    .col-settings-item .col-badge { font-size: 11px; color: var(--muted); background: var(--surface-2); padding: 1px 6px; border-radius: 4px; }
+
+    /* ── View toggle ── */
+    .view-toggle { display: flex; gap: 2px; flex: 0 0 auto; }
+    .view-btn { min-height: 32px; width: 34px; border: 1px solid var(--border); background: #fff; color: var(--muted); font-size: 15px; cursor: pointer; display: grid; place-items: center; transition: background .12s, color .12s; }
+    .view-btn:first-child { border-radius: 8px 0 0 8px; }
+    .view-btn:last-child { border-radius: 0 8px 8px 0; border-left: none; }
+    .view-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* ── Card grid ── */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; padding: 16px; }
+    .card-grid.hidden { display: none; }
+    .product-card { position: relative; border: 1px solid var(--border); border-radius: 12px; padding: 16px 16px 14px; background: var(--surface); cursor: pointer; transition: box-shadow .18s, transform .18s, border-color .18s; display: flex; flex-direction: column; gap: 9px; }
+    .product-card:hover { box-shadow: 0 8px 28px rgba(15,23,42,.11); transform: translateY(-2px); border-color: #bfdbfe; }
+    .product-card.card-selected { border-color: var(--primary); background: #f8fbff; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+    .product-card.card-low-stock { border-left: 3px solid #f59e0b; }
+    .card-cb { position: absolute; top: 10px; right: 10px; width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+    .cat-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; width: fit-content; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card-name { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-right: 20px; }
+    .card-price { font-size: 17px; font-weight: 800; color: var(--primary); letter-spacing: -.02em; }
+    .card-stock-row { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+    .card-stock-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex: 0 0 auto; }
+    .card-stock-dot.low { background: #f59e0b; }
+
+    /* ── Detail panel ── */
+    .detail-panel { position: fixed; right: calc(-1 * var(--dp-width) - 20px); top: var(--topbar-h); width: var(--dp-width); height: calc(100vh - var(--topbar-h)); background: var(--surface); border-left: 1px solid var(--border); box-shadow: -6px 0 32px rgba(15,23,42,.12); transition: right .25s cubic-bezier(.4,0,.2,1); z-index: 25; display: flex; flex-direction: column; overflow: hidden; }
+    .detail-panel.open { right: 0; }
+    .detail-panel-overlay { display: none; position: fixed; inset: 0; z-index: 24; }
+    .detail-panel-overlay.open { display: block; }
+    .dp-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--border); flex: 0 0 auto; background: linear-gradient(135deg,#eff6ff,#f0fdf4); }
+    .dp-close-btn { width: 30px; height: 30px; flex: 0 0 30px; border-radius: 50%; border: 1px solid var(--border); background: rgba(255,255,255,.85); color: var(--muted); font-size: 18px; cursor: pointer; display: grid; place-items: center; transition: background .12s, color .12s, border-color .12s; line-height: 1; }
+    .dp-close-btn:hover { background: var(--danger-soft); color: var(--danger); border-color: #fca5a5; }
+    .dp-header-info { min-width: 0; flex: 1; }
+    .dp-header-info strong { display: block; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dp-header-info .dp-cat { display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 20px; background: var(--primary-soft); color: var(--primary); font-size: 11px; font-weight: 700; }
+    .dp-quick-stock { flex: 0 0 auto; padding: 12px 16px; border-bottom: 1px solid var(--border); background: #f8fafc; }
+    .dp-quick-stock label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+    .dp-stock-row { display: flex; gap: 8px; align-items: center; }
+    .dp-stock-row input { flex: 1; height: 34px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; background: #fff; }
+    .dp-tabs { display: flex; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
+    .dp-tab { flex: 1; padding: 10px; border: none; background: transparent; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: color .12s, border-color .12s; }
+    .dp-tab:hover { color: var(--text); }
+    .dp-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .dp-body { flex: 1; overflow-y: auto; }
+    .dp-pane { padding: 16px; }
+    .dp-pane.hidden { display: none; }
+
+    /* ── Detail panel form fields ── */
+    .dp-field { display: grid; gap: 4px; margin-bottom: 12px; }
+    .dp-field label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .dp-field input, .dp-field textarea, .dp-field select { width: 100%; min-height: 34px; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; background: #fff; color: var(--text); font-size: 13px; }
+    .dp-field textarea { min-height: 70px; resize: vertical; }
+    .dp-field-row { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+    .dp-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 8px; }
+
+    /* ── Stock history in panel ── */
+    .sh-list { display: grid; gap: 8px; }
+    .sh-item { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: #fbfdff; }
+    .sh-item.add { border-left: 3px solid var(--success); }
+    .sh-item.remove { border-left: 3px solid var(--danger); }
+    .sh-change { font-weight: 700; font-size: 15px; }
+    .sh-change.positive { color: var(--success); }
+    .sh-change.negative { color: var(--danger); }
+    .sh-meta { font-size: 12px; color: var(--muted); }
+
+    /* ── History modal (price) ── */
+    .history-list { display: grid; gap: 10px; }
+    .history-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: #fbfdff; }
+    .history-price { font-weight: 800; }
+
+    /* ── Modals ── */
+    .modal-backdrop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15,23,42,.45); z-index: 40; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(920px,100%); max-height: min(820px,calc(100vh - 40px)); overflow: auto; background: var(--surface); border-radius: 10px; box-shadow: 0 22px 50px rgba(15,23,42,.22); }
+    .modal.import { width: min(1040px,100%); }
+    .modal.sm { width: min(480px,100%); }
+    .modal-head, .modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--border); }
+    .modal-head h2 { margin: 0; font-size: 17px; }
+    .modal-foot { justify-content: flex-end; border-top: 1px solid var(--border); border-bottom: 0; flex-wrap: wrap; }
+    .modal-body { padding: 16px; }
+    .paste-box { min-height: 210px; font-family: Consolas,monospace; font-size: 13px; }
+    .preview { max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 12px; }
+    .preview table { min-width: 900px; }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.45; }
+
+    /* ── Form fields (modals) ── */
+    .field { display: grid; gap: 6px; margin-bottom: 12px; }
+    .field label { color: var(--muted); font-size: 13px; font-weight: 700; }
+    .field input, .field textarea, .field select { width: 100%; min-height: 38px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: #fff; color: var(--text); }
+    .field textarea { min-height: 86px; resize: vertical; }
+    .field-row { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+    .field-row.three { grid-template-columns: repeat(3,minmax(0,1fr)); }
+
+    /* ── Category list ── */
+    .category-list { display: grid; gap: 8px; max-height: 260px; overflow: auto; margin-top: 12px; }
+    .category-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+    .category-row strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .category-row span { color: var(--muted); font-size: 12px; flex: 0 0 auto; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; right: 18px; bottom: 18px; max-width: min(380px,calc(100% - 36px)); padding: 12px 14px; border-radius: 8px; color: #fff; background: var(--success); box-shadow: var(--shadow); z-index: 50; }
+    .toast.error { background: var(--danger); }
+    .empty { padding: 24px 16px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    /* ── Dark mode ── */
+    body.dark {
+      --bg: #0f172a; --surface: #1e293b; --surface-2: #243555;
+      --text: #f1f5f9; --muted: #94a3b8; --border: #334155; --border-soft: #1e293b;
+      --primary-soft: #1e1b4b; --danger: #f87171; --danger-soft: #450a0a;
+      --warning: #fbbf24; --success: #34d399; --shadow: 0 16px 38px rgba(0,0,0,.35);
+      background: radial-gradient(circle at top left,#1a2744 0,transparent 280px),var(--bg);
+      color: var(--text);
+    }
+    body.dark .topbar { background: linear-gradient(180deg,#1e293b 0%,#1a2540 100%); border-color: #334155; }
+    body.dark .sheets-bar { background: #1e293b; border-color: #334155; }
+    body.dark .sheet-tab { color: #94a3b8; }
+    body.dark .sheet-tab:hover { background: #243555; color: var(--text); }
+    body.dark .sheet-tab.active { background: #1e293b; border-color: #334155; color: #818cf8; }
+    body.dark .sheet-tab.active::after { background: #1e293b; }
+    body.dark .metric { background: var(--surface); border-color: #334155; }
+    body.dark .panel { background: var(--surface); border-color: #334155; }
+    body.dark .panel-head { border-color: #334155; }
+    body.dark .search { background: #243555; color: var(--text); border-color: #334155; }
+    body.dark .search::placeholder { color: #64748b; }
+    body.dark .filter-select { background: #243555; color: var(--text); border-color: #334155; }
+    body.dark .filter-strip { background: #152035; border-color: #334155; }
+    body.dark .chip { background: #243555; color: #cbd5e1; border-color: #334155; }
+    body.dark .chip:hover { background: #1e1b4b; color: #818cf8; border-color: #818cf8; }
+    body.dark .bulk-bar { background: #1e1b4b; border-color: #312e81; }
+    body.dark .table-wrap { background: var(--surface); border-color: #334155; }
+    body.dark th { background: #152035; color: #94a3b8; box-shadow: inset 0 -1px 0 #334155; }
+    body.dark td { border-color: #243555; }
+    body.dark tbody tr:hover td { background: #1e2d45; }
+    body.dark tbody tr.selected td { background: #1a2e4a; }
+    body.dark tbody tr.row-low-stock td { background-color: #2d1f00 !important; }
+    body.dark tbody tr.row-low-stock:hover td { background-color: #3d2a00 !important; }
+    body.dark tbody tr.row-low-stock.selected td { background-color: #3d3000 !important; }
+    body.dark .detail-panel { background: #1e293b; border-color: #334155; }
+    body.dark .dp-header { background: linear-gradient(135deg,#1e1b4b,#0c2418); }
+    body.dark .dp-quick-stock { background: #152035; border-color: #334155; }
+    body.dark .dp-tabs { border-color: #334155; }
+    body.dark .dp-tab { color: #94a3b8; }
+    body.dark .dp-tab.active { color: #818cf8; border-bottom-color: #818cf8; }
+    body.dark .dp-field input, body.dark .dp-field textarea, body.dark .dp-field select { background: #152035; color: var(--text); border-color: #334155; }
+    body.dark .dp-field input::placeholder, body.dark .dp-field textarea::placeholder { color: #64748b; }
+    body.dark .dp-actions { border-color: #334155; }
+    body.dark .dp-close-btn { background: rgba(30,41,59,.9); color: #94a3b8; border-color: #334155; }
+    body.dark .dp-close-btn:hover { background: #450a0a; color: #f87171; border-color: #f87171; }
+    body.dark .sh-item { background: #152035; border-color: #334155; }
+    body.dark .modal { background: #1e293b; }
+    body.dark .modal-backdrop { background: rgba(0,0,0,.65); }
+    body.dark .modal-head, body.dark .modal-foot { border-color: #334155; }
+    body.dark .field input, body.dark .field textarea, body.dark .field select { background: #152035; color: var(--text); border-color: #334155; }
+    body.dark .field input::placeholder, body.dark .field textarea::placeholder { color: #64748b; }
+    body.dark .paste-box { background: #152035; color: var(--text); }
+    body.dark .preview { border-color: #334155; }
+    body.dark .preview th { background: #152035; }
+    body.dark .col-settings-item { background: #1e293b; border-color: #334155; }
+    body.dark .col-settings-item:hover { background: #243555; }
+    body.dark .category-list { color: var(--text); }
+    body.dark .category-row { background: #1e293b; border-color: #334155; }
+    body.dark .history-item { background: #152035; border-color: #334155; }
+    body.dark .cell-input { background: #152035; color: var(--text); border-color: #818cf8; }
+    body.dark .empty-state { background: linear-gradient(180deg,#152035,#1e293b); border-color: #334155; }
+    body.dark .product-card { background: #1e293b; border-color: #334155; }
+    body.dark .product-card:hover { border-color: #818cf8; }
+    body.dark .product-card.card-selected { background: #1a2e4a; border-color: #818cf8; }
+    body.dark .btn { background: #243555; color: var(--text); border-color: #334155; }
+    body.dark .btn.ghost { background: rgba(30,41,59,.9); border-color: #334155; color: #cbd5e1; }
+    body.dark .btn.ghost:hover { background: #243555; }
+    body.dark .btn.primary { background: #4f46e5; color: #fff; border-color: transparent; }
+    body.dark .btn.primary:hover { background: #6366f1; }
+    body.dark .view-btn { background: #1e293b; border-color: #334155; color: #94a3b8; }
+    body.dark .view-btn.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+    body.dark .stock-pill { background: #064e3b; color: #34d399; }
+    body.dark .stock-pill.low { background: #2d1f00; color: #fbbf24; }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) { .summary { grid-template-columns: repeat(2,minmax(0,1fr)); } :root { --dp-width: 100vw; } }
+    @media (max-width: 680px) {
+      .topbar { align-items: flex-start; flex-direction: column; padding: 14px 16px; }
+      .top-actions { width: 100%; }
+      .page { width: calc(100% - 20px); margin-top: 14px; }
+      .summary { grid-template-columns: 1fr; }
+      .panel-head { align-items: stretch; flex-direction: column; }
+      .search, .filter-select { width: 100%; }
+      .filter-strip { align-items: stretch; flex-direction: column; }
+      .field-row, .field-row.three { grid-template-columns: 1fr; }
+      .sheets-bar { padding: 0 12px; }
+    }
+  </style>
+</head>
+<body>
+<script>if(localStorage.getItem('crm_theme')==='dark')document.body.classList.add('dark');</script>
+
+<!-- ── Topbar ─────────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">I</div>
+    <div>
+      <h1>Inventory</h1>
+      <span>Business 3D ERP catalog</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <a class="btn ghost" href="/home">Home</a>
+    <button class="btn ghost" id="categoriesBtn">Categories</button>
+    <button class="btn ghost" id="importBtn">Import</button>
+    <button class="btn ghost" id="exportBtn">Export CSV</button>
+    <button class="btn primary" id="addProductBtn">+ Add Item</button>
+  </div>
+</header>
+
+<!-- ── Sheets bar ──────────────────────────────────────────────────────── -->
+<div class="sheets-bar" id="sheetsBar">
+  <div class="sheets-tabs" id="sheetsTabs">
+    <button class="sheet-tab active" data-sheet-id="">All Products</button>
+  </div>
+  <div class="sheets-add">
+    <button class="btn small ghost" id="newSheetBtn">+ Sheet</button>
+  </div>
+</div>
+
+<!-- ── Page ───────────────────────────────────────────────────────────── -->
+<main class="page">
+
+  <section class="summary">
+    <div class="metric"><span>Items</span><strong id="metricProducts">0</strong></div>
+    <div class="metric"><span>Total Stock</span><strong id="metricStock">0</strong></div>
+    <div class="metric"><span>Catalog Value</span><strong id="metricValue">EGP 0</strong></div>
+    <div class="metric metric-clickable" id="alertMetric" title="Click to show low stock only">
+      <span>Low Stock</span><strong id="metricAlerts">0</strong>
+    </div>
+  </section>
+
+  <div class="panel">
+    <!-- Panel header with search / filter -->
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2 id="panelTitle">Inventory Sheet</h2>
+        <span id="tableStatus">No rows loaded</span>
+      </div>
+      <div class="toolbar">
+        <input class="search" id="searchInput" type="search" placeholder="Search item, PN, brand…">
+        <select class="filter-select" id="categoryFilter">
+          <option value="">All categories</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="viewTableBtn" title="Table view">☰</button>
+          <button class="view-btn" id="viewCardBtn" title="Card view">⊞</button>
+        </div>
+        <button class="btn ghost small" id="columnsBtn">⚙ Columns</button>
+        <button class="btn ghost small" id="refreshBtn">Refresh</button>
+        <button class="btn ghost small" id="clearFiltersBtn">Clear</button>
+      </div>
+    </div>
+
+    <!-- Category chips + low-stock toggle -->
+    <div class="filter-strip">
+      <div class="category-chips" id="categoryChips"></div>
+      <div class="filter-meta" id="filterMeta">All categories</div>
+    </div>
+
+    <!-- Bulk action bar -->
+    <div class="bulk-bar" id="bulkBar">
+      <span class="bulk-count" id="bulkCount">0 selected</span>
+      <button class="btn small danger" id="bulkDeleteBtn">Delete</button>
+      <button class="btn small ghost" id="bulkCategoryBtn">Set Category</button>
+      <button class="btn small ghost" id="bulkPriceBtn">Set Price</button>
+      <button class="btn small ghost" id="bulkExportBtn">Export Selected</button>
+      <button class="btn small ghost" id="bulkClearBtn">Clear selection</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap" id="tableWrap">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="productsBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Card grid -->
+    <div class="card-grid hidden" id="cardGrid"></div>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="emptyProducts" hidden>
+      <div class="empty-card">
+        <h3 id="emptyTitle">No inventory items yet</h3>
+        <p id="emptyText">Import your current price sheet or add the first catalog item manually.</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Detail panel (fixed right overlay) ─────────────────────────────── -->
+<div class="detail-panel" id="detailPanel">
+  <div class="dp-header">
+    <div class="dp-header-info">
+      <strong id="dpName">Product</strong>
+      <span class="dp-cat" id="dpCat">—</span>
+    </div>
+    <button class="dp-close-btn" id="closeDetailBtn" title="Close" aria-label="Close">&times;</button>
+  </div>
+
+  <!-- Quick stock update -->
+  <div class="dp-quick-stock">
+    <label>Quick Stock Update</label>
+    <form id="dpStockForm">
+      <div class="dp-stock-row">
+        <input id="dpStockChange" type="number" step="0.01" placeholder="e.g. +5 or -2" required>
+        <input id="dpStockNote" type="text" placeholder="Note (optional)" style="max-width:120px">
+        <button class="btn small primary" type="submit">Apply</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabs -->
+  <div class="dp-tabs">
+    <button class="dp-tab active" data-dp-tab="details">Details</button>
+    <button class="dp-tab" data-dp-tab="history">Stock History</button>
+  </div>
+
+  <!-- Tab: Details -->
+  <div class="dp-body">
+    <div class="dp-pane" id="dpDetailsPane">
+      <form id="dpForm">
+        <input type="hidden" id="dpProductId">
+        <div class="dp-field-row">
+          <div class="dp-field"><label>Category</label><input id="dpCategory" list="dpCategoryDatalist"></div>
+          <div class="dp-field"><label>Unit</label><input id="dpUnit" placeholder="pcs, kg, m…"></div>
+        </div>
+        <div class="dp-field"><label>Item Name</label><input id="dpItemName" required></div>
+        <div class="dp-field-row">
+          <div class="dp-field"><label>Part Number</label><input id="dpPN"></div>
+          <div class="dp-field"><label>Size</label><input id="dpSize"></div>
+        </div>
+        <div class="dp-field-row">
+          <div class="dp-field"><label>Brand</label><input id="dpBrand"></div>
+          <div class="dp-field"><label>Origin</label><input id="dpOrigin"></div>
+        </div>
+        <div class="dp-field-row">
+          <div class="dp-field"><label>Selling Price</label><input id="dpSellingPrice" type="number" min="0" step="0.01"></div>
+          <div class="dp-field"><label>Cost Price</label><input id="dpCostPrice" type="number" min="0" step="0.01"></div>
+        </div>
+        <div class="dp-field"><label>Supplier</label><input id="dpSupplier"></div>
+        <div class="dp-field-row">
+          <div class="dp-field"><label>Stock Qty</label><input id="dpStockQty" type="number" min="0" step="0.01"></div>
+          <div class="dp-field"><label>Min Stock</label><input id="dpMinStock" type="number" min="0" step="0.01"></div>
+        </div>
+        <div class="dp-field"><label>Description</label><textarea id="dpDescription"></textarea></div>
+        <div class="dp-field"><label>Function</label><textarea id="dpFunction"></textarea></div>
+        <div class="dp-field"><label>Function (Arabic)</label><textarea id="dpFunctionAR" dir="auto"></textarea></div>
+        <div class="dp-field-row">
+          <div class="dp-field"><label>Price Date</label><input id="dpPriceDate"></div>
+          <div class="dp-field"><label>DTU</label><input id="dpDTU"></div>
+        </div>
+        <div class="dp-field"><label>Last Modifier</label><input id="dpLastModifier"></div>
+        <div class="dp-actions">
+          <button class="btn primary" type="submit" style="flex:1">Save Changes</button>
+          <button class="btn ghost" type="button" id="dpPriceHistoryBtn">Price History</button>
+          <button class="btn danger" type="button" id="dpDeleteBtn">Delete</button>
+        </div>
+      </form>
+      <datalist id="dpCategoryDatalist"></datalist>
+    </div>
+
+    <!-- Tab: Stock History -->
+    <div class="dp-pane hidden" id="dpHistoryPane">
+      <div class="sh-list" id="dpHistoryList"></div>
+      <div class="empty" id="dpHistoryEmpty" hidden>No stock changes yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Product form modal (Add only) ──────────────────────────────────── -->
+<div class="modal-backdrop" id="productModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <form class="modal" id="productForm">
+    <div class="modal-head">
+      <h2 id="modalTitle">Add Product</h2>
+      <button class="btn small ghost" type="button" data-close="productModal">Close</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="productId">
+      <div class="field-row three">
+        <div class="field"><label for="productCategory">Category</label><input id="productCategory" list="categoryDatalist"></div>
+        <div class="field"><label for="productName">Item Name</label><input id="productName" required></div>
+        <div class="field"><label for="partNumber">PN</label><input id="partNumber"></div>
+      </div>
+      <div class="field-row three">
+        <div class="field"><label for="productSize">Size</label><input id="productSize"></div>
+        <div class="field"><label for="productBrand">Brand</label><input id="productBrand"></div>
+        <div class="field"><label for="productOrigin">Origin</label><input id="productOrigin"></div>
+      </div>
+      <div class="field-row three">
+        <div class="field"><label for="sellingPrice">Selling Price</label><input id="sellingPrice" type="number" min="0" step="0.01" value="0"></div>
+        <div class="field"><label for="productSupplier">Supplier</label><input id="productSupplier"></div>
+        <div class="field"><label for="productUnit">Unit</label><input id="productUnit" placeholder="pcs, m3, kg"></div>
+      </div>
+      <div class="field"><label for="productDescription">Description</label><textarea id="productDescription"></textarea></div>
+      <div class="field"><label for="functionText">Function</label><textarea id="functionText"></textarea></div>
+      <div class="field"><label for="functionArabic">Function Arabic</label><textarea id="functionArabic" dir="auto"></textarea></div>
+      <div class="field-row three">
+        <div class="field"><label for="lastUpdatedPrice">Price Date</label><input id="lastUpdatedPrice" placeholder="24-Apr-2025"></div>
+        <div class="field"><label for="dtu">DTU</label><input id="dtu"></div>
+        <div class="field"><label for="lastModifier">Last Modifier</label><input id="lastModifier"></div>
+      </div>
+      <div class="field-row three">
+        <div class="field"><label for="costPrice">Cost Price</label><input id="costPrice" type="number" min="0" step="0.01" value="0"></div>
+        <div class="field"><label for="stockQuantity">Stock Qty</label><input id="stockQuantity" type="number" min="0" step="0.01" value="0"></div>
+        <div class="field"><label for="minStock">Min Stock</label><input id="minStock" type="number" min="0" step="0.01" value="0"></div>
+      </div>
+      <datalist id="categoryDatalist"></datalist>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" type="button" data-close="productModal">Cancel</button>
+      <button class="btn primary" type="submit">Save Product</button>
+    </div>
+  </form>
+</div>
+
+<!-- ── Import modal ────────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+  <div class="modal import">
+    <div class="modal-head">
+      <h2 id="importTitle">Import Inventory Sheet</h2>
+      <button class="btn small ghost" type="button" data-close="importModal">Close</button>
+    </div>
+    <div class="modal-body">
+      <p class="hint">Paste from Excel/Google Sheets, or load a .csv / .tsv file. Expected headers: Catogry, ITEM, PN, SIZE, Brand, made Origan, Price, SUPPLIER, Description, Function, Function Arabic, last updated price, DTU, last modifier.</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="importFile">File</label>
+          <input id="importFile" type="file" accept=".csv,.tsv,.txt">
+        </div>
+        <div class="field">
+          <label for="importMode">Mode</label>
+          <select id="importMode">
+            <option value="append">Append to current inventory</option>
+            <option value="replace">Replace current inventory</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="pasteData">Paste sheet data</label>
+        <textarea id="pasteData" class="paste-box" spellcheck="false"></textarea>
+      </div>
+      <button class="btn ghost" id="previewImportBtn" type="button">Preview</button>
+      <div class="preview" id="importPreview" hidden></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" type="button" data-close="importModal">Cancel</button>
+      <button class="btn primary" type="button" id="runImportBtn">Import Rows</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Price history modal ─────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+  <div class="modal sm">
+    <div class="modal-head">
+      <h2 id="historyTitle">Price History</h2>
+      <button class="btn small ghost" type="button" data-close="historyModal">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="history-list" id="historyList"></div>
+      <div class="empty" id="emptyHistory" hidden>No price changes yet.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" type="button" data-close="historyModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Categories modal ────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="categoriesModal" role="dialog" aria-modal="true">
+  <div class="modal sm">
+    <div class="modal-head">
+      <h2>Manage Categories</h2>
+      <button class="btn small ghost" type="button" data-close="categoriesModal">Close</button>
+    </div>
+    <div class="modal-body">
+      <form id="categoryForm" style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="newCategoryName" placeholder="New category name" style="flex:1;min-height:38px;border:1px solid var(--border);border-radius:8px;padding:0 10px">
+        <button class="btn ghost" type="submit">Add</button>
+      </form>
+      <div class="category-list" id="categoryList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" type="button" data-close="categoriesModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New sheet modal ─────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="newSheetModal" role="dialog" aria-modal="true">
+  <div class="modal sm">
+    <div class="modal-head">
+      <h2 id="newSheetTitle">New Sheet</h2>
+      <button class="btn small ghost" type="button" data-close="newSheetModal">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="newSheetName">Sheet name</label>
+        <input id="newSheetName" placeholder="e.g. Pumps, Membranes, Chemicals">
+      </div>
+      <div class="field">
+        <label for="newSheetCategory">Category filter</label>
+        <select id="newSheetCategory">
+          <option value="">All categories</option>
+        </select>
+      </div>
+      <div class="field" style="flex-direction:row;align-items:center;gap:10px;padding:4px 0;">
+        <input type="checkbox" id="newSheetLowStock" style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary);">
+        <label for="newSheetLowStock" style="margin:0;cursor:pointer;">Low stock only</label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" type="button" data-close="newSheetModal">Cancel</button>
+      <button class="btn primary" type="button" id="saveSheetBtn">Save Sheet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Bulk category modal ─────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="bulkCategoryModal" role="dialog" aria-modal="true">
+  <div class="modal sm">
+    <div class="modal-head">
+      <h2>Set Category</h2>
+      <button class="btn small ghost" type="button" data-close="bulkCategoryModal">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="bulkCategoryValue">New category for selected items</label>
+        <input id="bulkCategoryValue" list="bulkCategoryDatalist" placeholder="Category name">
+        <datalist id="bulkCategoryDatalist"></datalist>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" type="button" data-close="bulkCategoryModal">Cancel</button>
+      <button class="btn primary" type="button" id="applyBulkCategoryBtn">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Bulk price modal ────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="bulkPriceModal" role="dialog" aria-modal="true">
+  <div class="modal sm">
+    <div class="modal-head">
+      <h2>Set Selling Price</h2>
+      <button class="btn small ghost" type="button" data-close="bulkPriceModal">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="bulkPriceValue">New price for selected items</label>
+        <input id="bulkPriceValue" type="number" min="0" step="0.01" placeholder="0.00">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" type="button" data-close="bulkPriceModal">Cancel</button>
+      <button class="btn primary" type="button" id="applyBulkPriceBtn">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Column settings modal ───────────────────────────────────────────── -->
+<div class="modal-backdrop" id="columnsModal" role="dialog" aria-modal="true">
+  <div class="modal sm">
+    <div class="modal-head">
+      <h2>Table Columns</h2>
+      <button class="btn small ghost" type="button" data-close="columnsModal">Close</button>
+    </div>
+    <div class="modal-body">
+      <p class="hint" style="margin:0 0 12px">Columns are saved per sheet · Drag to reorder · Check to show</p>
+      <div class="col-settings-list" id="colSettingsList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" type="button" id="resetColumnsBtn">Reset to defaults</button>
+      <button class="btn primary" type="button" data-close="columnsModal">Done</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script>
+  // ── Column definitions ─────────────────────────────────────────────────────
+  const COLUMNS = [
+    { key: 'category',           label: 'Category',       editable: true,  defaultVisible: true  },
+    { key: 'name',               label: 'Item',           editable: true,  defaultVisible: true,  required: true },
+    { key: 'part_number',        label: 'PN',             editable: false, defaultVisible: true  },
+    { key: 'size',               label: 'Size',           editable: false, defaultVisible: true  },
+    { key: 'brand',              label: 'Brand',          editable: false, defaultVisible: true  },
+    { key: 'origin',             label: 'Origin',         editable: false, defaultVisible: true  },
+    { key: 'selling_price',      label: 'Price',          editable: true,  defaultVisible: true  },
+    { key: 'cost_price',         label: 'Cost Price',     editable: true,  defaultVisible: false },
+    { key: 'supplier',           label: 'Supplier',       editable: false, defaultVisible: true  },
+    { key: 'unit',               label: 'Unit',           editable: false, defaultVisible: false },
+    { key: 'description',        label: 'Description',    editable: false, defaultVisible: true  },
+    { key: 'function_text',      label: 'Function',       editable: false, defaultVisible: false },
+    { key: 'function_arabic',    label: 'Function (AR)',  editable: false, defaultVisible: false },
+    { key: 'last_updated_price', label: 'Price Date',     editable: false, defaultVisible: true  },
+    { key: 'dtu',                label: 'DTU',            editable: false, defaultVisible: false },
+    { key: 'last_modifier',      label: 'Last Modifier',  editable: false, defaultVisible: true  },
+    { key: 'stock_quantity',     label: 'Stock',          editable: true,  defaultVisible: true  },
+    { key: 'min_stock',          label: 'Min Stock',      editable: true,  defaultVisible: true  },
+  ];
+
+  function colLsKey(sheetId) {
+    return sheetId == null ? 'inv_cols_null' : `inv_cols_${sheetId}`;
+  }
+
+  function loadColumnSettings(sheetId) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(colLsKey(sheetId)) || 'null');
+      if (!Array.isArray(saved)) return COLUMNS.map(c => ({ key: c.key, visible: c.defaultVisible }));
+      const savedMap = new Map(saved.map((c, i) => [c.key, { visible: c.visible, order: i }]));
+      return COLUMNS
+        .map(col => ({ key: col.key, visible: savedMap.has(col.key) ? savedMap.get(col.key).visible : col.defaultVisible, order: savedMap.has(col.key) ? savedMap.get(col.key).order : 999 }))
+        .sort((a, b) => a.order - b.order)
+        .map(({ key, visible }) => ({ key, visible }));
+    } catch (_) {
+      return COLUMNS.map(c => ({ key: c.key, visible: c.defaultVisible }));
+    }
+  }
+
+  function saveColumnSettings() {
+    localStorage.setItem(colLsKey(state.currentSheetId), JSON.stringify(state.columnSettings));
+  }
+
+  function getVisibleColumns() {
+    return state.columnSettings
+      .filter(s => s.visible)
+      .map(s => COLUMNS.find(c => c.key === s.key))
+      .filter(Boolean);
+  }
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  const state = {
+    products: [],
+    alerts: [],
+    categories: [],
+    sheets: [],
+    importRows: [],
+    categoryFilter: '',
+    lowStockOnly: false,
+    searchQuery: '',
+    currentSheetId: null,
+    selectedIds: new Set(),
+    detailProductId: null,
+    columnSettings: loadColumnSettings(null),
+    viewMode: localStorage.getItem('inv_view') || 'table',
+    token: localStorage.getItem('crm_token'),
+  };
+
+  // ── Category color system ──────────────────────────────────────────────────
+  const CAT_PALETTE = [
+    { bg: '#eff6ff', color: '#1d4ed8' },
+    { bg: '#f0fdf4', color: '#166534' },
+    { bg: '#fdf4ff', color: '#7e22ce' },
+    { bg: '#fff7ed', color: '#c2410c' },
+    { bg: '#fefce8', color: '#854d0e' },
+    { bg: '#fff1f2', color: '#be123c' },
+    { bg: '#f0f9ff', color: '#0369a1' },
+    { bg: '#f7fee7', color: '#3f6212' },
+  ];
+
+  const CAT_COLOR_MAP = {
+    chemical: 0, chem: 0,
+    pump: 1, pumps: 1,
+    membrane: 2, membranes: 2,
+    electrical: 4, electric: 4,
+    mechanical: 1, mechanic: 1,
+    spare: 3, spares: 3,
+    instrument: 6, instruments: 6,
+    control: 6, controls: 6,
+    general: 7,
+    wt: 0, wwt: 2,
+  };
+
+  function catColor(category) {
+    const key = String(category || '').toLowerCase().trim();
+    if (!key) return { bg: '#f1f5f9', color: '#475569' };
+    const mapped = CAT_COLOR_MAP[key];
+    if (mapped !== undefined) return CAT_PALETTE[mapped];
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+    return CAT_PALETTE[hash % CAT_PALETTE.length];
+  }
+
+  const sheetHeaders = ['Catogry','ITEM','PN','SIZE','Brand','made Origan','Price','SUPPLIER','Description','Function','Function Arabic','last updated price','DTU','last modifier'];
+  const money = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 });
+
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function n(id) { return (document.getElementById(id) || {}).value || ''; }
+  function nv(id) { const v = Number(document.getElementById(id)?.value); return Number.isFinite(v) ? v : 0; }
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = `toast ${type}`;
+    toast.hidden = false;
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => { toast.hidden = true; }, 2800);
+  }
+
+  async function api(path, options = {}) {
+    const res = await fetch(path, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${state.token}`, ...(options.headers || {}) },
+    });
+    if (res.status === 401) { localStorage.removeItem('crm_token'); location.replace('/'); return null; }
+    if (options.headers?.Accept === 'text/csv') return res;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  }
+
+  async function verifySession() {
+    if (!state.token) { location.replace('/'); return false; }
+    const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${state.token}` } });
+    if (!res.ok) { localStorage.removeItem('crm_token'); location.replace('/'); return false; }
+    return true;
+  }
+
+  // ── Metrics ────────────────────────────────────────────────────────────────
+  function renderMetrics() {
+    const totalStock = state.products.reduce((s,p) => s + Number(p.stock_quantity || 0), 0);
+    const value = state.products.reduce((s,p) => s + Number(p.selling_price || 0) * Number(p.stock_quantity || 0), 0);
+    document.getElementById('metricProducts').textContent = state.products.length;
+    document.getElementById('metricStock').textContent = totalStock.toLocaleString();
+    document.getElementById('metricValue').textContent = money.format(value);
+    document.getElementById('metricAlerts').textContent = state.alerts.length;
+    const alertMetric = document.getElementById('alertMetric');
+    alertMetric.style.borderColor = state.alerts.length ? '#f59e0b' : '';
+  }
+
+  // ── Sheets ─────────────────────────────────────────────────────────────────
+  async function loadSheets() {
+    state.sheets = await api('/erp/inventory/sheets') || [];
+    renderSheets();
+  }
+
+  function renderSheets() {
+    const tabs = document.getElementById('sheetsTabs');
+    const allTab = `<button class="sheet-tab ${state.currentSheetId === null ? 'active' : ''}" data-sheet-id="">All Products</button>`;
+    const sheetTabs = state.sheets.map(s => `
+      <button class="sheet-tab ${state.currentSheetId === s.id ? 'active' : ''}" data-sheet-id="${s.id}">
+        ${esc(s.name)}
+        <span class="tab-close" data-delete-sheet="${s.id}" title="Delete sheet">×</span>
+      </button>`).join('');
+    tabs.innerHTML = allTab + sheetTabs;
+  }
+
+  async function switchSheet(sheetId) {
+    state.currentSheetId = sheetId || null;
+    if (sheetId) {
+      const sheet = state.sheets.find(s => s.id === Number(sheetId));
+      if (sheet) {
+        try {
+          const filters = JSON.parse(sheet.filters_json || '{}');
+          state.categoryFilter = filters.categoryFilter || '';
+          state.searchQuery = filters.search || '';
+          state.lowStockOnly = filters.lowStockOnly || false;
+          document.getElementById('searchInput').value = state.searchQuery;
+          document.getElementById('categoryFilter').value = state.categoryFilter;
+        } catch (_) {}
+      }
+      document.getElementById('panelTitle').textContent = state.sheets.find(s => s.id === Number(sheetId))?.name || 'Sheet';
+    } else {
+      state.categoryFilter = '';
+      state.searchQuery = '';
+      state.lowStockOnly = false;
+      document.getElementById('searchInput').value = '';
+      document.getElementById('categoryFilter').value = '';
+      document.getElementById('panelTitle').textContent = 'Inventory Sheet';
+    }
+    state.columnSettings = loadColumnSettings(state.currentSheetId);
+    state.selectedIds.clear();
+    renderSheets();
+    renderTableHeaders();
+    await loadProducts();
+  }
+
+  async function createSheet(name, filters) {
+    try {
+      const sheet = await api('/erp/inventory/sheets', {
+        method: 'POST',
+        body: JSON.stringify({ name, filters }),
+      });
+      await loadSheets();
+      await switchSheet(sheet.id);
+      showToast(`Sheet "${name}" created`);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function deleteSheet(id) {
+    const sheet = state.sheets.find(s => s.id === Number(id));
+    if (!confirm(`Delete sheet "${sheet?.name || id}"? Its products will be moved to All Products.`)) return;
+    try {
+      await api(`/erp/inventory/sheets/${id}`, { method: 'DELETE' });
+      if (state.currentSheetId === Number(id)) await switchSheet(null);
+      await loadSheets();
+      showToast('Sheet deleted');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function saveCurrentSheetFilters() {
+    if (!state.currentSheetId) return;
+    const filters = { categoryFilter: state.categoryFilter, search: state.searchQuery, lowStockOnly: state.lowStockOnly };
+    try {
+      await api(`/erp/inventory/sheets/${state.currentSheetId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ filters }),
+      });
+    } catch (_) {}
+  }
+
+  // ── Category helpers ───────────────────────────────────────────────────────
+  function categoryCounts() {
+    const counts = new Map();
+    state.products.forEach(p => {
+      const cat = String(p.category || '').trim();
+      if (!cat) return;
+      counts.set(cat, (counts.get(cat) || 0) + 1);
+    });
+    return counts;
+  }
+
+  function getCategories() {
+    const counts = categoryCounts();
+    state.categories.forEach(c => {
+      const cat = String(c.name || '').trim();
+      if (cat && !counts.has(cat)) counts.set(cat, 0);
+    });
+    return [...counts.entries()].sort((a,b) => a[0].localeCompare(b[0]));
+  }
+
+  function renderCategoryFilters() {
+    const categories = getCategories();
+    const selected = state.categoryFilter;
+    const options = ['<option value="">All categories</option>',
+      ...categories.map(([cat,count]) => `<option value="${esc(cat)}">${esc(cat)} (${count})</option>`)
+    ].join('');
+
+    document.getElementById('categoryFilter').innerHTML = options;
+    document.getElementById('categoryFilter').value = selected;
+
+    const lowCount = state.alerts.length;
+    document.getElementById('categoryChips').innerHTML = [
+      `<button class="chip ${!selected && !state.lowStockOnly ? 'active' : ''}" type="button" data-category="" data-low="">All<span class="chip-count">${state.products.length}</span></button>`,
+      `<button class="chip low-chip ${state.lowStockOnly ? 'active' : ''}" type="button" data-low-stock="">⚠ Low Stock<span class="chip-count">${lowCount}</span></button>`,
+      ...categories.map(([cat,count]) =>
+        `<button class="chip ${selected === cat && !state.lowStockOnly ? 'active' : ''}" type="button" data-category="${esc(cat)}">${esc(cat)}<span class="chip-count">${count}</span></button>`)
+    ].join('');
+
+    const datalists = ['categoryDatalist','dpCategoryDatalist','bulkCategoryDatalist'];
+    datalists.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = categories.map(([cat]) => `<option value="${esc(cat)}"></option>`).join('');
+    });
+  }
+
+  function renderCategoryList() {
+    const categories = getCategories();
+    const list = document.getElementById('categoryList');
+    if (!categories.length) { list.innerHTML = '<div class="empty">No categories yet.</div>'; return; }
+    const savedByName = new Map(state.categories.map(c => [c.name, c]));
+    list.innerHTML = categories.map(([cat, count]) => {
+      const saved = savedByName.get(cat);
+      const canDelete = saved && count === 0;
+      return `<div class="category-row">
+        <div><strong>${esc(cat)}</strong></div>
+        <span>${count} item(s)</span>
+        ${canDelete ? `<button class="btn xs ghost" type="button" onclick="deleteCategory(${saved.id})">Delete</button>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // ── Filtering ──────────────────────────────────────────────────────────────
+  function filteredProducts() {
+    const q = state.searchQuery.trim().toLowerCase();
+    return state.products.filter(p => {
+      const matchesCat = !state.categoryFilter || String(p.category || '').trim() === state.categoryFilter;
+      const matchesSearch = !q || [p.category,p.name,p.part_number,p.size,p.brand,p.origin,p.supplier,p.description,p.function_text,p.function_arabic].some(v => String(v || '').toLowerCase().includes(q));
+      const matchesLow = !state.lowStockOnly || Number(p.stock_quantity || 0) < Number(p.min_stock || 0);
+      return matchesCat && matchesSearch && matchesLow;
+    });
+  }
+
+  function setCategoryFilter(cat) {
+    state.categoryFilter = cat || '';
+    state.lowStockOnly = false;
+    renderProducts();
+    saveCurrentSheetFilters();
+  }
+
+  function setLowStockFilter() {
+    state.lowStockOnly = !state.lowStockOnly;
+    if (state.lowStockOnly) state.categoryFilter = '';
+    renderProducts();
+    saveCurrentSheetFilters();
+  }
+
+  function clearFilters() {
+    state.categoryFilter = '';
+    state.lowStockOnly = false;
+    state.searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('categoryFilter').value = '';
+    renderProducts();
+    saveCurrentSheetFilters();
+  }
+
+  // ── Selection ──────────────────────────────────────────────────────────────
+  function toggleSelectAll(checked) {
+    const rows = filteredProducts();
+    if (checked) rows.forEach(p => state.selectedIds.add(p.id));
+    else rows.forEach(p => state.selectedIds.delete(p.id));
+    renderBulkBar();
+    document.querySelectorAll('tbody input[type=checkbox]').forEach(cb => { cb.checked = checked; });
+    document.querySelectorAll('tbody tr').forEach(tr => tr.classList.toggle('selected', checked));
+  }
+
+  function toggleSelectProduct(id, checked, tr) {
+    if (checked) state.selectedIds.add(id);
+    else state.selectedIds.delete(id);
+    tr.classList.toggle('selected', checked);
+    renderBulkBar();
+    const allChecked = filteredProducts().every(p => state.selectedIds.has(p.id));
+    document.getElementById('selectAll').checked = allChecked;
+  }
+
+  function renderBulkBar() {
+    const bar = document.getElementById('bulkBar');
+    const count = state.selectedIds.size;
+    bar.classList.toggle('visible', count > 0);
+    document.getElementById('bulkCount').textContent = `${count} selected`;
+  }
+
+  function clearSelection() {
+    state.selectedIds.clear();
+    renderBulkBar();
+    document.querySelectorAll('tbody input[type=checkbox]').forEach(cb => { cb.checked = false; });
+    document.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('selected'));
+    document.getElementById('selectAll').checked = false;
+  }
+
+  // ── Render products (table or card) ──────────────────────────────────────
+  function renderProducts() {
+    const rows = filteredProducts();
+    const hasRows = rows.length > 0;
+    const hasAny  = state.products.length > 0;
+
+    document.getElementById('emptyProducts').hidden = hasRows;
+    document.getElementById('emptyTitle').textContent = hasAny ? 'No matching items' : 'No inventory items yet';
+    document.getElementById('emptyText').textContent  = hasAny
+      ? 'Try another category, clear filters, or search with a different keyword.'
+      : 'Import your current price sheet or add the first catalog item manually.';
+    document.getElementById('tableStatus').textContent = state.products.length
+      ? `${rows.length} of ${state.products.length} item(s)` + (state.lowStockOnly ? ' — Low stock' : '')
+      : 'No rows loaded';
+    document.getElementById('filterMeta').textContent = state.lowStockOnly
+      ? 'Low stock items'
+      : state.categoryFilter ? `Filtered: ${state.categoryFilter}` : 'All categories';
+
+    renderCategoryFilters();
+    renderMetrics();
+
+    if (!hasRows) {
+      document.getElementById('tableWrap').classList.add('hidden');
+      document.getElementById('cardGrid').classList.add('hidden');
+      return;
+    }
+
+    if (state.viewMode === 'card') {
+      renderCardView(rows);
+      return;
+    }
+
+    // ── Table mode ──
+    document.getElementById('cardGrid').classList.add('hidden');
+    document.getElementById('tableWrap').classList.remove('hidden');
+    const body = document.getElementById('productsBody');
+    const visCols = getVisibleColumns();
+    body.innerHTML = rows.map(p => {
+      const stock = Number(p.stock_quantity || 0);
+      const min   = Number(p.min_stock || 0);
+      const isLow = stock < min;
+      const isSel = state.selectedIds.has(p.id);
+      const cells = visCols.map(col => renderCell(p, col, stock, min, isLow)).join('');
+      return `<tr data-id="${p.id}" class="${isLow ? 'row-low-stock' : ''} ${isSel ? 'selected' : ''}">
+        <td class="col-cb" onclick="event.stopPropagation()">
+          <input type="checkbox" ${isSel ? 'checked' : ''} onchange="toggleSelectProduct(${p.id},this.checked,this.closest('tr'))">
+        </td>
+        ${cells}
+        <td class="actions-col" onclick="event.stopPropagation()">
+          <div class="actions-cell">
+            <button class="btn xs ghost" onclick="openDetailPanel(${p.id})">Detail</button>
+            <button class="btn xs danger" onclick="deleteProduct(${p.id})">Del</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    body.querySelectorAll('tr').forEach(tr => {
+      tr.addEventListener('click', () => { const id = Number(tr.dataset.id); if (id) openDetailPanel(id); });
+    });
+  }
+
+  // ── View mode ─────────────────────────────────────────────────────────────
+  function setViewMode(mode) {
+    state.viewMode = mode;
+    localStorage.setItem('inv_view', mode);
+    document.getElementById('viewTableBtn').classList.toggle('active', mode === 'table');
+    document.getElementById('viewCardBtn').classList.toggle('active', mode === 'card');
+    document.getElementById('columnsBtn').style.display = mode === 'table' ? '' : 'none';
+    renderProducts();
+  }
+
+  // ── Card view renderer ────────────────────────────────────────────────────
+  function renderCardView(rows) {
+    const grid = document.getElementById('cardGrid');
+    document.getElementById('tableWrap').classList.add('hidden');
+    grid.classList.remove('hidden');
+
+    grid.innerHTML = rows.map(p => {
+      const stock = Number(p.stock_quantity || 0);
+      const min   = Number(p.min_stock || 0);
+      const isLow = stock < min;
+      const isSel = state.selectedIds.has(p.id);
+      const col   = catColor(p.category);
+      const catLabel = p.category ? esc(p.category) : 'Uncategorized';
+      return `
+        <div class="product-card ${isSel ? 'card-selected' : ''} ${isLow ? 'card-low-stock' : ''}" data-id="${p.id}">
+          <input class="card-cb" type="checkbox" ${isSel ? 'checked' : ''}
+                 onclick="event.stopPropagation()"
+                 onchange="cardToggleSelect(${p.id},this.checked,this.closest('.product-card'))">
+          <span class="cat-badge" style="background:${col.bg};color:${col.color}">${catLabel}</span>
+          <div class="card-name">${esc(p.name)}</div>
+          <div class="card-price">${money.format(Number(p.selling_price || 0))}</div>
+          <div class="card-stock-row">
+            <span class="card-stock-dot ${isLow ? 'low' : ''}"></span>
+            Stock: ${stock}${isLow ? ' ⚠' : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    grid.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', () => openDetailPanel(Number(card.dataset.id)));
+    });
+  }
+
+  window.cardToggleSelect = function(id, checked, card) {
+    if (checked) state.selectedIds.add(id);
+    else state.selectedIds.delete(id);
+    card.classList.toggle('card-selected', checked);
+    renderBulkBar();
+  };
+
+  // ── Dynamic table headers ──────────────────────────────────────────────────
+  function renderTableHeaders() {
+    const thead = document.getElementById('tableHead');
+    const cols = getVisibleColumns();
+    thead.innerHTML = `<tr>
+      <th class="col-cb"><input type="checkbox" id="selectAll" title="Select all"></th>
+      ${cols.map(col => `<th data-col="${esc(col.key)}">${esc(col.label)}</th>`).join('')}
+      <th class="actions-col">Actions</th>
+    </tr>`;
+    document.getElementById('selectAll').addEventListener('change', e => toggleSelectAll(e.target.checked));
+    setupColumnResize();
+  }
+
+  function setupColumnResize() {
+    document.querySelectorAll('#tableHead th').forEach(th => {
+      if (th.classList.contains('col-cb') || th.querySelector('.col-resizer')) return;
+      const handle = document.createElement('div');
+      handle.className = 'col-resizer';
+      th.appendChild(handle);
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault(); e.stopPropagation();
+        const startX = e.pageX;
+        const startW = th.offsetWidth;
+        handle.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        const onMove = e => { th.style.width = Math.max(50, startW + e.pageX - startX) + 'px'; };
+        const onUp = () => {
+          handle.classList.remove('resizing');
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      });
+    });
+  }
+
+  // ── Per-cell renderer (used by renderProducts) ─────────────────────────────
+  function renderCell(p, col, stock, min, isLow) {
+    const id = p.id;
+    switch (col.key) {
+      case 'category':
+        return `<td class="cell-editable" onclick="event.stopPropagation();startCellEdit(this,'category',${id},'${esc(p.category || '')}',false)">${esc(p.category || '')}</td>`;
+      case 'name':
+        return `<td class="name-cell cell-editable" onclick="event.stopPropagation();startCellEdit(this,'name',${id},'${esc(p.name)}',false)">${esc(p.name)}</td>`;
+      case 'selling_price':
+        return `<td class="cell-editable" onclick="event.stopPropagation();startCellEdit(this,'selling_price',${id},${Number(p.selling_price||0)},true)">${money.format(Number(p.selling_price || 0))}</td>`;
+      case 'cost_price':
+        return `<td class="cell-editable" onclick="event.stopPropagation();startCellEdit(this,'cost_price',${id},${Number(p.cost_price||0)},true)">${money.format(Number(p.cost_price || 0))}</td>`;
+      case 'stock_quantity':
+        return `<td class="cell-editable" onclick="event.stopPropagation();startCellEdit(this,'stock_quantity',${id},${stock},true)"><span class="stock-pill ${isLow ? 'low' : ''}">${stock}</span></td>`;
+      case 'min_stock':
+        return `<td class="cell-editable" onclick="event.stopPropagation();startCellEdit(this,'min_stock',${id},${min},true)">${min}</td>`;
+      case 'description':
+        return `<td class="wrap">${esc(p.description || '')}</td>`;
+      case 'function_text':
+        return `<td class="wrap">${esc(p.function_text || '')}</td>`;
+      case 'function_arabic':
+        return `<td class="wrap" dir="auto">${esc(p.function_arabic || '')}</td>`;
+      default:
+        return `<td>${esc(p[col.key] == null ? '' : p[col.key])}</td>`;
+    }
+  }
+
+  // ── Column settings UI ─────────────────────────────────────────────────────
+  function renderColumnsModal() {
+    const list = document.getElementById('colSettingsList');
+    list.innerHTML = state.columnSettings.map((setting, i) => {
+      const col = COLUMNS.find(c => c.key === setting.key);
+      if (!col) return '';
+      const disabled = col.required ? 'disabled title="Always visible"' : '';
+      return `<div class="col-settings-item" draggable="true" data-index="${i}">
+        <span class="col-drag-handle">⠿</span>
+        <input type="checkbox" ${setting.visible || col.required ? 'checked' : ''} ${disabled}
+               onchange="toggleColumnVisibility('${col.key}',this.checked)">
+        <span class="col-name">${esc(col.label)}</span>
+        ${col.required ? '<span class="col-badge">required</span>' : ''}
+        ${col.editable ? '<span class="col-badge" style="background:#eff6ff;color:#2563eb">editable</span>' : ''}
+      </div>`;
+    }).join('');
+    setupColumnDragDrop();
+  }
+
+  window.toggleColumnVisibility = function(key, visible) {
+    const col = COLUMNS.find(c => c.key === key);
+    if (col?.required) return;
+    const s = state.columnSettings.find(c => c.key === key);
+    if (s) s.visible = visible;
+    saveColumnSettings();
+    renderTableHeaders();
+    renderProducts();
+  };
+
+  function setupColumnDragDrop() {
+    const list = document.getElementById('colSettingsList');
+    let dragIdx = null;
+    list.querySelectorAll('.col-settings-item').forEach((item, i) => {
+      item.addEventListener('dragstart', e => {
+        dragIdx = i;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+        list.querySelectorAll('.col-settings-item').forEach(el => el.classList.remove('drag-over'));
+      });
+      item.addEventListener('dragover', e => { e.preventDefault(); item.classList.add('drag-over'); });
+      item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+      item.addEventListener('drop', e => {
+        e.preventDefault();
+        item.classList.remove('drag-over');
+        if (dragIdx === null || dragIdx === i) return;
+        const moved = state.columnSettings.splice(dragIdx, 1)[0];
+        state.columnSettings.splice(i, 0, moved);
+        dragIdx = null;
+        saveColumnSettings();
+        renderColumnsModal();
+        renderTableHeaders();
+        renderProducts();
+      });
+    });
+  }
+
+  // ── Inline cell editing ────────────────────────────────────────────────────
+  function startCellEdit(td, field, productId, currentValue, isNumber) {
+    if (td.classList.contains('editing')) return;
+    td.classList.add('editing');
+    const original = td.innerHTML;
+    const input = document.createElement('input');
+    input.className = 'cell-input';
+    input.value = currentValue;
+    if (isNumber) { input.type = 'number'; input.step = '0.01'; }
+    td.textContent = '';
+    td.appendChild(input);
+    input.focus();
+    input.select();
+
+    let done = false;
+
+    async function commit() {
+      if (done) return;
+      done = true;
+      td.classList.remove('editing');
+      const rawValue = isNumber ? Number(input.value) : input.value.trim();
+      const product = state.products.find(p => p.id === productId);
+      if (!product || String(product[field]) === String(rawValue)) {
+        renderProducts();
+        return;
+      }
+      const payload = Object.assign({}, product, { [field]: rawValue });
+      try {
+        await api(`/erp/inventory/products/${productId}`, { method: 'PUT', body: JSON.stringify(payload) });
+        await refreshAll();
+        showToast('Saved');
+      } catch (err) {
+        showToast(err.message, 'error');
+        renderProducts();
+      }
+    }
+
+    function cancel() {
+      if (done) return;
+      done = true;
+      td.classList.remove('editing');
+      td.innerHTML = original;
+    }
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); commit(); }
+      if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+    });
+    input.addEventListener('blur', commit);
+  }
+
+  // ── Detail panel ───────────────────────────────────────────────────────────
+  function openDetailPanel(productId) {
+    const product = state.products.find(p => p.id === productId);
+    if (!product) return;
+    state.detailProductId = productId;
+
+    document.getElementById('dpProductId').value = product.id;
+    document.getElementById('dpName').textContent = product.name;
+    document.getElementById('dpCat').textContent = product.category || '—';
+    document.getElementById('dpItemName').value = product.name || '';
+    document.getElementById('dpCategory').value = product.category || '';
+    document.getElementById('dpUnit').value = product.unit || '';
+    document.getElementById('dpPN').value = product.part_number || '';
+    document.getElementById('dpSize').value = product.size || '';
+    document.getElementById('dpBrand').value = product.brand || '';
+    document.getElementById('dpOrigin').value = product.origin || '';
+    document.getElementById('dpSellingPrice').value = product.selling_price ?? 0;
+    document.getElementById('dpCostPrice').value = product.cost_price ?? 0;
+    document.getElementById('dpSupplier').value = product.supplier || '';
+    document.getElementById('dpStockQty').value = product.stock_quantity ?? 0;
+    document.getElementById('dpMinStock').value = product.min_stock ?? 0;
+    document.getElementById('dpDescription').value = product.description || '';
+    document.getElementById('dpFunction').value = product.function_text || '';
+    document.getElementById('dpFunctionAR').value = product.function_arabic || '';
+    document.getElementById('dpPriceDate').value = product.last_updated_price || '';
+    document.getElementById('dpDTU').value = product.dtu || '';
+    document.getElementById('dpLastModifier').value = product.last_modifier || '';
+    document.getElementById('dpStockChange').value = '';
+    document.getElementById('dpStockNote').value = '';
+
+    // Switch to details tab
+    switchDpTab('details');
+
+    document.getElementById('detailPanel').classList.add('open');
+  }
+
+  function closeDetailPanel() {
+    document.getElementById('detailPanel').classList.remove('open');
+    state.detailProductId = null;
+  }
+
+  function switchDpTab(tab) {
+    document.querySelectorAll('.dp-tab').forEach(t => t.classList.toggle('active', t.dataset.dpTab === tab));
+    document.getElementById('dpDetailsPane').classList.toggle('hidden', tab !== 'details');
+    document.getElementById('dpHistoryPane').classList.toggle('hidden', tab !== 'history');
+    if (tab === 'history' && state.detailProductId) loadStockHistory(state.detailProductId);
+  }
+
+  async function loadStockHistory(productId) {
+    const list = document.getElementById('dpHistoryList');
+    const empty = document.getElementById('dpHistoryEmpty');
+    list.innerHTML = '<div class="empty">Loading…</div>';
+    empty.hidden = true;
+    try {
+      const rows = await api(`/erp/inventory/products/${productId}/stock-history`) || [];
+      empty.hidden = rows.length > 0;
+      list.innerHTML = rows.map(row => {
+        const change = Number(row.change || 0);
+        const isAdd = change > 0;
+        const dateStr = row.date ? new Date(row.date).toLocaleString() : '';
+        return `<div class="sh-item ${isAdd ? 'add' : 'remove'}">
+          <div>
+            <span class="sh-change ${isAdd ? 'positive' : 'negative'}">${isAdd ? '+' : ''}${change}</span>
+            <div class="sh-meta">${esc(row.user || 'Unknown')} · ${esc(row.action || '')}${row.note ? ` · ${esc(row.note)}` : ''}</div>
+            <div class="sh-meta">${esc(dateStr)}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch (err) {
+      list.innerHTML = '';
+      empty.hidden = false;
+    }
+  }
+
+  // ── Load / refresh data ────────────────────────────────────────────────────
+  async function loadProducts() {
+    const qs = state.currentSheetId != null ? `?sheetId=${state.currentSheetId}` : '';
+    state.products = await api(`/erp/inventory/products${qs}`) || [];
+    renderProducts();
+  }
+
+  async function loadCategories() {
+    state.categories = await api('/erp/inventory/categories') || [];
+    renderCategoryFilters();
+  }
+
+  async function loadAlerts() {
+    state.alerts = await api('/erp/inventory/alerts') || [];
+    renderMetrics();
+  }
+
+  async function refreshAll() {
+    await Promise.all([loadCategories(), loadAlerts()]);
+    await loadProducts();
+    renderCategoryList();
+    if (state.detailProductId) {
+      const updated = state.products.find(p => p.id === state.detailProductId);
+      if (updated) openDetailPanel(state.detailProductId);
+    }
+  }
+
+  // ── Product CRUD ───────────────────────────────────────────────────────────
+  function productPayload() {
+    return {
+      name: document.getElementById('productName').value.trim(),
+      category: document.getElementById('productCategory').value.trim(),
+      part_number: document.getElementById('partNumber').value.trim(),
+      size: document.getElementById('productSize').value.trim(),
+      brand: document.getElementById('productBrand').value.trim(),
+      origin: document.getElementById('productOrigin').value.trim(),
+      selling_price: nv('sellingPrice'),
+      supplier: document.getElementById('productSupplier').value.trim(),
+      unit: document.getElementById('productUnit').value.trim(),
+      description: document.getElementById('productDescription').value.trim(),
+      function_text: document.getElementById('functionText').value.trim(),
+      function_arabic: document.getElementById('functionArabic').value.trim(),
+      last_updated_price: document.getElementById('lastUpdatedPrice').value.trim(),
+      dtu: document.getElementById('dtu').value.trim(),
+      last_modifier: document.getElementById('lastModifier').value.trim(),
+      cost_price: nv('costPrice'),
+      stock_quantity: nv('stockQuantity'),
+      min_stock: nv('minStock'),
+      sheet_id: state.currentSheetId,
+    };
+  }
+
+  function openModal() {
+    document.getElementById('modalTitle').textContent = 'Add Product';
+    document.getElementById('productId').value = '';
+    document.getElementById('productForm').reset();
+    document.getElementById('productModal').classList.add('open');
+    setTimeout(() => document.getElementById('productName').focus(), 0);
+  }
+
+  function closeModal(id) {
+    document.getElementById(id)?.classList.remove('open');
+    if (id === 'productModal') {
+      document.getElementById('productForm').reset();
+      document.getElementById('productId').value = '';
+    }
+  }
+
+  window.deleteProduct = async function(id) {
+    const product = state.products.find(p => Number(p.id) === Number(id));
+    if (!product || !confirm(`Delete "${product.name}"?`)) return;
+    try {
+      await api(`/erp/inventory/products/${id}`, { method: 'DELETE' });
+      showToast('Product deleted');
+      if (state.detailProductId === Number(id)) closeDetailPanel();
+      await refreshAll();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  window.deleteCategory = async function(id) {
+    try {
+      await api(`/erp/inventory/categories/${id}`, { method: 'DELETE' });
+      showToast('Category deleted');
+      await loadCategories();
+      renderCategoryList();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  window.openDetailPanel = openDetailPanel;
+  window.toggleSelectProduct = toggleSelectProduct;
+  window.startCellEdit = startCellEdit;
+
+  window.openPriceHistory = async function(id) {
+    const product = state.products.find(p => Number(p.id) === Number(id));
+    document.getElementById('historyTitle').textContent = product ? `Price History — ${product.name}` : 'Price History';
+    document.getElementById('historyModal').classList.add('open');
+    const list = document.getElementById('historyList');
+    const empty = document.getElementById('emptyHistory');
+    list.innerHTML = '<div class="empty">Loading…</div>';
+    empty.hidden = true;
+    try {
+      const rows = await api(`/erp/inventory/products/${id}/price-history`) || [];
+      empty.hidden = rows.length > 0;
+      list.innerHTML = rows.map(row => `
+        <div class="history-item">
+          <div>
+            <strong>${esc(row.changed_by || 'Unknown')}</strong>
+            <div class="muted">${esc(row.changed_at || '')}</div>
+          </div>
+          <div class="history-price">${money.format(Number(row.old_price || 0))} → ${money.format(Number(row.new_price || 0))}</div>
+        </div>`).join('');
+    } catch (err) {
+      list.innerHTML = '';
+      empty.hidden = false;
+    }
+  };
+
+  // ── Import / Export ────────────────────────────────────────────────────────
+  function openImport() {
+    state.importRows = [];
+    document.getElementById('pasteData').value = '';
+    document.getElementById('importFile').value = '';
+    document.getElementById('importPreview').hidden = true;
+    document.getElementById('importPreview').innerHTML = '';
+    document.getElementById('importModal').classList.add('open');
+  }
+
+  function splitLine(line, delimiter) {
+    if (delimiter === '\t') return line.split('\t');
+    const cells = []; let cur = ''; let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"' && line[i+1] === '"') { cur += '"'; i++; continue; }
+      if (ch === '"') { quoted = !quoted; continue; }
+      if (ch === ',' && !quoted) { cells.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    cells.push(cur);
+    return cells;
+  }
+
+  function parseDelimited(text, delimiter) {
+    const rows = []; let row = []; let cell = ''; let quoted = false;
+    const src = String(text || '').replace(/^﻿/, '');
+    for (let i = 0; i < src.length; i++) {
+      const ch = src[i]; const next = src[i+1];
+      if (ch === '"' && quoted && next === '"') { cell += '"'; i++; continue; }
+      if (ch === '"') { quoted = !quoted; continue; }
+      if (ch === delimiter && !quoted) { row.push(cell.trim()); cell = ''; continue; }
+      if ((ch === '\n' || ch === '\r') && !quoted) {
+        if (ch === '\r' && next === '\n') i++;
+        row.push(cell.trim());
+        if (row.some(Boolean)) rows.push(row);
+        row = []; cell = ''; continue;
+      }
+      cell += ch;
+    }
+    row.push(cell.trim());
+    if (row.some(Boolean)) rows.push(row);
+    return rows;
+  }
+
+  function normalizeHeader(h) { return String(h || '').trim().toLowerCase().replace(/\s+/g,' '); }
+
+  function parseSheet(text) {
+    const clean = String(text || '').replace(/^﻿/, '').trim();
+    if (!clean) return [];
+    const delimiter = clean.includes('\t') ? '\t' : ',';
+    const parsedRows = parseDelimited(clean, delimiter);
+    if (!parsedRows.length) return [];
+    const first = parsedRows[0].map(h => h.trim());
+    const hasHeader = first.some(h => ['catogry','category','item','pn','price'].includes(normalizeHeader(h)));
+    const headers = hasHeader ? first : sheetHeaders;
+    const dataRows = hasHeader ? parsedRows.slice(1) : parsedRows;
+    const headerMap = headers.map(h => {
+      const key = normalizeHeader(h);
+      if (key === 'category') return 'Catogry';
+      if (key === 'item') return 'ITEM';
+      if (key === 'pn') return 'PN';
+      if (key === 'size') return 'SIZE';
+      if (key === 'brand') return 'Brand';
+      if (key === 'made origan' || key === 'made origin' || key === 'origin') return 'made Origan';
+      if (key === 'price') return 'Price';
+      if (key === 'supplier') return 'SUPPLIER';
+      if (key === 'description') return 'Description';
+      if (key === 'function') return 'Function';
+      if (key === 'function arabic') return 'Function Arabic';
+      if (key === 'last updated price') return 'last updated price';
+      if (key === 'dtu') return 'DTU';
+      if (key === 'last modifier') return 'last modifier';
+      return h;
+    });
+    return dataRows.map(cells => {
+      const row = {};
+      headerMap.forEach((h, i) => { row[h] = String(cells[i] ?? '').trim(); });
+      return row;
+    }).filter(row => Object.values(row).some(Boolean));
+  }
+
+  function renderImportPreview() {
+    const box = document.getElementById('importPreview');
+    box.hidden = false;
+    if (!state.importRows.length) { box.innerHTML = '<div class="empty">No rows found.</div>'; return; }
+    const rows = state.importRows.slice(0,12);
+    box.innerHTML = `<table><thead><tr>${sheetHeaders.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${sheetHeaders.map(h => `<td>${esc(row[h] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+
+  async function loadImportFile(file) {
+    if (!file) return;
+    document.getElementById('pasteData').value = await file.text();
+    previewImport();
+  }
+
+  function previewImport() {
+    state.importRows = parseSheet(document.getElementById('pasteData').value);
+    renderImportPreview();
+    showToast(`${state.importRows.length} row(s) ready`);
+  }
+
+  async function runImport() {
+    if (!state.importRows.length) previewImport();
+    if (!state.importRows.length) { showToast('No rows to import', 'error'); return; }
+    const mode = document.getElementById('importMode').value;
+    const sheetLabel = state.currentSheetId ? `"${state.sheets.find(s => s.id === state.currentSheetId)?.name || 'this sheet'}"` : 'All Products';
+    if (mode === 'replace' && !confirm(`Replace all items in ${sheetLabel}?`)) return;
+    try {
+      const result = await api('/erp/inventory/products/import', {
+        method: 'POST',
+        body: JSON.stringify({ mode, rows: state.importRows, sheetId: state.currentSheetId }),
+      });
+      closeModal('importModal');
+      showToast(`Imported ${result.created} row(s), skipped ${result.skipped}`);
+      await refreshAll();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function exportProducts() {
+    try {
+      const res = await fetch('/erp/inventory/products/export', { headers: { Authorization: `Bearer ${state.token}` } });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `inventory-products-${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  // ── Bulk operations ────────────────────────────────────────────────────────
+  async function bulkDelete() {
+    const ids = [...state.selectedIds];
+    if (!ids.length) return;
+    if (!confirm(`Delete ${ids.length} selected item(s)?`)) return;
+    try {
+      const r = await api('/erp/inventory/products/bulk-delete', { method: 'POST', body: JSON.stringify({ ids }) });
+      showToast(`Deleted ${r.deleted} item(s)`);
+      clearSelection();
+      if (ids.includes(state.detailProductId)) closeDetailPanel();
+      await refreshAll();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async function bulkSetCategory(category) {
+    const ids = [...state.selectedIds];
+    if (!ids.length || !category) return;
+    try {
+      await api('/erp/inventory/products/bulk-category', { method: 'POST', body: JSON.stringify({ ids, category }) });
+      showToast(`Updated category for ${ids.length} item(s)`);
+      closeModal('bulkCategoryModal');
+      clearSelection();
+      await refreshAll();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async function bulkSetPrice(price) {
+    const ids = [...state.selectedIds];
+    if (!ids.length) return;
+    try {
+      await api('/erp/inventory/products/bulk-price', { method: 'POST', body: JSON.stringify({ ids, price }) });
+      showToast(`Updated price for ${ids.length} item(s)`);
+      closeModal('bulkPriceModal');
+      clearSelection();
+      await refreshAll();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async function bulkExport() {
+    const ids = [...state.selectedIds];
+    if (!ids.length) return;
+    try {
+      const res = await fetch('/erp/inventory/products/export-selected', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${state.token}` },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `inventory-selected-${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  // ── Boot ───────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Sync detail panel top to actual topbar height
+    const syncDpTop = () => {
+      const h = document.querySelector('.topbar').offsetHeight;
+      document.documentElement.style.setProperty('--topbar-h', h + 'px');
+    };
+    syncDpTop();
+    window.addEventListener('resize', syncDpTop);
+
+    // Register event listeners
+    // Topbar
+    document.getElementById('addProductBtn').addEventListener('click', openModal);
+    document.getElementById('importBtn').addEventListener('click', openImport);
+    document.getElementById('exportBtn').addEventListener('click', exportProducts);
+    document.getElementById('categoriesBtn').addEventListener('click', () => {
+      renderCategoryList();
+      document.getElementById('categoriesModal').classList.add('open');
+    });
+
+    // Column settings
+    document.getElementById('columnsBtn').addEventListener('click', () => {
+      renderColumnsModal();
+      document.getElementById('columnsModal').classList.add('open');
+    });
+    document.getElementById('resetColumnsBtn').addEventListener('click', () => {
+      state.columnSettings = COLUMNS.map(c => ({ key: c.key, visible: c.defaultVisible }));
+      saveColumnSettings();
+      renderColumnsModal();
+      renderTableHeaders();
+      renderProducts();
+    });
+
+    // Search & filter
+    document.getElementById('searchInput').addEventListener('input', e => {
+      state.searchQuery = e.target.value;
+      renderProducts();
+      saveCurrentSheetFilters();
+    });
+    document.getElementById('categoryFilter').addEventListener('change', e => setCategoryFilter(e.target.value));
+    document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+    document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+
+    // Category chips (delegated)
+    document.getElementById('categoryChips').addEventListener('click', e => {
+      const low = e.target.closest('[data-low-stock]');
+      const chip = e.target.closest('[data-category]');
+      if (low) setLowStockFilter();
+      else if (chip) setCategoryFilter(chip.dataset.category);
+    });
+
+    // Alert metric click → toggle low stock filter
+    document.getElementById('alertMetric')?.addEventListener('click', setLowStockFilter);
+
+    // View toggle
+    document.getElementById('viewTableBtn').addEventListener('click', () => setViewMode('table'));
+    document.getElementById('viewCardBtn').addEventListener('click', () => setViewMode('card'));
+
+    // Select all — added dynamically by renderTableHeaders(); no static listener needed
+
+    // Bulk bar
+    document.getElementById('bulkDeleteBtn')?.addEventListener('click', bulkDelete);
+    document.getElementById('bulkClearBtn')?.addEventListener('click', clearSelection);
+    document.getElementById('bulkCategoryBtn')?.addEventListener('click', () => {
+      document.getElementById('bulkCategoryValue').value = '';
+      document.getElementById('bulkCategoryModal').classList.add('open');
+    });
+    document.getElementById('bulkPriceBtn')?.addEventListener('click', () => {
+      document.getElementById('bulkPriceValue').value = '';
+      document.getElementById('bulkPriceModal').classList.add('open');
+    });
+    document.getElementById('bulkExportBtn')?.addEventListener('click', bulkExport);
+    document.getElementById('applyBulkCategoryBtn')?.addEventListener('click', () => {
+      const cat = document.getElementById('bulkCategoryValue').value.trim();
+      if (!cat) { showToast('Category is required', 'error'); return; }
+      bulkSetCategory(cat);
+    });
+    document.getElementById('applyBulkPriceBtn')?.addEventListener('click', () => {
+      const price = Number(document.getElementById('bulkPriceValue').value);
+      if (!Number.isFinite(price)) { showToast('Enter a valid price', 'error'); return; }
+      bulkSetPrice(price);
+    });
+
+    // Sheets
+    document.getElementById('sheetsTabs').addEventListener('click', e => {
+      const delBtn = e.target.closest('[data-delete-sheet]');
+      if (delBtn) { e.stopPropagation(); deleteSheet(delBtn.dataset.deleteSheet); return; }
+      const tab = e.target.closest('[data-sheet-id]');
+      if (tab) {
+        const id = tab.dataset.sheetId ? Number(tab.dataset.sheetId) : null;
+        switchSheet(id);
+      }
+    });
+    document.getElementById('newSheetBtn').addEventListener('click', () => {
+      document.getElementById('newSheetName').value = '';
+      document.getElementById('newSheetLowStock').checked = false;
+      const catSel = document.getElementById('newSheetCategory');
+      catSel.innerHTML = '<option value="">All categories</option>' +
+        state.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      catSel.value = '';
+      document.getElementById('newSheetModal').classList.add('open');
+      setTimeout(() => document.getElementById('newSheetName').focus(), 0);
+    });
+    document.getElementById('saveSheetBtn').addEventListener('click', () => {
+      const name = document.getElementById('newSheetName').value.trim();
+      if (!name) { showToast('Sheet name is required', 'error'); return; }
+      const filters = {
+        categoryFilter: document.getElementById('newSheetCategory').value,
+        search: '',
+        lowStockOnly: document.getElementById('newSheetLowStock').checked,
+      };
+      closeModal('newSheetModal');
+      createSheet(name, filters);
+    });
+
+    // Detail panel
+    document.getElementById('closeDetailBtn').addEventListener('click', closeDetailPanel);
+    document.querySelectorAll('.dp-tab').forEach(tab => {
+      tab.addEventListener('click', () => switchDpTab(tab.dataset.dpTab));
+    });
+    document.getElementById('dpPriceHistoryBtn').addEventListener('click', () => {
+      if (state.detailProductId) openPriceHistory(state.detailProductId);
+    });
+    document.getElementById('dpDeleteBtn').addEventListener('click', () => {
+      if (state.detailProductId) deleteProduct(state.detailProductId);
+    });
+    document.getElementById('dpForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = document.getElementById('dpProductId').value;
+      if (!id) return;
+      const product = state.products.find(p => p.id === Number(id));
+      if (!product) return;
+      const payload = {
+        name: document.getElementById('dpItemName').value.trim(),
+        category: document.getElementById('dpCategory').value.trim(),
+        unit: document.getElementById('dpUnit').value.trim(),
+        part_number: document.getElementById('dpPN').value.trim(),
+        size: document.getElementById('dpSize').value.trim(),
+        brand: document.getElementById('dpBrand').value.trim(),
+        origin: document.getElementById('dpOrigin').value.trim(),
+        selling_price: nv('dpSellingPrice'),
+        cost_price: nv('dpCostPrice'),
+        supplier: document.getElementById('dpSupplier').value.trim(),
+        stock_quantity: nv('dpStockQty'),
+        min_stock: nv('dpMinStock'),
+        description: document.getElementById('dpDescription').value.trim(),
+        function_text: document.getElementById('dpFunction').value.trim(),
+        function_arabic: document.getElementById('dpFunctionAR').value.trim(),
+        last_updated_price: document.getElementById('dpPriceDate').value.trim(),
+        dtu: document.getElementById('dpDTU').value.trim(),
+        last_modifier: document.getElementById('dpLastModifier').value.trim(),
+      };
+      if (!payload.name) { showToast('Item name is required', 'error'); return; }
+      try {
+        await api(`/erp/inventory/products/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        showToast('Product saved');
+        await refreshAll();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+    document.getElementById('dpStockForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = state.detailProductId;
+      if (!id) return;
+      const quantityChange = Number(document.getElementById('dpStockChange').value);
+      const note = document.getElementById('dpStockNote').value.trim();
+      if (!Number.isFinite(quantityChange) || quantityChange === 0) { showToast('Enter a non-zero quantity', 'error'); return; }
+      try {
+        await api('/erp/inventory/stock/update', { method: 'POST', body: JSON.stringify({ product_id: id, quantity_change: quantityChange, note }) });
+        document.getElementById('dpStockChange').value = '';
+        document.getElementById('dpStockNote').value = '';
+        showToast('Stock updated');
+        await refreshAll();
+        if (document.getElementById('dpHistoryPane').classList.contains('hidden') === false) {
+          loadStockHistory(id);
+        }
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    // Product form modal (Add)
+    document.getElementById('productForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const payload = productPayload();
+      if (!payload.name) { showToast('Item name is required', 'error'); return; }
+      try {
+        await api('/erp/inventory/products', { method: 'POST', body: JSON.stringify(payload) });
+        closeModal('productModal');
+        showToast('Item created');
+        await refreshAll();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    // Category form
+    document.getElementById('categoryForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = document.getElementById('newCategoryName').value.trim();
+      if (!name) { showToast('Category name is required', 'error'); return; }
+      try {
+        await api('/erp/inventory/categories', { method: 'POST', body: JSON.stringify({ name }) });
+        document.getElementById('newCategoryName').value = '';
+        showToast('Category added');
+        await loadCategories();
+        renderCategoryList();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    // Import
+    document.getElementById('previewImportBtn').addEventListener('click', previewImport);
+    document.getElementById('runImportBtn').addEventListener('click', runImport);
+    document.getElementById('importFile').addEventListener('change', e => loadImportFile(e.target.files[0]));
+
+    // Modal close (backdrop + buttons)
+    document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.close)));
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); }));
+
+    // Close detail panel on Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        if (document.querySelector('.modal-backdrop.open')) return;
+        closeDetailPanel();
+      }
+    });
+
+    // Initialize app
+    if (!await verifySession()) return;
+    // Sync view toggle to saved preference
+    document.getElementById('viewTableBtn').classList.toggle('active', state.viewMode === 'table');
+    document.getElementById('viewCardBtn').classList.toggle('active', state.viewMode === 'card');
+    if (state.viewMode !== 'table') document.getElementById('columnsBtn').style.display = 'none';
+    renderTableHeaders();
+    await Promise.all([loadSheets(), loadCategories(), loadAlerts()]);
+    await loadProducts();
+    renderCategoryList();
+  });
+</script>
+</body>
+</html>

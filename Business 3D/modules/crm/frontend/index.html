@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business 3D</title>
+  <link rel="stylesheet" href="/crm/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <link rel="manifest" href="/crm/manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Business 3D">
+  <link rel="apple-touch-icon" href="/crm/icon-192.png">
+</head>
+<body>
+
+  <div id="mobile-backdrop" class="mobile-backdrop"></div>
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="/home" title="Home">
+        <div class="brand-icon"><i class="fas fa-layer-group"></i></div>
+        <span class="brand-name">Business 3D</span>
+      </a>
+      <nav class="sidebar-nav">
+        <a class="nav-link active" data-page="dashboard" href="#dashboard">
+          <i class="fas fa-chart-pie"></i><span data-i18n="Dashboard">Dashboard</span>
+        </a>
+        <a class="nav-link" data-page="contacts" href="#contacts">
+          <i class="fas fa-users"></i><span data-i18n="Contacts">Contacts</span>
+        </a>
+        <a class="nav-link" data-page="companies" href="#companies">
+          <i class="fas fa-building"></i><span data-i18n="Companies">Companies</span>
+        </a>
+        <a class="nav-link" data-page="deals" href="#deals">
+          <i class="fas fa-handshake"></i><span data-i18n="Deals">Deals</span>
+        </a>
+        <a class="nav-link" data-page="tasks" href="#tasks">
+          <i class="fas fa-check-square"></i><span data-i18n="Tasks">Tasks</span>
+        </a>
+        <a class="nav-link" data-page="reminders" href="#reminders">
+          <i class="fas fa-bell"></i><span data-i18n="Reminders">Reminders</span>
+        </a>
+        <a class="nav-link" data-page="reports" href="#reports">
+          <i class="fas fa-chart-bar"></i><span data-i18n="Reports">Reports</span>
+        </a>
+        <a class="nav-link" data-page="calendar" href="#calendar">
+          <i class="fas fa-calendar-alt"></i><span data-i18n="Calendar">Calendar</span>
+        </a>
+        <a class="nav-link" data-page="team" href="#team" id="nav-team" style="display:none">
+          <i class="fas fa-users-cog"></i><span data-i18n="My Team">My Team</span>
+        </a>
+        <a class="nav-link" data-page="users" href="#users" id="nav-users" style="display:none">
+          <i class="fas fa-user-shield"></i><span data-i18n="Users">Users</span>
+        </a>
+        <a class="nav-link" data-page="lists" href="#lists" id="nav-lists" style="display:none">
+          <i class="fas fa-list-ul"></i><span data-i18n="Lists">Lists</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar-sm" id="sidebarAvatar">?</div>
+          <div>
+            <div class="user-name" id="sidebarName">Loading...</div>
+            <div class="user-role" id="sidebarRole"></div>
+          </div>
+        </div>
+        <button class="btn-logout" id="logoutBtn" title="Logout">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-wrapper">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <button class="btn-hamburger" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-search">
+          <i class="fas fa-search"></i>
+          <input type="text" id="globalSearch" placeholder="Search contacts, companies, deals..." autocomplete="off">
+          <div id="globalSearchResults" class="search-dropdown"></div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn-lang-toggle" id="langToggleBtn" title="Toggle language" onclick="I18N.toggle()">عر</button>
+          <button class="btn-theme-toggle" id="themeToggle" title="Toggle dark mode" onclick="toggleTheme()">
+            <i class="fas fa-moon" id="themeIcon"></i>
+          </button>
+          <div class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="notif-dot" id="notifDot"></span>
+          </div>
+          <div class="user-badge" id="topbarUserBadge">?</div>
+        </div>
+      </header>
+
+      <!-- Team Leader: member selector bar -->
+      <div id="tl-member-bar" style="display:none;">
+        <div class="tl-member-bar-inner">
+          <span class="tl-bar-label"><i class="fas fa-eye"></i> Viewing:</span>
+          <div id="tl-member-chips" class="tl-chips"></div>
+        </div>
+      </div>
+
+      <!-- Pages injected dynamically by page-loader.js -->
+      <main class="content-area" id="pages-container"></main>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal()">
+    <div class="modal-dialog" id="modalDialog" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle"></h3>
+        <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast-container"></div>
+
+  <!-- i18n: must load first so t() is available and direction is set -->
+  <script src="/crm/js/i18n.js"></script>
+
+  <!-- Page loader — fetches pages/*.html and injects before app boots -->
+  <script src="/crm/js/page-loader.js"></script>
+
+  <!-- Core: state → theme → api → utils → modal → auth → team-leader -->
+  <script src="/crm/js/state.js"></script>
+  <script src="/crm/js/theme.js"></script>
+  <script src="/crm/js/api.js"></script>
+  <script src="/crm/js/utils.js"></script>
+  <script src="/crm/js/modal.js"></script>
+  <script src="/crm/js/auth.js"></script>
+  <script src="/crm/js/team-leader.js"></script>
+
+  <!-- Navigation & cross-page features -->
+  <script src="/crm/js/router.js"></script>
+  <script src="/crm/js/notifications.js"></script>
+  <script src="/crm/js/search.js"></script>
+  <script src="/crm/js/shortcuts.js"></script>
+  <script src="/crm/js/bulk.js"></script>
+  <script src="/crm/js/dup-check.js"></script>
+  <script src="/crm/js/email.js"></script>
+  <script src="/crm/js/goals.js"></script>
+  <script src="/crm/js/custom-fields.js"></script>
+  <script src="/crm/js/import-export.js"></script>
+
+  <!-- Page modules -->
+  <script src="/crm/js/pages/dashboard.js"></script>
+  <script src="/crm/js/pages/companies.js"></script>
+  <script src="/crm/js/pages/contacts.js"></script>
+  <script src="/crm/js/pages/deals.js"></script>
+  <script src="/crm/js/pages/activities.js"></script>
+  <script src="/crm/js/pages/tasks.js"></script>
+  <script src="/crm/js/pages/reminders.js"></script>
+  <script src="/crm/js/pages/users.js"></script>
+  <script src="/crm/js/pages/detail-views.js"></script>
+  <script src="/crm/js/pages/lists.js"></script>
+  <script src="/crm/js/pages/reports.js"></script>
+  <script src="/crm/js/pages/calendar.js"></script>
+  <script src="/crm/js/pages/team.js"></script>
+
+  <!-- Entry point (must be last) -->
+  <script src="/crm/js/init.js"></script>
+  <script>
+    if('serviceWorker' in navigator) navigator.serviceWorker.register('/crm/sw.js', { scope: '/crm/' });
+    // Apply i18n after all scripts loaded
+    document.addEventListener('DOMContentLoaded', () => I18N.apply());
+  </script>
+</body>
+</html>

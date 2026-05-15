@@ -1,0 +1,38 @@
+<div id="page-contacts" class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Contacts</h1>
+      <span class="page-subtitle" id="contacts-count"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-secondary manager-only" id="btn-import-ct" onclick="openImportModal('contacts')" style="display:none">
+        <i class="fas fa-file-import"></i> Import
+      </button>
+      <button class="btn btn-secondary manager-only" id="btn-export-ct" onclick="exportData()" style="display:none">
+        <i class="fas fa-file-csv"></i> Export CSV
+      </button>
+      <button class="btn btn-secondary" onclick="openWhatsAppBroadcast()" title="WhatsApp Broadcast">
+        <i class="fab fa-whatsapp" style="color:#25d366;"></i> Broadcast
+      </button>
+      <button class="btn btn-primary" onclick="openContactForm()">
+        <i class="fas fa-plus"></i> Add Contact
+      </button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="contactSearch" placeholder="Search contacts..." oninput="searchContacts()">
+    </div>
+    <select id="contactStatusFilter" class="form-control" style="height:38px;max-width:160px;" onchange="filterContacts()">
+      <option value="">All Status</option>
+    </select>
+  </div>
+  <div id="ct-bulk-bar" class="bulk-bar" style="display:none"></div>
+  <div class="cards-page-layout">
+    <div class="cards-grid-area" id="ct-list-panel"></div>
+    <div class="detail-slide-panel" id="ct-detail-panel">
+      <div class="split-empty"><i class="fas fa-user"></i><p>Select a contact</p></div>
+    </div>
+  </div>
+</div>

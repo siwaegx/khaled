@@ -1,5 +1,31 @@
+# .NET
 .vs/
 bin/
 obj/
 *.user
 *.suo
+
+# Node.js
+node_modules/
+npm-debug.log*
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Secrets
+.env
+.env.local
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Editor
+.vscode/*.local

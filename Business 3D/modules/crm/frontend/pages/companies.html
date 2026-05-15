@@ -1,0 +1,41 @@
+<div id="page-companies" class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Companies</h1>
+      <span class="page-subtitle" id="companies-count"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button class="btn btn-secondary manager-only" id="btn-import" onclick="openImportModal()" style="display:none">
+        <i class="fas fa-file-import"></i> Import
+      </button>
+      <button class="btn btn-secondary manager-only" id="btn-export-co" onclick="exportData()" style="display:none">
+        <i class="fas fa-file-csv"></i> Export CSV
+      </button>
+      <button class="btn btn-secondary manager-only" id="btn-backup-co" onclick="backupCompanies()" style="display:none" title="Download full backup (companies + contacts + deals + activities)">
+        <i class="fas fa-download"></i> Backup
+      </button>
+      <button class="btn btn-secondary manager-only" id="btn-restore-co" onclick="openRestoreModal()" style="display:none" title="Restore from a previous backup file">
+        <i class="fas fa-upload"></i> Restore
+      </button>
+      <button class="btn btn-primary" onclick="openCompanyForm()">
+        <i class="fas fa-plus"></i> Add Company
+      </button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="companySearch" placeholder="Search companies..." oninput="searchCompanies()">
+    </div>
+    <select id="companyStatusFilter" class="form-control" style="height:38px;max-width:160px;" onchange="filterCompanies()">
+      <option value="">All Status</option>
+    </select>
+  </div>
+  <div id="co-bulk-bar" class="bulk-bar" style="display:none"></div>
+  <div class="cards-page-layout">
+    <div class="cards-grid-area" id="co-list-panel"></div>
+    <div class="detail-slide-panel" id="co-detail-panel">
+      <div class="split-empty"><i class="fas fa-building"></i><p>Select a company</p></div>
+    </div>
+  </div>
+</div>
