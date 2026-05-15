@@ -1,0 +1,17 @@
+{
+  "name": "web-crm",
+  "version": "1.0.0",
+  "description": "Full-featured web CRM system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --no-warnings server.js",
+    "dev": "nodemon --ignore '**/*.db' --ignore '**/*.db-shm' --ignore '**/*.db-wal' server.js"
+  },
+  "dependencies": {
+    "nodemailer": "^8.0.7",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

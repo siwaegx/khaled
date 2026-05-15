@@ -1,0 +1,127 @@
+Project Root: c:\Users\KR007\Business 3D
+
+c:\Users\KR007\Business 3D\.env.example
+c:\Users\KR007\Business 3D\.vscode\launch.json
+c:\Users\KR007\Business 3D\BACKUP.bat
+c:\Users\KR007\Business 3D\CLAUDE.md
+c:\Users\KR007\Business 3D\RESET.bat
+c:\Users\KR007\Business 3D\START.bat
+c:\Users\KR007\Business 3D\package.json
+c:\Users\KR007\Business 3D\package-lock.json
+c:\Users\KR007\Business 3D\server.js
+c:\Users\KR007\Business 3D\query_db.js
+c:\Users\KR007\Business 3D\test.js
+c:\Users\KR007\Business 3D\setup.bat
+c:\Users\KR007\Business 3D\setup.sh
+c:\Users\KR007\Business 3D\project-path.txt
+
+--- main ---
+c:\Users\KR007\Business 3D\main\home.html
+c:\Users\KR007\Business 3D\main\login.html
+c:\Users\KR007\Business 3D\main\css\global.css
+
+--- modules\crm\core ---
+c:\Users\KR007\Business 3D\modules\crm\core\server.js
+c:\Users\KR007\Business 3D\modules\crm\core\app.js
+c:\Users\KR007\Business 3D\modules\crm\core\routeLoader.js
+
+--- modules\crm\middleware ---
+c:\Users\KR007\Business 3D\modules\crm\middleware\auth.js
+
+--- modules\crm\database ---
+c:\Users\KR007\Business 3D\modules\crm\database\database.js
+
+--- modules\crm\backend ---
+c:\Users\KR007\Business 3D\modules\crm\backend\auth.js
+c:\Users\KR007\Business 3D\modules\crm\backend\users.js
+c:\Users\KR007\Business 3D\modules\crm\backend\lists.js
+c:\Users\KR007\Business 3D\modules\crm\backend\settings.js
+c:\Users\KR007\Business 3D\modules\crm\backend\team.js
+c:\Users\KR007\Business 3D\modules\crm\backend\dashboard.js
+c:\Users\KR007\Business 3D\modules\crm\backend\notifications.js
+c:\Users\KR007\Business 3D\modules\crm\backend\goals.js
+c:\Users\KR007\Business 3D\modules\crm\backend\custom-fields.js
+c:\Users\KR007\Business 3D\modules\crm\backend\email.js
+c:\Users\KR007\Business 3D\modules\crm\backend\search.js
+c:\Users\KR007\Business 3D\modules\crm\backend\reports.js
+c:\Users\KR007\Business 3D\modules\crm\backend\calendar.js
+c:\Users\KR007\Business 3D\modules\crm\backend\tasks.js
+c:\Users\KR007\Business 3D\modules\crm\backend\bulk.js
+c:\Users\KR007\Business 3D\modules\crm\backend\import-export.js
+c:\Users\KR007\Business 3D\modules\crm\backend\companies.js
+c:\Users\KR007\Business 3D\modules\crm\backend\contacts.js
+c:\Users\KR007\Business 3D\modules\crm\backend\deals.js
+c:\Users\KR007\Business 3D\modules\crm\backend\activities.js
+
+--- modules\crm\frontend ---
+c:\Users\KR007\Business 3D\modules\crm\frontend\index.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\manual.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\manifest.json
+c:\Users\KR007\Business 3D\modules\crm\frontend\sw.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\icon-192.png
+c:\Users\KR007\Business 3D\modules\crm\frontend\icon-512.png
+c:\Users\KR007\Business 3D\modules\crm\frontend\css\style.css
+c:\Users\KR007\Business 3D\modules\crm\frontend\images\companies.png
+c:\Users\KR007\Business 3D\modules\crm\frontend\images\contacts.png
+c:\Users\KR007\Business 3D\modules\crm\frontend\images\dashboard.png
+c:\Users\KR007\Business 3D\modules\crm\frontend\images\deals.png
+c:\Users\KR007\Business 3D\modules\crm\frontend\images\login.png
+c:\Users\KR007\Business 3D\modules\crm\frontend\images\tasks.png
+
+--- modules\crm\frontend\js ---
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\api.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\app.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\auth.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\bulk.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\custom-fields.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\dup-check.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\email.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\goals.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\import-export.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\init.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\modal.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\notifications.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\page-loader.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\router.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\search.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\shortcuts.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\state.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\team-leader.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\theme.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\utils.js
+
+--- modules\crm\frontend\js\pages ---
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\activities.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\calendar.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\companies.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\contacts.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\dashboard.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\deals.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\detail-views.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\lists.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\reminders.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\reports.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\tasks.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\team.js
+c:\Users\KR007\Business 3D\modules\crm\frontend\js\pages\users.js
+
+--- modules\crm\frontend\pages ---
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\activities.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\calendar.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\companies.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\contacts.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\dashboard.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\deals.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\lists.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\reminders.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\reports.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\tasks.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\team.html
+c:\Users\KR007\Business 3D\modules\crm\frontend\pages\users.html
+
+--- modules\erp ---
+c:\Users\KR007\Business 3D\modules\erp\finance\frontend\index.html
+c:\Users\KR007\Business 3D\modules\erp\inventory\frontend\index.html
+c:\Users\KR007\Business 3D\modules\erp\machine_data\frontend\index.html
+c:\Users\KR007\Business 3D\modules\erp\purchasing\frontend\index.html
+c:\Users\KR007\Business 3D\modules\erp\service\frontend\index.html

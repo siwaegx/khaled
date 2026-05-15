@@ -1,0 +1,28 @@
+<div id="page-deals" class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Deals</h1>
+      <span class="page-subtitle" id="deals-count"></span>
+    </div>
+    <div class="header-actions-group">
+      <div class="view-toggle">
+        <button class="view-btn active" id="kanbanViewBtn" onclick="setDealsView('kanban')">
+          <i class="fas fa-th-large"></i> Kanban
+        </button>
+        <button class="view-btn" id="listViewBtn" onclick="setDealsView('list')">
+          <i class="fas fa-list"></i> List
+        </button>
+      </div>
+      <button class="btn btn-primary" onclick="openDealForm()">
+        <i class="fas fa-plus"></i> Add Deal
+      </button>
+    </div>
+  </div>
+  <div class="toolbar" id="deals-toolbar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="dealSearch" placeholder="Search deals..." oninput="searchDeals()">
+    </div>
+  </div>
+  <div id="deals-content"></div>
+</div>

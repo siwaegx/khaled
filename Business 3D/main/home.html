@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home — Business 3D</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div class="dashboard-page">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <i class="fas fa-layer-group"></i>
+      <span>Business 3D</span>
+    </div>
+    <div class="topbar-user">
+      <span id="user-label">Loading…</span>
+      <button class="lang-toggle" id="langToggleBtn" title="Toggle language">عر</button>
+      <button class="theme-toggle" id="themeToggleBtn" title="Toggle dark mode">🌙</button>
+      <button class="btn-logout" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i> <span id="logoutLabel">Logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <main class="dashboard-body">
+    <div class="dashboard-greeting">
+      <h2 id="greeting">Welcome back!</h2>
+      <p id="greeting-sub">Choose a module to get started.</p>
+    </div>
+
+    <div class="module-grid">
+
+      <!-- CRM -->
+      <a class="module-card" href="/crm">
+        <div class="module-icon indigo">
+          <i class="fas fa-users"></i>
+        </div>
+        <h3 id="mod-crm-title">CRM</h3>
+        <p id="mod-crm-desc">Manage contacts, companies, deals, and activities.</p>
+      </a>
+
+      <!-- ERP Inventory -->
+      <a class="module-card" href="/erp/inventory">
+        <div class="module-icon slate">
+          <i class="fas fa-boxes"></i>
+        </div>
+        <h3 id="mod-inv-title">Inventory</h3>
+        <p id="mod-inv-desc">Manage products, pricing, stock levels, and low-stock alerts.</p>
+      </a>
+
+    </div>
+  </main>
+
+</div>
+
+<script>
+// Apply saved theme + language immediately to avoid flash
+(function () {
+  if (localStorage.getItem('crm_theme') === 'dark') document.body.classList.add('dark');
+  if (localStorage.getItem('crm_lang') === 'ar') {
+    document.documentElement.dir = 'rtl';
+    document.documentElement.lang = 'ar';
+    document.body.classList.add('rtl');
+  }
+})();
+
+(async function () {
+  const token = localStorage.getItem('crm_token');
+
+  if (!token) { location.replace('/'); return; }
+
+  try {
+    const r = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) throw new Error('unauth');
+    const user = await r.json();
+    const name = user.name || 'User';
+    document.getElementById('user-label').textContent = name;
+    document.getElementById('greeting').textContent = `Welcome back, ${name}!`;
+  } catch (_) {
+    localStorage.removeItem('crm_token');
+    location.replace('/');
+    return;
+  }
+
+  // ── Theme ──
+  const themeBtn = document.getElementById('themeToggleBtn');
+  const applyTheme = (dark) => {
+    document.body.classList.toggle('dark', dark);
+    themeBtn.textContent = dark ? '☀️' : '🌙';
+    themeBtn.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
+  };
+  applyTheme(localStorage.getItem('crm_theme') === 'dark');
+  themeBtn.addEventListener('click', () => {
+    const isDark = document.body.classList.contains('dark');
+    localStorage.setItem('crm_theme', isDark ? 'light' : 'dark');
+    applyTheme(!isDark);
+  });
+
+  // ── Language ──
+  const AR_HOME = {
+    greeting: (name) => `مرحباً بعودتك، ${name}!`,
+    sub: 'اختر وحدة للبدء.',
+    crmTitle: 'CRM',
+    crmDesc: 'إدارة جهات الاتصال والشركات والصفقات والأنشطة.',
+    invTitle: 'المخزون',
+    invDesc: 'إدارة المنتجات والأسعار ومستويات المخزون والتنبيهات.',
+    logout: 'خروج',
+  };
+  const EN_HOME = {
+    greeting: (name) => `Welcome back, ${name}!`,
+    sub: 'Choose a module to get started.',
+    crmTitle: 'CRM',
+    crmDesc: 'Manage contacts, companies, deals, and activities.',
+    invTitle: 'Inventory',
+    invDesc: 'Manage products, pricing, stock levels, and low-stock alerts.',
+    logout: 'Logout',
+  };
+
+  function applyLang(lang, userName) {
+    const L = lang === 'ar' ? AR_HOME : EN_HOME;
+    const ar = lang === 'ar';
+    document.documentElement.dir = ar ? 'rtl' : 'ltr';
+    document.documentElement.lang = ar ? 'ar' : 'en';
+    document.body.classList.toggle('rtl', ar);
+    if (userName) document.getElementById('greeting').textContent = L.greeting(userName);
+    document.getElementById('greeting-sub').textContent = L.sub;
+    document.getElementById('mod-crm-title').textContent = L.crmTitle;
+    document.getElementById('mod-crm-desc').textContent = L.crmDesc;
+    document.getElementById('mod-inv-title').textContent = L.invTitle;
+    document.getElementById('mod-inv-desc').textContent = L.invDesc;
+    document.getElementById('logoutLabel').textContent = L.logout;
+    const langBtn = document.getElementById('langToggleBtn');
+    langBtn.textContent = ar ? 'EN' : 'عر';
+  }
+
+  const langBtn = document.getElementById('langToggleBtn');
+  let currentUser = '';
+  applyLang(localStorage.getItem('crm_lang') || 'en', '');
+  langBtn.addEventListener('click', () => {
+    const next = (localStorage.getItem('crm_lang') || 'en') === 'ar' ? 'en' : 'ar';
+    localStorage.setItem('crm_lang', next);
+    applyLang(next, currentUser);
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    } catch (_) {}
+    localStorage.removeItem('crm_token');
+    location.replace('/');
+  });
+})();
+</script>
+</body>
+</html>

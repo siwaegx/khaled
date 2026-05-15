@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business 3D — Sales User Manual</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: #1e293b;
+    background: #fff;
+    line-height: 1.6;
+  }
+
+  /* ── Cover page ── */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 100%);
+    color: white;
+    text-align: center;
+    padding: 40px;
+    page-break-after: always;
+  }
+  .cover-logo {
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,.15);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    margin-bottom: 28px;
+    border: 2px solid rgba(255,255,255,.3);
+  }
+  .cover h1 { font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; }
+  .cover .sub { font-size: 20px; opacity: .8; margin-bottom: 40px; }
+  .cover .badge {
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 30px;
+    padding: 8px 24px;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .cover .version { opacity: .5; font-size: 12px; margin-top: 48px; }
+
+  /* ── Layout ── */
+  .container { max-width: 820px; margin: 0 auto; padding: 40px 48px; }
+
+  /* ── TOC ── */
+  .toc { page-break-after: always; }
+  .toc h2 { font-size: 22px; color: #4f46e5; margin-bottom: 24px; padding-bottom: 10px; border-bottom: 2px solid #4f46e5; }
+  .toc-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dotted #e2e8f0;
+    font-size: 13px;
+  }
+  .toc-item a { color: #1e293b; text-decoration: none; font-weight: 500; }
+  .toc-item a:hover { color: #4f46e5; }
+  .toc-num { color: #94a3b8; font-size: 12px; }
+  .toc-sub { padding-left: 20px; font-size: 12px; color: #64748b; }
+
+  /* ── Section headings ── */
+  .section { margin-bottom: 48px; }
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, #1e1b4b, #4f46e5);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    page-break-after: avoid;
+  }
+  .section-header .icon {
+    width: 38px; height: 38px;
+    background: rgba(255,255,255,.2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 17px; font-weight: 700; }
+  .section-header .section-num { font-size: 11px; opacity: .7; margin-top: 2px; }
+
+  h3 { font-size: 14px; font-weight: 700; color: #4f46e5; margin: 20px 0 10px; }
+  h4 { font-size: 13px; font-weight: 600; color: #334155; margin: 14px 0 6px; }
+  p  { margin-bottom: 10px; color: #334155; }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 5px; color: #334155; }
+
+  /* ── Tip / Warning / Note boxes ── */
+  .tip, .warn, .note, .step-box {
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .tip  { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+  .warn { background: #fff7ed; border-left: 4px solid #f97316; color: #9a3412; }
+  .note { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+  .tip::before  { content: "✅  "; font-weight: 700; }
+  .warn::before { content: "⚠️  "; font-weight: 700; }
+  .note::before { content: "ℹ️  "; font-weight: 700; }
+
+  /* ── Step-by-step ── */
+  .steps { counter-reset: step; margin: 14px 0; }
+  .step {
+    display: flex; gap: 14px; align-items: flex-start;
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+  .step-num {
+    counter-increment: step;
+    min-width: 26px; height: 26px;
+    background: #4f46e5; color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .step-num::before { content: counter(step); }
+  .step-content { flex: 1; font-size: 13px; color: #334155; padding-top: 3px; }
+  .step-content strong { color: #1e293b; }
+
+  /* ── Field / Tag pills ── */
+  .pill {
+    display: inline-block;
+    background: #eff6ff; color: #3b82f6;
+    border: 1px solid #bfdbfe;
+    border-radius: 20px; padding: 2px 10px;
+    font-size: 11px; font-weight: 600;
+    margin: 2px;
+  }
+  .pill.green  { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+  .pill.orange { background: #fff7ed; color: #ea580c; border-color: #fed7aa; }
+  .pill.purple { background: #faf5ff; color: #9333ea; border-color: #e9d5ff; }
+  .pill.gray   { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
+  th { background: #4f46e5; color: white; padding: 9px 12px; text-align: left; font-weight: 600; }
+  td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafe; }
+  td:first-child { font-weight: 600; color: #1e293b; }
+
+  /* ── Screenshot placeholder ── */
+  .screen {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 14px 0;
+    font-size: 12px;
+    color: #64748b;
+  }
+  .screen-title {
+    font-weight: 700; color: #4f46e5; font-size: 13px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ── Keyboard shortcut ── */
+  kbd {
+    background: #f1f5f9; border: 1px solid #cbd5e1;
+    border-radius: 4px; padding: 2px 7px;
+    font-size: 11px; font-family: monospace;
+    color: #334155;
+  }
+
+  /* ── Page break ── */
+  .page-break { page-break-before: always; }
+
+  /* ── Footer ── */
+  .manual-footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 2px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: #94a3b8;
+  }
+
+  /* ── Print button (hidden on print) ── */
+  .print-btn {
+    position: fixed; bottom: 28px; right: 28px;
+    background: #4f46e5; color: white;
+    border: none; border-radius: 50px;
+    padding: 13px 24px; font-size: 14px; font-weight: 600;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(79,70,229,.4);
+    display: flex; align-items: center; gap: 8px;
+    z-index: 999;
+    transition: background .2s;
+  }
+  .print-btn:hover { background: #4338ca; }
+
+  /* ── Stage pipeline diagram ── */
+  .pipeline {
+    display: flex; gap: 4px; align-items: center;
+    flex-wrap: wrap; margin: 14px 0;
+  }
+  .pipe-stage {
+    background: #4f46e5; color: white;
+    padding: 7px 14px; border-radius: 6px;
+    font-size: 11px; font-weight: 700;
+    position: relative;
+  }
+  .pipe-stage.won   { background: #16a34a; }
+  .pipe-stage.lost  { background: #dc2626; }
+  .pipe-arrow { color: #94a3b8; font-size: 16px; }
+
+  /* ── Status chip ── */
+  .status-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; margin: 2px;
+  }
+  .chip-fresh   { background: #eff6ff; color: #3b82f6; }
+  .chip-hot     { background: #fff7ed; color: #ea580c; }
+  .chip-cold    { background: #f1f5f9; color: #64748b; }
+  .chip-vip     { background: #faf5ff; color: #9333ea; }
+  .chip-rfq     { background: #fefce8; color: #ca8a04; }
+  .chip-done    { background: #f0fdf4; color: #16a34a; }
+
+  @media print {
+    .print-btn { display: none !important; }
+    body { font-size: 12px; }
+    .cover { min-height: 100vh; }
+    .section-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .pipe-stage { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .status-chip, .pill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tip, .warn, .note { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="cover-logo">🗂️</div>
+  <h1>Business 3D</h1>
+  <div class="sub">Sales User Manual</div>
+  <div class="badge">📘 Complete Guide for Sales Team</div>
+  <div class="badge">How to manage contacts, companies, deals & activities</div>
+  <div class="version">Version 1.0 &nbsp;·&nbsp; 2026</div>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════ TOC -->
+<div class="toc">
+  <h2>📋 Table of Contents</h2>
+
+  <div class="toc-item"><a href="#s1">1. Login &amp; Getting Started</a><span class="toc-num">2</span></div>
+  <div class="toc-item"><a href="#s2">2. Dashboard</a><span class="toc-num">3</span></div>
+  <div class="toc-item"><a href="#s3">3. Contacts</a><span class="toc-num">4</span></div>
+  <div class="toc-sub toc-item"><a href="#s3a">Add a new contact</a><span class="toc-num">4</span></div>
+  <div class="toc-sub toc-item"><a href="#s3b">Lead statuses explained</a><span class="toc-num">5</span></div>
+  <div class="toc-sub toc-item"><a href="#s3c">Quick actions on a contact</a><span class="toc-num">5</span></div>
+  <div class="toc-item"><a href="#s4">4. Companies</a><span class="toc-num">6</span></div>
+  <div class="toc-sub toc-item"><a href="#s4a">Add a new company</a><span class="toc-num">6</span></div>
+  <div class="toc-sub toc-item"><a href="#s4b">Company detail view</a><span class="toc-num">7</span></div>
+  <div class="toc-item"><a href="#s5">5. Deals &amp; Pipeline</a><span class="toc-num">8</span></div>
+  <div class="toc-sub toc-item"><a href="#s5a">Deal stages</a><span class="toc-num">8</span></div>
+  <div class="toc-sub toc-item"><a href="#s5b">Add &amp; move deals</a><span class="toc-num">9</span></div>
+  <div class="toc-item"><a href="#s6">6. Activities — Logging Your Work</a><span class="toc-num">10</span></div>
+  <div class="toc-sub toc-item"><a href="#s6a">Activity types</a><span class="toc-num">10</span></div>
+  <div class="toc-sub toc-item"><a href="#s6b">Log a call or visit</a><span class="toc-num">10</span></div>
+  <div class="toc-item"><a href="#s7">7. Tasks &amp; Reminders</a><span class="toc-num">11</span></div>
+  <div class="toc-item"><a href="#s8">8. Calendar</a><span class="toc-num">12</span></div>
+  <div class="toc-item"><a href="#s9">9. Search</a><span class="toc-num">12</span></div>
+  <div class="toc-item"><a href="#s10">10. Reports</a><span class="toc-num">13</span></div>
+  <div class="toc-item"><a href="#s11">11. Tips &amp; Best Practices</a><span class="toc-num">14</span></div>
+  <div class="toc-item"><a href="#s12">12. Quick Reference</a><span class="toc-num">15</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S1: LOGIN -->
+<div class="section page-break" id="s1">
+  <div class="section-header">
+    <div class="icon">🔐</div>
+    <div>
+      <div class="section-num">SECTION 1</div>
+      <h2>Login &amp; Getting Started</h2>
+    </div>
+  </div>
+
+  <h3>How to Log In</h3>
+  <p>Business 3D uses a 4-digit PIN — no username or password to remember.</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Open your browser and go to <strong>http://192.168.8.6:3000</strong> (or the address your manager gave you).</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">You will see a PIN pad. Type your <strong>4-digit PIN</strong> using the buttons or your keyboard.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Press the <strong>→ (Enter)</strong> button or press <kbd>Enter</kbd> on your keyboard.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">The Dashboard loads automatically. You are now in!</div>
+    </div>
+  </div>
+
+  <h3>Login Screen Screenshot</h3>
+  <img src="images/login.png" alt="Login Screen Screenshot" style="width:100%; border:1px solid #ddd; border-radius:8px; margin:20px 0;">
+
+  <div class="tip">Your PIN is given to you by your manager. If you forget it, ask your manager to reset it — only managers can change PINs.</div>
+
+  <h3>Installing as a Mobile App</h3>
+  <p>You can install Business 3D on your phone for quick access — no App Store needed.</p>
+
+  <table>
+    <tr><th>Device</th><th>Steps</th></tr>
+    <tr><td>Android</td><td>Open Chrome → go to the CRM URL → tap the <strong>3-dot menu ⋮</strong> → <strong>"Add to Home screen"</strong> → tap Install</td></tr>
+    <tr><td>iPhone / iPad</td><td>Open Safari → go to the CRM URL → tap the <strong>Share button ⬆</strong> → <strong>"Add to Home Screen"</strong> → tap Add</td></tr>
+  </table>
+
+  <div class="note">On iPhone you must use Safari, not Chrome, for the install option to appear.</div>
+
+  <h3>Logging Out</h3>
+  <p>Click the <strong>⏻ logout icon</strong> at the bottom-left of the sidebar. Your session will end and the PIN screen will appear again.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S2: DASHBOARD -->
+<div class="section page-break" id="s2">
+  <div class="section-header">
+    <div class="icon">📊</div>
+    <div>
+      <div class="section-num">SECTION 2</div>
+      <h2>Dashboard</h2>
+    </div>
+  </div>
+
+  <p>The Dashboard is the first screen you see after login. It gives you a live summary of your work.</p>
+
+  <h3>What You See</h3>
+  <table>
+    <tr><th>Card</th><th>What it means</th></tr>
+    <tr><td>Total Contacts</td><td>Number of contacts assigned to you</td></tr>
+    <tr><td>Total Companies</td><td>Number of companies assigned to you</td></tr>
+    <tr><td>Active Deals</td><td>Deals in progress (not won or lost)</td></tr>
+    <tr><td>Won Revenue</td><td>Total value of deals you marked as Won</td></tr>
+    <tr><td>Pipeline Value</td><td>Total value of all your open deals</td></tr>
+    <tr><td>Pending Activities</td><td>Activities / tasks not yet completed</td></tr>
+  </table>
+
+  <h3>Activity Feed</h3>
+  <p>Below the stats cards, the <strong>Activity Feed</strong> shows your 10 most recent actions — calls logged, contacts added, deals moved, etc. This is a quick way to pick up where you left off.</p>
+
+  <h3>Upcoming Activities</h3>
+  <p>Shows your next 5 scheduled activities ordered by due date. Use this every morning to plan your day.</p>
+
+  <div class="tip">Start every day on the Dashboard — check upcoming activities and overdue tasks before making any calls.</div>
+
+  <h3>Dashboard Screenshot</h3>
+  <img src="images/dashboard.png" alt="Dashboard Screenshot" style="width:100%; border:1px solid #ddd; border-radius:8px; margin:20px 0;">
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S3: CONTACTS -->
+<div class="section page-break" id="s3">
+  <div class="section-header">
+    <div class="icon">👤</div>
+    <div>
+      <div class="section-num">SECTION 3</div>
+      <h2>Contacts</h2>
+    </div>
+  </div>
+
+  <p>A <strong>Contact</strong> is an individual person you deal with — a purchasing manager, engineer, owner, etc. Each contact can be linked to a company.</p>
+
+  <h3 id="s3a">Adding a New Contact</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Contacts</strong> in the left sidebar.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click the blue <strong>+ New Contact</strong> button (top-right).</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Fill in the form. Required: <strong>First Name</strong> and <strong>Last Name</strong>.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Set the <strong>Lead Status</strong> to describe where this contact is in your sales process.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Save</strong>. The contact appears in your list immediately.</div>
+    </div>
+  </div>
+
+  <h4>Important Fields</h4>
+  <table>
+    <tr><th>Field</th><th>Description</th><th>Example</th></tr>
+    <tr><td>First / Last Name</td><td>Contact's full name</td><td>Ahmed Hassan</td></tr>
+    <tr><td>Phone</td><td>Mobile or office number</td><td>01012345678</td></tr>
+    <tr><td>Title / Position</td><td>Their role in the company</td><td>Purchasing MNG</td></tr>
+    <tr><td>Company</td><td>Which company they belong to</td><td>Nile Corp</td></tr>
+    <tr><td>Lead Status</td><td>Where they are in your pipeline</td><td>Hot</td></tr>
+    <tr><td>Source</td><td>How you found them</td><td>Exhibition</td></tr>
+    <tr><td>Notes</td><td>Anything important to remember</td><td>Prefers WhatsApp</td></tr>
+  </table>
+
+  <h3>Contacts Page Screenshot</h3>
+  <img src="images/contacts.png" alt="Contacts Page Screenshot" style="width:100%; border:1px solid #ddd; border-radius:8px; margin:20px 0;">
+
+  <h3 id="s3b">Lead Statuses Explained</h3>
+  <p>Lead status tells you and your manager the temperature of each contact:</p>
+
+  <div>
+    <span class="status-chip chip-fresh">🔵 Fresh Lead</span> — Brand new, not yet contacted<br><br>
+    <span class="status-chip chip-hot">🔥 Hot</span> — Very interested, follow up immediately<br><br>
+    <span class="status-chip chip-cold">❄️ Cold</span> — Not interested right now, revisit later<br><br>
+    <span class="status-chip chip-vip">⭐ VIP</span> — Key customer, treat with high priority<br><br>
+    <span class="status-chip chip-rfq">📋 RFQ</span> — Sent a Request For Quotation, waiting for response<br><br>
+    <span class="status-chip">🏁 Need Visit</span> — Requires an in-person visit<br><br>
+    <span class="status-chip chip-done">✅ Done Sales</span> — Sale completed<br><br>
+    <span class="status-chip chip-cold">🚫 Not Interested</span> — Declined, archive this lead<br><br>
+    <span class="status-chip chip-fresh">📝 Registered</span> — Formally registered as a customer
+  </div>
+
+  <div class="tip">Update the lead status after every interaction. This is the most important habit for keeping your pipeline accurate.</div>
+
+  <h3 id="s3c">Quick Actions on a Contact Card</h3>
+  <p>Each contact card in the list has quick-action buttons:</p>
+  <table>
+    <tr><th>Button</th><th>Action</th></tr>
+    <tr><td>📞 Phone icon</td><td>Instantly log a phone call for this contact</td></tr>
+    <tr><td>📍 Pin icon</td><td>Instantly log a visit</td></tr>
+    <tr><td>📝 Note icon</td><td>Add a quick note</td></tr>
+    <tr><td>💬 WhatsApp icon</td><td>Open WhatsApp chat with this contact's number</td></tr>
+  </table>
+
+  <h3>Viewing Contact Details</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click any contact card to open the <strong>detail panel</strong> on the right.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">You can see their full info, linked company, all past activities, and deals.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click the <strong>pencil ✏️ Edit</strong> button to update their information.</div>
+    </div>
+  </div>
+
+  <h3>Searching &amp; Filtering Contacts</h3>
+  <ul>
+    <li>Use the <strong>Search box</strong> at the top of the Contacts page to find by name, phone, or email.</li>
+    <li>Use the <strong>Status filter</strong> dropdown to show only contacts with a specific lead status.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S4: COMPANIES -->
+<div class="section page-break" id="s4">
+  <div class="section-header">
+    <div class="icon">🏢</div>
+    <div>
+      <div class="section-num">SECTION 4</div>
+      <h2>Companies</h2>
+    </div>
+  </div>
+
+  <p>A <strong>Company</strong> is a business account you work with. Companies can have multiple contacts, deals, and activities linked to them.</p>
+
+  <h3>Companies Page Screenshot</h3>
+  <img src="images/companies.png" alt="Companies Page Screenshot" style="width:100%; border:1px solid #ddd; border-radius:8px; margin:20px 0;">
+
+  <h3 id="s4a">Adding a New Company</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Companies</strong> in the left sidebar.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>+ New Company</strong> (top-right).</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Enter the company name (required) and as many details as you know.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Save</strong>.</div>
+    </div>
+  </div>
+
+  <div class="warn">Before adding a company, use the global search (🔍 top bar) to check it doesn't already exist — duplicates waste time.</div>
+
+  <h4>Company Fields</h4>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Company Name</td><td>Official business name (required)</td></tr>
+    <tr><td>Industry</td><td>What sector they are in (e.g. F&amp;B, Pharmaceuticals, Oil &amp; Gas)</td></tr>
+    <tr><td>Area / City</td><td>City where they operate (Cairo, Alexandria, Suez…)</td></tr>
+    <tr><td>Status</td><td>Hot or Cold — the account temperature</td></tr>
+    <tr><td>Category</td><td>Product category: WT, WWT, CHEM, SPARE, INSTRUMENT, CONTROL, GENERAL</td></tr>
+    <tr><td>FOLDER</td><td>Internal folder / segment for organizing accounts</td></tr>
+    <tr><td>Custom ID</td><td>Your own reference number (e.g. 260002)</td></tr>
+    <tr><td>Notes</td><td>Free text — important details about the account</td></tr>
+  </table>
+
+  <h3 id="s4b">Company Detail View</h3>
+  <p>Click a company card to open the full detail panel. It has tabs:</p>
+
+  <table>
+    <tr><th>Tab</th><th>What you see</th></tr>
+    <tr><td>Overview</td><td>Company info and a summary of contacts, deals, revenue</td></tr>
+    <tr><td>Contacts</td><td>All people linked to this company</td></tr>
+    <tr><td>Deals</td><td>All active and closed deals for this account</td></tr>
+    <tr><td>Activities</td><td>Full history of calls, visits, emails, notes</td></tr>
+    <tr><td>Tasks</td><td>Tasks assigned to team members for this company</td></tr>
+  </table>
+
+  <div class="tip">The Activities tab is your call log. Every call, visit, and meeting you log here builds a complete history for the account — very important for handovers.</div>
+
+  <h3>Status Color on Cards</h3>
+  <p>Company cards show a colored left border based on status:</p>
+  <ul>
+    <li><span class="pill orange">Hot</span> — warm color border, high priority</li>
+    <li><span class="pill gray">Cold</span> — gray border, lower priority</li>
+    <li>No status — no colored border</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S5: DEALS -->
+<div class="section page-break" id="s5">
+  <div class="section-header">
+    <div class="icon">🤝</div>
+    <div>
+      <div class="section-num">SECTION 5</div>
+      <h2>Deals &amp; Pipeline</h2>
+    </div>
+  </div>
+
+  <p>A <strong>Deal</strong> tracks a sales opportunity — a specific product or service you are trying to sell to a company or contact. The pipeline shows all deals organized by stage.</p>
+
+  <h3>Deals Page Screenshot</h3>
+  <img src="images/deals.png" alt="Deals Page Screenshot" style="width:100%; border:1px solid #ddd; border-radius:8px; margin:20px 0;">
+
+  <h3 id="s5a">Deal Stages</h3>
+  <div class="pipeline">
+    <div class="pipe-stage">Lead</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-stage">Qualified</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-stage">Proposal</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-stage">Negotiation</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-stage won">Won ✓</div>
+    <span class="pipe-arrow">/</span>
+    <div class="pipe-stage lost">Lost ✗</div>
+  </div>
+
+  <table>
+    <tr><th>Stage</th><th>Meaning</th><th>What to do</th></tr>
+    <tr><td>Lead</td><td>Initial interest, not yet verified</td><td>Qualify — confirm they have budget &amp; need</td></tr>
+    <tr><td>Qualified</td><td>Confirmed real opportunity</td><td>Prepare proposal / quotation</td></tr>
+    <tr><td>Proposal</td><td>Offer has been sent</td><td>Follow up, answer questions</td></tr>
+    <tr><td>Negotiation</td><td>Discussing price &amp; terms</td><td>Negotiate, involve manager if needed</td></tr>
+    <tr><td>Won ✓</td><td>Deal closed successfully</td><td>Handover to operations, update records</td></tr>
+    <tr><td>Lost ✗</td><td>Deal did not close</td><td>Add a note explaining why it was lost</td></tr>
+  </table>
+
+  <div class="note">Every time you move a deal to a new stage, the system automatically logs a <strong>stage change activity</strong> — no need to add a note manually.</div>
+
+  <h3 id="s5b">Adding a Deal</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Deals</strong> in the sidebar to see the Kanban board.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>+ New Deal</strong>.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Fill in <strong>Title</strong>, <strong>Value</strong> (in EGP), <strong>Stage</strong>, and link to a <strong>Company</strong> and/or <strong>Contact</strong>.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Set a <strong>Close Date</strong> — your target date to close the deal.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Save</strong>.</div>
+    </div>
+  </div>
+
+  <h3>Moving a Deal (Drag &amp; Drop)</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">On the Kanban view, click and <strong>hold</strong> a deal card.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content"><strong>Drag</strong> it to the new stage column and <strong>release</strong>.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">The stage updates and a stage-change activity is logged automatically.</div>
+    </div>
+  </div>
+
+  <div class="tip">Switch to <strong>List view</strong> (the ≡ icon) when you have many deals — it's easier to sort and see all details at once.</div>
+
+  <h4>Probability</h4>
+  <p>Each deal has a <strong>probability %</strong> (0–100). Use this to estimate how likely the deal is to close. The Dashboard uses this to calculate your <em>Forecast Value</em> (pipeline × probability).</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S6: ACTIVITIES -->
+<div class="section page-break" id="s6">
+  <div class="section-header">
+    <div class="icon">📋</div>
+    <div>
+      <div class="section-num">SECTION 6</div>
+      <h2>Activities — Logging Your Work</h2>
+    </div>
+  </div>
+
+  <p>Activities are the <strong>record of everything you do</strong>: calls made, visits done, emails sent, meetings held. Logging activities is essential — it shows your manager your work and keeps the account history complete.</p>
+
+  <h3>Tasks Page Screenshot</h3>
+  <img src="images/tasks.png" alt="Tasks Page Screenshot" style="width:100%; border:1px solid #ddd; border-radius:8px; margin:20px 0;">
+
+  <h3 id="s6a">Activity Types</h3>
+  <table>
+    <tr><th>Type</th><th>When to use</th></tr>
+    <tr><td>📞 Call</td><td>Any phone call you made or received</td></tr>
+    <tr><td>📍 Visit</td><td>An in-person visit to a company or contact</td></tr>
+    <tr><td>✉️ Email</td><td>An email you sent or received</td></tr>
+    <tr><td>🤝 Meeting</td><td>A formal meeting (at your office or theirs)</td></tr>
+    <tr><td>✅ Task</td><td>A to-do item — for yourself or assigned to a colleague</td></tr>
+    <tr><td>📝 Note</td><td>A general note about a contact or company</td></tr>
+  </table>
+
+  <h3 id="s6b">How to Log a Call or Visit (Quick Method)</h3>
+  <p>The fastest way — directly from the contact card:</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Go to <strong>Contacts</strong> and find the contact.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">On their card, click the <strong>📞 phone button</strong> (for call) or <strong>📍 pin button</strong> (for visit).</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">A quick form appears. Add a short <strong>title</strong> (e.g. "Discussed pricing") and optional note.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Save</strong>. The activity is logged instantly.</div>
+    </div>
+  </div>
+
+  <h3>How to Log a Full Activity</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Activities</strong> in the sidebar (or open a contact/company detail and click <strong>+ Log Activity</strong>).</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>+ New Activity</strong>.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Choose the <strong>Type</strong>, write a <strong>Title</strong>, and add a <strong>Description</strong> with details.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Set a <strong>Due Date</strong> if it's a scheduled activity (meeting, planned visit).</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Link it to a <strong>Contact</strong> and/or <strong>Company</strong>.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Save</strong>.</div>
+    </div>
+  </div>
+
+  <h3>Completing an Activity</h3>
+  <p>When you finish a task or scheduled activity, mark it as done:</p>
+  <ul>
+    <li>Open the <strong>Activities</strong> page.</li>
+    <li>Click the <strong>✓ checkmark</strong> next to the activity.</li>
+    <li>It moves to the "Completed" section.</li>
+  </ul>
+
+  <div class="warn">Never skip logging a visit or call — even a 2-minute call should be logged. This history is what makes the CRM valuable over time.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S7: TASKS -->
+<div class="section page-break" id="s7">
+  <div class="section-header">
+    <div class="icon">✅</div>
+    <div>
+      <div class="section-num">SECTION 7</div>
+      <h2>Tasks &amp; Reminders</h2>
+    </div>
+  </div>
+
+  <h3>Tasks</h3>
+  <p>Tasks are to-do items with a due date. Use them to track follow-ups, send quotations, make a call, etc.</p>
+
+  <h4>Creating a Task</h4>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Tasks</strong> in the sidebar.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>+ New Task</strong>.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Write the task title (e.g. "Follow up with Ahmed about the quotation").</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Set a <strong>Due Date</strong> so it shows on your calendar.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Link it to a Contact and/or Company if relevant.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click <strong>Save</strong>.</div>
+    </div>
+  </div>
+
+  <div class="tip">Check your Tasks page every morning. Complete tasks that are done by clicking the <strong>✓</strong> button.</div>
+
+  <h4>Overdue Tasks</h4>
+  <p>The Dashboard shows an <strong>overdue count</strong> in red. If you have overdue tasks, complete them or update their due date — your manager can see this number.</p>
+
+  <h3>Reminders</h3>
+  <p>When creating an activity, you can set a <strong>Reminder Date/Time</strong>. The system will send you a notification when the reminder fires.</p>
+  <ul>
+    <li>Reminders appear in the <strong>🔔 bell icon</strong> at the top of the screen.</li>
+    <li>Click the bell to see all your unread notifications.</li>
+    <li>The <strong>Reminders</strong> page in the sidebar shows all activities that have a reminder set.</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S8: CALENDAR -->
+<div class="section page-break" id="s8">
+  <div class="section-header">
+    <div class="icon">📅</div>
+    <div>
+      <div class="section-num">SECTION 8</div>
+      <h2>Calendar</h2>
+    </div>
+  </div>
+
+  <p>The Calendar shows all activities that have a <strong>due date</strong> on a monthly grid — visits, meetings, tasks, calls scheduled for a specific day.</p>
+
+  <h3>Using the Calendar</h3>
+  <ul>
+    <li>Click <strong>Calendar</strong> in the sidebar.</li>
+    <li>Use the <strong>&lt; &gt; arrows</strong> to move between months.</li>
+    <li>Click the <strong>Today</strong> button to jump back to the current month.</li>
+    <li>Click any event on the calendar to see its details.</li>
+    <li>Different activity types are shown in different colors so you can tell calls, visits, and meetings apart at a glance.</li>
+  </ul>
+
+  <div class="tip">Schedule your visits and meetings by creating activities with due dates — they will appear on your calendar automatically. No separate scheduling is needed.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S9: SEARCH -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="icon">🔍</div>
+    <div>
+      <div class="section-num">SECTION 9</div>
+      <h2>Global Search</h2>
+    </div>
+  </div>
+
+  <p>The <strong>search bar at the top</strong> of every page lets you find anything instantly across contacts, companies, and deals.</p>
+
+  <h3>How to Search</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click the search box in the top bar (or press <kbd>/</kbd> on your keyboard).</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Type at least <strong>2 characters</strong> — name, phone number, city, or company name.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Results appear instantly in a dropdown, grouped by Contacts, Companies, and Deals.</div>
+    </div>
+    <div class="step"><div class="step-num"></div>
+      <div class="step-content">Click any result to go directly to that record.</div>
+    </div>
+  </div>
+
+  <div class="tip">Search by phone number to quickly check if a contact already exists before adding a new one — this prevents duplicates.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S10: REPORTS -->
+<div class="section page-break" id="s10">
+  <div class="section-header">
+    <div class="icon">📈</div>
+    <div>
+      <div class="section-num">SECTION 10</div>
+      <h2>Reports</h2>
+    </div>
+  </div>
+
+  <p>The Reports page gives you charts and stats about your performance. It helps you understand what's working and where to focus.</p>
+
+  <h3>What's in Reports</h3>
+  <table>
+    <tr><th>Report</th><th>What it shows</th></tr>
+    <tr><td>Revenue by Month</td><td>How much revenue you've won each month (last 12 months)</td></tr>
+    <tr><td>Lead Funnel</td><td>Count of contacts at each lead status — shows your pipeline health</td></tr>
+    <tr><td>Activities by Type</td><td>How many calls, visits, emails you've done — and how many are completed</td></tr>
+    <tr><td>Deal Stages</td><td>How many deals are at each stage and their total value</td></tr>
+    <tr><td>Won vs Lost</td><td>Win rate — how many deals you close vs lose</td></tr>
+  </table>
+
+  <h3>Filtering by Date</h3>
+  <p>Use the <strong>From / To</strong> date pickers at the top of the Reports page to narrow the data to a specific period (e.g. this month, last quarter).</p>
+
+  <div class="note">Reports only show your own data. Your manager sees everyone's data combined.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S11: TIPS -->
+<div class="section page-break" id="s11">
+  <div class="section-header">
+    <div class="icon">💡</div>
+    <div>
+      <div class="section-num">SECTION 11</div>
+      <h2>Tips &amp; Best Practices</h2>
+    </div>
+  </div>
+
+  <h3>Daily Habits</h3>
+  <div class="step-box note">
+    <ol style="padding-left:18px;">
+      <li style="margin-bottom:8px;"><strong>Morning:</strong> Open the Dashboard — check upcoming activities and overdue tasks.</li>
+      <li style="margin-bottom:8px;"><strong>During the day:</strong> Log every call and visit immediately after it happens — don't wait until the end of the day.</li>
+      <li style="margin-bottom:8px;"><strong>After a meeting:</strong> Update the deal stage and add a note about what was discussed.</li>
+      <li style="margin-bottom:8px;"><strong>End of day:</strong> Create tasks for tomorrow's follow-ups so you start the next day prepared.</li>
+    </ol>
+  </div>
+
+  <h3>Common Mistakes to Avoid</h3>
+  <table>
+    <tr><th>Mistake</th><th>Why it's a problem</th><th>What to do instead</th></tr>
+    <tr><td>Not logging activities</td><td>No history = no proof of work; loses context on handover</td><td>Log every call, visit, email — even a 1-minute call</td></tr>
+    <tr><td>Not updating lead status</td><td>Manager sees inaccurate pipeline</td><td>Update status after every contact interaction</td></tr>
+    <tr><td>Adding duplicate contacts</td><td>Confusion, split history</td><td>Always search first before adding</td></tr>
+    <tr><td>Leaving overdue tasks</td><td>Missed follow-ups, manager flags it</td><td>Complete or reschedule tasks daily</td></tr>
+    <tr><td>Empty notes</td><td>No context when you revisit in 2 weeks</td><td>Write what was said, what was promised, next step</td></tr>
+  </table>
+
+  <h3>What a Good Activity Note Looks Like</h3>
+  <div class="screen">
+    <div class="screen-title">✅ Good note example</div>
+    Called Ahmed Hassan (Purchasing MNG at Nile Corp). He confirmed they need a water treatment system for their new Badr City plant. Budget is around 500K EGP. He asked for a quotation by next Thursday. Follow-up call scheduled.
+  </div>
+  <div class="screen">
+    <div class="screen-title">❌ Bad note example</div>
+    Called. Will call again.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ S12: QUICK REF -->
+<div class="section page-break" id="s12">
+  <div class="section-header">
+    <div class="icon">⚡</div>
+    <div>
+      <div class="section-num">SECTION 12</div>
+      <h2>Quick Reference</h2>
+    </div>
+  </div>
+
+  <h3>Keyboard Shortcuts</h3>
+  <table>
+    <tr><th>Key</th><th>Action</th></tr>
+    <tr><td><kbd>Enter</kbd></td><td>Submit PIN on the login screen</td></tr>
+    <tr><td><kbd>Backspace</kbd></td><td>Delete last PIN digit</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>Close any open modal/form</td></tr>
+  </table>
+
+  <h3>Navigation</h3>
+  <table>
+    <tr><th>Sidebar Link</th><th>What it opens</th></tr>
+    <tr><td>📊 Dashboard</td><td>Summary stats, upcoming activities, feed</td></tr>
+    <tr><td>👤 Contacts</td><td>All your contacts with quick-action buttons</td></tr>
+    <tr><td>🏢 Companies</td><td>All your company accounts</td></tr>
+    <tr><td>🤝 Deals</td><td>Sales pipeline (Kanban or List view)</td></tr>
+    <tr><td>✅ Tasks</td><td>Your pending to-do items</td></tr>
+    <tr><td>🔔 Reminders</td><td>Activities with a reminder set</td></tr>
+    <tr><td>📈 Reports</td><td>Performance charts and stats</td></tr>
+    <tr><td>📅 Calendar</td><td>Monthly view of all scheduled activities</td></tr>
+  </table>
+
+  <h3>Lead Status Reference</h3>
+  <table>
+    <tr><th>Status</th><th>Use when…</th></tr>
+    <tr><td>Fresh Lead</td><td>First time adding the contact, not yet called</td></tr>
+    <tr><td>Hot</td><td>Actively interested, ready to buy soon</td></tr>
+    <tr><td>Cold</td><td>Not interested now, revisit in future</td></tr>
+    <tr><td>Need Visit</td><td>Phone not enough — must visit in person</td></tr>
+    <tr><td>VIP</td><td>Top-priority customer, high value</td></tr>
+    <tr><td>RFQ</td><td>They sent a request for quotation</td></tr>
+    <tr><td>Not Interested</td><td>Definitely won't buy — close this lead</td></tr>
+    <tr><td>Done Sales</td><td>Sale successfully completed</td></tr>
+    <tr><td>Registered</td><td>Formally registered as a customer</td></tr>
+  </table>
+
+  <h3>Deal Stage Reference</h3>
+  <table>
+    <tr><th>Stage</th><th>Description</th></tr>
+    <tr><td>Lead</td><td>Potential opportunity, not yet qualified</td></tr>
+    <tr><td>Qualified</td><td>Confirmed budget, need, and authority</td></tr>
+    <tr><td>Proposal</td><td>Quotation or offer has been sent</td></tr>
+    <tr><td>Negotiation</td><td>Discussing price, terms, delivery</td></tr>
+    <tr><td>Won ✓</td><td>Deal closed successfully</td></tr>
+    <tr><td>Lost ✗</td><td>Deal lost — add note with reason</td></tr>
+  </table>
+
+  <h3>Industry Categories Available</h3>
+  <p>
+    <span class="pill">F&amp;B</span>
+    <span class="pill">Pharmaceuticals</span>
+    <span class="pill">Chemicals &amp; Petrochemicals</span>
+    <span class="pill">Oil &amp; Gas</span>
+    <span class="pill">Textile</span>
+    <span class="pill">Hotels &amp; Resorts</span>
+    <span class="pill">Hospitals</span>
+    <span class="pill">Drinking water treatment</span>
+    <span class="pill">Wastewater treatment</span>
+    <span class="pill">Desalination plants</span>
+    <span class="pill">Power Plants</span>
+    <span class="pill">Farms &amp; Greenhouses</span>
+    <span class="pill">Mining &amp; Primary Metals</span>
+    <span class="pill">Fertilizers</span>
+    <span class="pill">Residential Compounds</span>
+    <span class="pill">Contractors</span>
+    <span class="pill">LABS</span>
+    <span class="pill">Malls</span>
+    <span class="pill">Pools</span>
+    <span class="pill gray">+ more</span>
+  </p>
+
+  <h3>Supported Cities</h3>
+  <p>
+    <span class="pill">Cairo</span>
+    <span class="pill">Alexandria City</span>
+    <span class="pill">Badr City</span>
+    <span class="pill">New Cairo</span>
+    <span class="pill">6th of October City</span>
+    <span class="pill">10th of Ramadan City</span>
+    <span class="pill">Suez SCZone</span>
+    <span class="pill">Obour City</span>
+    <span class="pill">Helwan</span>
+    <span class="pill">Mansoura</span>
+    <span class="pill">Tanta</span>
+    <span class="pill">Ismailia</span>
+    <span class="pill">Damietta</span>
+    <span class="pill gray">+ more</span>
+  </p>
+
+  <div class="manual-footer">
+    <span>Business 3D — Sales User Manual v1.0</span>
+    <span>🗂️ For internal use only</span>
+    <span>2026</span>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<button class="print-btn" onclick="window.print()">
+  🖨️ Save as PDF
+</button>
+
+</body>
+</html>

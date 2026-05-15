@@ -1,0 +1,614 @@
+# VERSION
+
+Shared Markdown project memory for this workspace.
+
+Purpose: keep the project state, file map, architecture notes, version history, and AI handoff notes in one place so another AI assistant or developer can resume work quickly.
+
+Update rule: whenever an AI or developer changes the project, add a new entry at the top of "Version History", update "Last updated", and revise any affected project sections.
+
+Timestamp format: `YYYY-MM-DD HH:mm:ss UTC_OFFSET`
+
+Current project: `web-crm`
+Current package version: `1.0.0`
+Last updated: `2026-04-30 13:53:17 +03:00`
+
+## Quick Start
+
+- Workspace path: `C:\Users\KR007\Business 3D`
+- Install dependencies: already present in `node_modules`; use `npm install` only if dependencies are missing.
+- Development command: `npm run dev`
+- Start command: `npm start`
+- Default URL: `http://localhost:3000`
+- Server host: `0.0.0.0` by default, configurable with `HOST`
+- Server port: `3000` by default, configurable with `PORT`
+- Root entry point: `server.js`
+- Main app server: `modules/crm/core/server.js`
+
+## AI Handoff Rules
+
+- Read this file before making changes.
+- Read `CLAUDE.md` for detailed architecture and backend rules.
+- Do not replace this file with a short summary; keep it as the shared project memory.
+- Add new version entries above older entries.
+- Keep exact file paths in every entry.
+- Include verification performed, or write `Not run` with the reason.
+- Preserve user changes unrelated to the current task.
+- The project is not currently a git repository in this workspace.
+
+## Project Summary
+
+`web-crm` is a full-featured CRM web app with ERP placeholder modules. It uses Node.js native `http`, built-in `node:sqlite`, and a vanilla HTML/CSS/JS frontend. There is no build step.
+
+Important constraint: use built-in `node:sqlite` with `DatabaseSync`. Do not migrate to or suggest `better-sqlite3`; the local machine may not compile native addons.
+
+## Package Metadata
+
+- Package name: `web-crm`
+- Version: `1.0.0`
+- Description: `Full-featured web CRM system`
+- Main: `server.js`
+- Scripts:
+  - `npm start`: `node --no-warnings server.js`
+  - `npm run dev`: `nodemon --ignore '**/*.db' --ignore '**/*.db-shm' --ignore '**/*.db-wal' server.js`
+- Dependencies:
+  - `nodemailer` `^8.0.7`
+  - `xlsx` `^0.18.5`
+- Dev dependencies:
+  - `nodemon` `^3.1.14`
+
+## Runtime Architecture
+
+- `server.js` is a thin shim that requires `./modules/crm/core/server`.
+- `modules/crm/core/server.js` initializes the database, runs migrations, seeds data/lists, loads routes, serves static files, starts reminder checks, and cleans expired sessions.
+- `modules/crm/core/app.js` provides the small router and route table.
+- `modules/crm/core/routeLoader.js` registers all CRM backend route modules.
+- `modules/crm/middleware/auth.js` provides auth, manager checks, ownership filters, manager counts, and null coercion helpers.
+- `modules/crm/database/database.js` owns SQLite setup, schema creation, migrations, seed data, and seed list values.
+
+## URL Routing
+
+- `/`: global login page from `main/login.html`
+- `/home`: global home page from `main/home.html`
+- `/dashboard`: legacy redirect to `/home`
+- `/crm`: CRM SPA from `modules/crm/frontend/index.html`
+- `/crm/*`: CRM frontend static files
+- `/erp/<submodule>`: ERP frontend stubs
+- `/api/*`: backend API routes from CRM modules
+- Other static paths such as `/css/*`: served from `main/`
+
+## Database
+
+- Database file: `modules/crm/database/crm.db`
+- WAL files: `modules/crm/database/crm.db-wal`, `modules/crm/database/crm.db-shm`
+- SQLite mode: WAL
+- Foreign keys: enabled
+- Default manager seed:
+  - Name: `Manager`
+  - Role: `manager`
+  - PIN: `1996`
+- Session cleanup runs at startup and every 6 hours.
+
+Known tables from schema/migrations:
+
+- `companies`
+- `contacts`
+- `deals`
+- `activities`
+- `users`
+- `sessions`
+- `list_items`
+- `notifications`
+- `goals`
+- `custom_field_defs`
+- `custom_field_values`
+- `settings`
+- `deal_files`
+- `products`
+- `inventory_categories`
+- `product_price_history`
+
+## CRM Backend Modules
+
+Registered in `modules/crm/core/routeLoader.js`:
+
+- `modules/crm/backend/auth.js`: login/logout/me session endpoints.
+- `modules/crm/backend/users.js`: user management.
+- `modules/crm/backend/lists.js`: dropdown/list item management.
+- `modules/crm/backend/settings.js`: app settings.
+- `modules/crm/backend/team.js`: team and team leader behavior.
+- `modules/crm/backend/dashboard.js`: dashboard statistics and recent items.
+- `modules/crm/backend/notifications.js`: user notifications.
+- `modules/crm/backend/goals.js`: monthly/team goals.
+- `modules/crm/backend/custom-fields.js`: custom field definitions and values.
+- `modules/crm/backend/email.js`: email/reminder behavior and background reminder interval.
+- `modules/crm/backend/search.js`: search endpoints.
+- `modules/crm/backend/reports.js`: reporting endpoints.
+- `modules/crm/backend/calendar.js`: calendar endpoints.
+- `modules/crm/backend/tasks.js`: task endpoints.
+- `modules/crm/backend/bulk.js`: bulk operations.
+- `modules/crm/backend/import-export.js`: CSV/XLSX import/export.
+- `modules/crm/backend/companies.js`: company CRUD and related data.
+- `modules/crm/backend/contacts.js`: contact CRUD.
+- `modules/crm/backend/deals.js`: deal CRUD and related behavior.
+- `modules/crm/backend/activities.js`: activity CRUD.
+
+## CRM Frontend
+
+- Main SPA: `modules/crm/frontend/index.html`
+- Manual/help page: `modules/crm/frontend/manual.html`
+- PWA manifest: `modules/crm/frontend/manifest.json`
+- Service worker: `modules/crm/frontend/sw.js`
+- Main stylesheet: `modules/crm/frontend/css/style.css`
+- Icons: `modules/crm/frontend/icon-192.png`, `modules/crm/frontend/icon-512.png`
+- Image assets:
+  - `modules/crm/frontend/images/companies.png`
+  - `modules/crm/frontend/images/contacts.png`
+  - `modules/crm/frontend/images/dashboard.png`
+  - `modules/crm/frontend/images/deals.png`
+  - `modules/crm/frontend/images/login.png`
+  - `modules/crm/frontend/images/tasks.png`
+
+Frontend JS modules:
+
+- `modules/crm/frontend/js/api.js`
+- `modules/crm/frontend/js/app.js`
+- `modules/crm/frontend/js/auth.js`
+- `modules/crm/frontend/js/bulk.js`
+- `modules/crm/frontend/js/custom-fields.js`
+- `modules/crm/frontend/js/dup-check.js`
+- `modules/crm/frontend/js/email.js`
+- `modules/crm/frontend/js/goals.js`
+- `modules/crm/frontend/js/import-export.js`
+- `modules/crm/frontend/js/init.js`
+- `modules/crm/frontend/js/modal.js`
+- `modules/crm/frontend/js/notifications.js`
+- `modules/crm/frontend/js/page-loader.js`
+- `modules/crm/frontend/js/router.js`
+- `modules/crm/frontend/js/search.js`
+- `modules/crm/frontend/js/shortcuts.js`
+- `modules/crm/frontend/js/state.js`
+- `modules/crm/frontend/js/team-leader.js`
+- `modules/crm/frontend/js/theme.js`
+- `modules/crm/frontend/js/utils.js`
+
+Frontend page templates:
+
+- `modules/crm/frontend/pages/activities.html`
+- `modules/crm/frontend/pages/calendar.html`
+- `modules/crm/frontend/pages/companies.html`
+- `modules/crm/frontend/pages/contacts.html`
+- `modules/crm/frontend/pages/dashboard.html`
+- `modules/crm/frontend/pages/deals.html`
+- `modules/crm/frontend/pages/lists.html`
+- `modules/crm/frontend/pages/reminders.html`
+- `modules/crm/frontend/pages/reports.html`
+- `modules/crm/frontend/pages/tasks.html`
+- `modules/crm/frontend/pages/team.html`
+- `modules/crm/frontend/pages/users.html`
+
+Frontend page controllers:
+
+- `modules/crm/frontend/js/pages/activities.js`
+- `modules/crm/frontend/js/pages/calendar.js`
+- `modules/crm/frontend/js/pages/companies.js`
+- `modules/crm/frontend/js/pages/contacts.js`
+- `modules/crm/frontend/js/pages/dashboard.js`
+- `modules/crm/frontend/js/pages/deals.js`
+- `modules/crm/frontend/js/pages/detail-views.js`
+- `modules/crm/frontend/js/pages/lists.js`
+- `modules/crm/frontend/js/pages/reminders.js`
+- `modules/crm/frontend/js/pages/reports.js`
+- `modules/crm/frontend/js/pages/tasks.js`
+- `modules/crm/frontend/js/pages/team.js`
+- `modules/crm/frontend/js/pages/users.js`
+
+## Global Frontend
+
+- `main/login.html`: global login/start page served at `/`.
+- `main/home.html`: global home page served at `/home`.
+- `main/css/global.css`: global styling for `main/` pages.
+
+## ERP Modules
+
+ERP modules are served under `/erp/<submodule>`. Inventory is now implemented; the other ERP modules are still frontend placeholders.
+
+- `modules/erp/inventory/backend/products.js`: inventory product CRUD, stock update, and low-stock alert APIs.
+- `modules/erp/inventory/frontend/index.html`: sheet-style inventory dashboard UI for products, stock updates, alerts, import, and export.
+- `modules/erp/purchasing/frontend/index.html`
+- `modules/erp/finance/frontend/index.html`
+- `modules/erp/service/frontend/index.html`
+- `modules/erp/machine_data/frontend/index.html`
+
+Future ERP backend routes should be registered from `modules/crm/core/routeLoader.js` or a new dedicated ERP route loader if the project grows.
+
+## Root Utility Files
+
+- `CLAUDE.md`: detailed project instructions and architecture reference.
+- `VERSION`: this shared Markdown project memory.
+- `.env.example`: environment variable example file.
+- `package.json`: package scripts and dependencies.
+- `package-lock.json`: locked dependency tree.
+- `server.js`: root server entry shim.
+- `START.bat`: Windows startup helper.
+- `BACKUP.bat`: Windows backup helper.
+- `RESET.bat`: Windows reset helper.
+- `setup.bat`: Windows setup helper.
+- `setup.sh`: shell setup helper.
+- `query_db.js`: database query utility.
+- `test.js`: project test/check utility.
+- `project-path.txt`: project path/reference notes.
+- `.vscode/`: editor settings folder.
+- `node_modules/`: installed third-party packages; not listed file-by-file here.
+
+## Complete Project File Index
+
+This index excludes `node_modules` internals so the file stays useful. If dependency internals matter, inspect `package-lock.json` or the package folder directly.
+
+```text
+VERSION
+test.js
+START.bat
+setup.sh
+setup.bat
+server.js
+RESET.bat
+query_db.js
+project-path.txt
+package.json
+package-lock.json
+CLAUDE.md
+BACKUP.bat
+main/login.html
+main/home.html
+main/css/global.css
+modules/crm/middleware/auth.js
+modules/crm/core/server.js
+modules/crm/core/routeLoader.js
+modules/crm/core/app.js
+modules/crm/backend/auth.js
+modules/crm/backend/activities.js
+modules/crm/backend/bulk.js
+modules/crm/backend/calendar.js
+modules/crm/frontend/sw.js
+modules/crm/database/database.js
+modules/crm/database/crm.db-wal
+modules/crm/database/crm.db-shm
+modules/crm/database/crm.db
+modules/crm/backend/users.js
+modules/crm/backend/team.js
+modules/crm/backend/tasks.js
+modules/crm/backend/settings.js
+modules/crm/backend/search.js
+modules/crm/backend/reports.js
+modules/crm/backend/notifications.js
+modules/crm/backend/lists.js
+modules/crm/backend/import-export.js
+modules/crm/backend/goals.js
+modules/crm/backend/email.js
+modules/crm/backend/deals.js
+modules/crm/backend/dashboard.js
+modules/crm/backend/custom-fields.js
+modules/crm/backend/contacts.js
+modules/crm/backend/companies.js
+modules/erp/inventory/backend/products.js
+modules/crm/frontend/icon-192.png
+modules/erp/inventory/frontend/index.html
+modules/erp/service/frontend/index.html
+modules/crm/frontend/css/style.css
+modules/erp/finance/frontend/index.html
+modules/erp/purchasing/frontend/index.html
+modules/crm/frontend/icon-512.png
+modules/crm/frontend/manifest.json
+modules/crm/frontend/manual.html
+modules/crm/frontend/index.html
+modules/erp/machine_data/frontend/index.html
+modules/crm/frontend/images/tasks.png
+modules/crm/frontend/images/login.png
+modules/crm/frontend/images/deals.png
+modules/crm/frontend/images/dashboard.png
+modules/crm/frontend/images/contacts.png
+modules/crm/frontend/images/companies.png
+modules/crm/frontend/js/import-export.js
+modules/crm/frontend/js/goals.js
+modules/crm/frontend/js/email.js
+modules/crm/frontend/js/dup-check.js
+modules/crm/frontend/js/custom-fields.js
+modules/crm/frontend/js/bulk.js
+modules/crm/frontend/js/auth.js
+modules/crm/frontend/js/app.js
+modules/crm/frontend/js/api.js
+modules/crm/frontend/pages/activities.html
+modules/crm/frontend/js/utils.js
+modules/crm/frontend/js/theme.js
+modules/crm/frontend/js/team-leader.js
+modules/crm/frontend/js/state.js
+modules/crm/frontend/js/shortcuts.js
+modules/crm/frontend/js/search.js
+modules/crm/frontend/js/router.js
+modules/crm/frontend/js/modal.js
+modules/crm/frontend/js/init.js
+modules/crm/frontend/js/notifications.js
+modules/crm/frontend/js/page-loader.js
+modules/crm/frontend/pages/lists.html
+modules/crm/frontend/pages/deals.html
+modules/crm/frontend/pages/dashboard.html
+modules/crm/frontend/pages/contacts.html
+modules/crm/frontend/pages/companies.html
+modules/crm/frontend/pages/calendar.html
+modules/crm/frontend/pages/tasks.html
+modules/crm/frontend/pages/reports.html
+modules/crm/frontend/pages/reminders.html
+modules/crm/frontend/pages/team.html
+modules/crm/frontend/pages/users.html
+modules/crm/frontend/js/pages/users.js
+modules/crm/frontend/js/pages/team.js
+modules/crm/frontend/js/pages/tasks.js
+modules/crm/frontend/js/pages/reports.js
+modules/crm/frontend/js/pages/reminders.js
+modules/crm/frontend/js/pages/lists.js
+modules/crm/frontend/js/pages/detail-views.js
+modules/crm/frontend/js/pages/deals.js
+modules/crm/frontend/js/pages/dashboard.js
+modules/crm/frontend/js/pages/contacts.js
+modules/crm/frontend/js/pages/companies.js
+modules/crm/frontend/js/pages/calendar.js
+modules/crm/frontend/js/pages/activities.js
+```
+
+## Development Notes
+
+- No build step is required.
+- Prefer `npm run dev` while editing so nodemon restarts automatically.
+- Database files are intentionally ignored by nodemon in the dev script.
+- API routes use native Node request/response objects augmented with `res.status()` and `res.json()`.
+- Non-GET and non-DELETE API requests parse JSON request bodies unless the request is multipart.
+- Multipart streams are left unconsumed so route handlers can parse uploads.
+- Static serving falls back to `index.html` for SPA-style routes.
+- `modules/crm/core/routeLoader.js` is the place to register new backend route modules.
+
+## Version History
+
+### 2026-04-30 13:53:17 +03:00 - v1.0.0-inventory-dynamic-categories-price-history
+
+Author/tool: Codex
+
+Files touched:
+
+- `modules/crm/database/database.js`
+- `modules/erp/inventory/backend/products.js`
+- `modules/erp/inventory/frontend/index.html`
+- `VERSION`
+
+Summary:
+
+- Added dynamic Inventory category list with persistent `inventory_categories` table.
+- Added Inventory price history with persistent `product_price_history` table.
+- Added category APIs:
+  - `GET /erp/inventory/categories`
+  - `POST /erp/inventory/categories`
+  - `DELETE /erp/inventory/categories/:id`
+- Added price history API:
+  - `GET /erp/inventory/products/:id/price-history`
+- Product create/update/import now automatically creates category list entries for used categories.
+- Product create/update records price history when an item has an initial price or its selling price changes.
+- Frontend now has category management, category datalist suggestions in product form, and row-level Price History action/modal.
+
+Verification:
+
+- Ran syntax checks on updated backend and database files.
+- Ran JavaScript syntax check on the inventory inline frontend script.
+- Confirmed `/erp/inventory` serves the category form, category datalist, and history modal.
+- Ran live server smoke test: create category, create product, update price, fetch price history, list category, delete product, delete category.
+
+Next notes:
+
+- Dynamic categories cannot be deleted while products still use them.
+- Price history is tied to product IDs and is removed if the product is deleted.
+- Server remains running at `http://localhost:3000`.
+
+### 2026-04-30 13:47:37 +03:00 - v1.0.0-inventory-category-filters
+
+Author/tool: Codex
+
+Files touched:
+
+- `modules/erp/inventory/frontend/index.html`
+- `VERSION`
+
+Summary:
+
+- Added Inventory category filtering system.
+- Added main toolbar `Catogry` dropdown, side-panel category dropdown, category chips with item counts, filter status text, and clear filters button.
+- Search now combines with selected category.
+- Empty state now distinguishes between no inventory data and no matching filtered results.
+
+Verification:
+
+- Confirmed `/erp/inventory` serves successfully from the running dev server.
+- Confirmed served HTML includes category filter, side filter, category chips, and clear filters controls.
+- Ran JavaScript syntax check on the inline inventory frontend script.
+
+Next notes:
+
+- Category filters are generated from current product `category` values after loading/importing products.
+- Server remains running at `http://localhost:3000`.
+
+### 2026-04-30 13:44:07 +03:00 - v1.0.0-inventory-frontend-polish
+
+Author/tool: Codex
+
+Files touched:
+
+- `modules/erp/inventory/frontend/index.html`
+- `VERSION`
+
+Summary:
+
+- Enhanced the Inventory frontend layout and visual polish.
+- Added a product catalog intro area with quick actions.
+- Improved metric cards, panel headers, toolbar spacing, table styling, sticky first columns, hover states, and responsive behavior.
+- Replaced the empty table scrollbar state with a clean empty state that offers Import Sheet and Add Item actions.
+- Added table status text showing how many items are visible after search/filtering.
+
+Verification:
+
+- Confirmed `/erp/inventory` serves successfully from the running dev server.
+- Confirmed the served HTML includes the new catalog hero, empty state, and table wrapper behavior.
+
+Next notes:
+
+- Server remains running at `http://localhost:3000`.
+- This was a frontend-only polish pass; inventory APIs and database schema were not changed.
+
+### 2026-04-30 13:33:25 +03:00 - v1.0.0-inventory-sheet-import-export
+
+Author/tool: Codex
+
+Files touched:
+
+- `modules/crm/database/database.js`
+- `modules/erp/inventory/backend/products.js`
+- `modules/erp/inventory/frontend/index.html`
+- `VERSION`
+
+Summary:
+
+- Expanded Inventory to match the user's spreadsheet layout.
+- Added product fields for `PN`, `SIZE`, `Brand`, `made Origan`, `SUPPLIER`, `Function`, `Function Arabic`, `last updated price`, `DTU`, and `last modifier`.
+- Added backend import/export routes:
+  - `POST /erp/inventory/products/import`
+  - `GET /erp/inventory/products/export`
+- Added frontend Import modal with paste support and `.csv` / `.tsv` file loading.
+- Added CSV export with the same sheet headers.
+- Improved the import parser to handle quoted multiline cells from copied spreadsheet data.
+
+Verification:
+
+- Ran syntax checks on updated backend/database files.
+- Confirmed new product columns exist via `PRAGMA table_info(products)`.
+- Confirmed all inventory routes are registered, including import/export.
+- Ran live server smoke test: login, import sheet-style row, export CSV, confirm exported header and PN, then remove smoke row.
+
+Next notes:
+
+- Import supports pasted Excel/Google Sheets tab-separated data best.
+- CSV/TSV import handles quoted multiline cells.
+- Export uses the existing Bearer session token from the browser and downloads CSV.
+
+### 2026-04-30 13:21:39 +03:00 - v1.0.0-inventory-module
+
+Author/tool: Codex
+
+Files touched:
+
+- `modules/crm/database/database.js`
+- `modules/crm/core/routeLoader.js`
+- `modules/crm/core/server.js`
+- `modules/erp/inventory/backend/products.js`
+- `modules/erp/inventory/frontend/index.html`
+- `main/home.html`
+- `VERSION`
+
+Summary:
+
+- Built a complete ERP Inventory module at `/erp/inventory`.
+- Added `products` table migration with product, pricing, stock, minimum stock, and created timestamp fields.
+- Added inventory APIs:
+  - `POST /erp/inventory/products`
+  - `GET /erp/inventory/products`
+  - `PUT /erp/inventory/products/:id`
+  - `DELETE /erp/inventory/products/:id`
+  - `POST /erp/inventory/stock/update`
+  - `GET /erp/inventory/alerts`
+- Added a clean inventory dashboard UI with product table, add/edit modal, delete action, stock update form, metrics, search, and low-stock alerts.
+- Linked the global home dashboard Inventory card to `/erp/inventory`.
+- Kept CRM routes and CRM frontend behavior unchanged.
+
+Verification:
+
+- Ran syntax checks with `node --check` on inventory backend, core server, route loader, and database files.
+- Ran database migration smoke check confirming `products` table exists.
+- Ran route registration check confirming all six inventory routes are registered.
+- Ran full local API smoke test on a temporary port: login, create product, list product, stock update, low-stock alert, update product, delete product.
+- Ran static route smoke check confirming `/erp/inventory` returns the inventory UI and `/home` links to it.
+
+Next notes:
+
+- Inventory currently stores data in the existing SQLite database file beside CRM tables.
+- API endpoints require the existing CRM Bearer session token.
+- This structure is ready for later quotation generator integration by reading products through `GET /erp/inventory/products`.
+
+### 2026-04-30 13:12:25 +03:00 - v1.0.0-project-memory-expanded
+
+Author/tool: Codex
+
+Files touched:
+
+- `VERSION`
+
+Summary:
+
+- Expanded `VERSION` into a full shared Markdown project memory file.
+- Added quick start, architecture, routing, database notes, backend module map, frontend map, ERP map, root utility file notes, and complete project file index excluding `node_modules`.
+- Updated the handoff rules so other AI assistants know to maintain this file as the shared source of context.
+
+Verification:
+
+- Scanned workspace files with `rg --files`.
+- Scanned project files excluding `node_modules` with `rg --files -g "!node_modules/**"`.
+- Read `package.json`, `server.js`, `modules/crm/core/server.js`, `modules/crm/core/routeLoader.js`, `modules/crm/database/database.js`, and `modules/crm/frontend/manifest.json`.
+
+Next notes:
+
+- Keep this document current as files and features change.
+- If a new backend module is added, update "CRM Backend Modules" and "Complete Project File Index".
+- If a new frontend page or controller is added, update the relevant frontend section and file index.
+
+### 2026-04-30 13:11:16 +03:00 - v1.0.0-shared-version-log
+
+Author/tool: Codex
+
+Files touched:
+
+- `VERSION`
+
+Summary:
+
+- Created this shared Markdown version log named `VERSION`.
+- Added project snapshot, AI handoff rules, timestamp format, and first timestamped entry.
+- Designed the file so other AI assistants can access the current project state and append future version records.
+
+Verification:
+
+- Confirmed workspace root contents.
+- Confirmed `package.json` project name and version.
+- Confirmed project guidance exists in `CLAUDE.md`.
+
+Next notes:
+
+- Add every future change as a new entry above this one.
+- If the package version changes, update `Current package version` near the top.
+
+## Entry Template
+
+### YYYY-MM-DD HH:mm:ss +03:00 - vX.Y.Z-short-name
+
+Author/tool:
+
+- Name
+
+Files touched:
+
+- `path/to/file`
+
+Summary:
+
+- What changed.
+
+Verification:
+
+- Command or manual check performed.
+
+Next notes:
+
+- Anything the next AI/developer should know.

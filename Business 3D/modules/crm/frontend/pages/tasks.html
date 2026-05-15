@@ -1,0 +1,24 @@
+<div id="page-tasks" class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Tasks</h1>
+      <span class="page-subtitle" id="tasks-count"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-secondary manager-only" id="btn-general-task" onclick="openGeneralTaskForm()" style="display:none">
+        <i class="fas fa-users"></i> Team Task
+      </button>
+      <button class="btn btn-primary" onclick="openTaskForm()">
+        <i class="fas fa-plus"></i> Add Task
+      </button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="tabs">
+      <button class="tab active" data-filter="all" onclick="filterTasks('all')">All</button>
+      <button class="tab" data-filter="pending" onclick="filterTasks('pending')">Pending</button>
+      <button class="tab" data-filter="completed" onclick="filterTasks('completed')">Completed</button>
+    </div>
+  </div>
+  <div id="tasks-list"></div>
+</div>
